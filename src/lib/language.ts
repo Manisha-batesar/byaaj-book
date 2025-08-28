@@ -200,6 +200,15 @@ export const translations = {
     success: "Success",
     warning: "Warning",
     info: "Info",
+    edit: "Edit",
+    
+    // Edit Loan
+    editLoan: "Edit Loan",
+    updateLoan: "Update Loan",
+    updating: "Updating...",
+    loanNotFound: "Loan not found",
+    failedToUpdateLoan: "Failed to update loan",
+    errorUpdatingLoan: "Error updating loan",
   },
   hi: {
     // App name
@@ -399,6 +408,15 @@ export const translations = {
     success: "सफलता",
     warning: "चेतावनी",
     info: "जानकारी",
+    edit: "संपादित करें",
+    
+    // Edit Loan
+    editLoan: "ऋण संपादित करें",
+    updateLoan: "ऋण अपडेट करें",
+    updating: "अपडेट कर रहे हैं...",
+    loanNotFound: "ऋण नहीं मिला",
+    failedToUpdateLoan: "ऋण अपडेट करने में असफल",
+    errorUpdatingLoan: "ऋण अपडेट करने में त्रुटि",
   },
 } as const
 

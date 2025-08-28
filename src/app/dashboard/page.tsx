@@ -8,7 +8,7 @@ import { BottomNav } from "@/components/bottom-nav"
 import { LanguageSelector } from "@/components/language-selector"
 import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
-import { Plus, Calculator, TrendingUp, FileText, IndianRupee } from "lucide-react"
+import { Plus, Calculator, TrendingUp, FileText, IndianRupee, Edit3 } from "lucide-react"
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -154,13 +154,20 @@ export default function DashboardPage() {
                   <Card key={loan.id}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <div>
+                        <div className="flex-1">
                           <p className="font-semibold">{loan.borrowerName}</p>
                           <p className="text-sm text-muted-foreground">₹{loan.amount.toLocaleString()}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">{loan.interestRate}%</p>
-                          <p className="text-xs text-muted-foreground">{t(loan.interestMethod)}</p>
+                        <div className="flex items-center space-x-3">
+                          <div className="text-right">
+                            <p className="text-sm font-medium">{loan.interestRate}%</p>
+                            <p className="text-xs text-muted-foreground">{t(loan.interestMethod)}</p>
+                          </div>
+                          <Link href={`/loans/edit/${loan.id}`}>
+                            <button className="p-2 hover:bg-muted rounded-lg transition-colors">
+                              <Edit3 size={16} className="text-muted-foreground hover:text-foreground" />
+                            </button>
+                          </Link>
                         </div>
                       </div>
                     </CardContent>

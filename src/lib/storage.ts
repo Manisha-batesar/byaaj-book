@@ -35,6 +35,24 @@ export const storage = {
     return data ? JSON.parse(data) : []
   },
 
+  getLoanById: (id: string): Loan | null => {
+    if (typeof window === "undefined") return null
+    const loans = storage.getLoans()
+    return loans.find((loan) => loan.id === id) || null
+  },
+
+  updateLoan: (id: string, updatedLoan: Partial<Loan>): boolean => {
+    if (typeof window === "undefined") return false
+    const loans = storage.getLoans()
+    const loanIndex = loans.findIndex((loan) => loan.id === id)
+    
+    if (loanIndex === -1) return false
+    
+    loans[loanIndex] = { ...loans[loanIndex], ...updatedLoan }
+    storage.saveLoans(loans)
+    return true
+  },
+
   saveLoans: (loans: Loan[]) => {
     if (typeof window === "undefined") return
     localStorage.setItem(STORAGE_KEYS.LOANS, JSON.stringify(loans))

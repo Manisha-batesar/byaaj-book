@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Plus, IndianRupee, Calendar, User } from "lucide-react"
+import { ArrowLeft, Plus, IndianRupee, Calendar, User, Edit3 } from "lucide-react"
 import { storage, type Loan, type Payment } from "@/lib/storage"
 import { useLanguage } from "@/components/language-provider"
 import { LanguageSelector } from "@/components/language-selector"
@@ -78,24 +78,37 @@ export default function PaymentsPage() {
             ) : (
               <div className="space-y-3">
                 {activeLoans.map((loan) => (
-                  <div
-                    key={loan.id}
-                    className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => setSelectedLoan(loan)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
+                  <div key={loan.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex-1">
                         <h3 className="font-semibold">{loan.borrowerName}</h3>
                         <p className="text-sm text-muted-foreground">
                           {t("outstanding")}: ₹{calculateOutstanding(loan).toLocaleString()}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold">₹{loan.amount.toLocaleString()}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {loan.interestRate}% {t(loan.interestMethod)}
-                        </p>
+                      <div className="flex items-center space-x-3">
+                        <div className="text-right">
+                          <p className="font-semibold">₹{loan.amount.toLocaleString()}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {loan.interestRate}% {t(loan.interestMethod)}
+                          </p>
+                        </div>
+                        <Link href={`/loans/edit/${loan.id}`}>
+                          <button className="p-2 hover:bg-muted rounded-lg transition-colors">
+                            <Edit3 size={16} className="text-muted-foreground hover:text-foreground" />
+                          </button>
+                        </Link>
                       </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 bg-transparent"
+                        onClick={() => setSelectedLoan(loan)}
+                      >
+                        {t("recordPayment")}
+                      </Button>
                     </div>
                   </div>
                 ))}

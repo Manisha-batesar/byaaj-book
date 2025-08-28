@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Plus, Phone, Calendar, IndianRupee } from "lucide-react"
+import { ArrowLeft, Plus, Phone, Calendar, IndianRupee, Edit3 } from "lucide-react"
 import { storage, type Loan } from "@/lib/storage"
 import { useLanguage } from "@/components/language-provider"
 import { LanguageSelector } from "@/components/language-selector"
@@ -172,9 +172,12 @@ export default function LoansPage() {
                 )}
 
                 <div className="flex space-x-2 mt-4">
-                  <Button variant="outline" size="sm" className="flex-1 bg-transparent">
-                    {t("viewDetails")}
-                  </Button>
+                  <Link href={`/loans/edit/${loan.id}`} className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full bg-transparent">
+                      <Edit3 size={14} className="mr-1" />
+                      {t("edit")}
+                    </Button>
+                  </Link>
                   {loan.isActive && (
                     <Link href="/payments" className="flex-1">
                       <Button size="sm" className="w-full">
