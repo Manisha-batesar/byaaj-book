@@ -101,7 +101,8 @@ export const storage = {
     if (loanIndex === -1) return false
 
     const loan = loans[loanIndex]
-    const outstanding = loan.amount - loan.totalPaid
+    const finalAmount = storage.calculateFinalAmount(loan)
+    const outstanding = finalAmount - loan.totalPaid
 
     // Validate payment amount
     if (amount <= 0 || amount > outstanding) return false
@@ -119,7 +120,7 @@ export const storage = {
     loans[loanIndex] = {
       ...loan,
       totalPaid: loan.totalPaid + amount,
-      isActive: type === "full" || loan.totalPaid + amount < loan.amount,
+      isActive: type === "full" || loan.totalPaid + amount < finalAmount,
     }
 
     // Save updates

@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [totalPayable, setTotalPayable] = useState(0)
   const [totalReceived, setTotalReceived] = useState(0)
   const [activeLoans, setActiveLoans] = useState(0)
+  const [pendingPayments, setPendingPayments] = useState(0)
   const router = useRouter()
   const { t } = useLanguage()
 
@@ -35,12 +36,20 @@ export default function DashboardPage() {
     const totalPayableAmount = loans.reduce((sum, loan) => sum + storage.calculateFinalAmount(loan), 0)
     const receivedAmount = payments.reduce((sum, payment) => sum + payment.amount, 0)
     const activeLoanCount = loans.filter((loan) => loan.isActive).length
+    
+    // Calculate pending payments (outstanding amount from active loans)
+    const activeLoansData = loans.filter((loan) => loan.isActive)
+    const pendingAmount = activeLoansData.reduce((sum, loan) => {
+      const finalAmount = storage.calculateFinalAmount(loan)
+      return sum + (finalAmount - loan.totalPaid)
+    }, 0)
 
     setTotalLent(lentAmount)
     setTotalReceived(receivedAmount)
     setActiveLoans(activeLoanCount)
     // Store total payable in a new state variable
     setTotalPayable(totalPayableAmount)
+    setPendingPayments(pendingAmount)
   }, [router])
 
   if (!isAuthenticated) {
@@ -91,31 +100,45 @@ export default function DashboardPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center mb-1">
-              <IndianRupee size={16} />
+        <div className="space-y-4">
+          {/* First row - 2 cards */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
+              <div className="flex items-center justify-center mb-1">
+                <IndianRupee size={16} />
+              </div>
+              <p className="text-xs opacity-80">{t("totalLent")}</p>
+              <p className="font-semibold">₹{totalLent.toLocaleString()}</p>
             </div>
-            <p className="text-xs opacity-80">{t("totalLent")}</p>
-            <p className="font-semibold">₹{totalLent.toLocaleString()}</p>
-          </div>
-          <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center mb-1">
-              <TrendingUp size={16} />
+            <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
+              <div className="flex items-center justify-center mb-1">
+                <TrendingUp size={16} />
+              </div>
+              <p className="text-xs opacity-80">{t("totalPayable")}</p>
+              <p className="font-semibold">₹{totalPayable.toLocaleString()}</p>
             </div>
-            <p className="text-xs opacity-80">{t("totalPayable")}</p>
-            <p className="font-semibold">₹{totalPayable.toLocaleString()}</p>
           </div>
-          <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center mb-1">
-              <TrendingUp size={16} />
+          
+          {/* Second row - 3 cards */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
+              <div className="flex items-center justify-center mb-1">
+                <TrendingUp size={14} />
+              </div>
+              <p className="text-xs opacity-80">{t("received")}</p>
+              <p className="font-semibold text-sm">₹{totalReceived.toLocaleString()}</p>
             </div>
-            <p className="text-xs opacity-80">{t("received")}</p>
-            <p className="font-semibold">₹{totalReceived.toLocaleString()}</p>
-          </div>
-          <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
-            <p className="text-xs opacity-80">{t("activeLoans")}</p>
-            <p className="font-semibold text-lg">{activeLoans}</p>
+            <div className="bg-red-100/20 border border-red-200/30 rounded-lg p-3 text-center">
+              <div className="flex items-center justify-center mb-1">
+                <IndianRupee size={14} className="text-red-300" />
+              </div>
+              <p className="text-xs opacity-80">Pending</p>
+              <p className="font-semibold text-sm text-red-200">₹{pendingPayments.toLocaleString()}</p>
+            </div>
+            <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
+              <p className="text-xs opacity-80">{t("activeLoans")}</p>
+              <p className="font-semibold">{activeLoans}</p>
+            </div>
           </div>
         </div>
       </div>

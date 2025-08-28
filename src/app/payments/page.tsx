@@ -26,7 +26,8 @@ export default function PaymentsPage() {
   }, [])
 
   const calculateOutstanding = (loan: Loan) => {
-    return loan.amount - loan.totalPaid
+    const finalAmount = storage.calculateFinalAmount(loan)
+    return finalAmount - loan.totalPaid
   }
 
   const formatDate = (dateString: string) => {
@@ -88,7 +89,7 @@ export default function PaymentsPage() {
                       </div>
                       <div className="flex items-center space-x-3">
                         <div className="text-right">
-                          <p className="font-semibold">₹{loan.amount.toLocaleString()}</p>
+                          <p className="font-semibold">₹{storage.calculateFinalAmount(loan).toLocaleString()}</p>
                           <p className="text-sm text-muted-foreground">
                             {loan.interestRate}% {t(loan.interestMethod)}
                           </p>
@@ -215,7 +216,7 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
   const [error, setError] = useState("")
   const { t } = useLanguage()
 
-  const outstanding = loan.amount - loan.totalPaid
+  const outstanding = storage.calculateFinalAmount(loan) - loan.totalPaid
 
   useEffect(() => {
     // Auto-set to full payment if amount matches outstanding
@@ -263,9 +264,32 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{t("recordingPayment")}</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {loan.borrowerName} • {t("outstanding")}: ₹{outstanding.toLocaleString()}
-          </p>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              {loan.borrowerName} • {t("outstanding")}: ₹{outstanding.toLocaleString()}
+            </p>
+            <div className="bg-muted p-3 rounded-lg">
+              <div className="text-xs space-y-1">
+                <div className="flex justify-between">
+                  <span>Principal:</span>
+                  <span>₹{loan.amount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Interest:</span>
+                  <span>₹{storage.calculateInterestAmount(loan).toLocaleString()}</span>
+                </div>
+                <hr className="my-1" />
+                <div className="flex justify-between font-semibold">
+                  <span>Total Payable:</span>
+                  <span>₹{storage.calculateFinalAmount(loan).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-green-600">
+                  <span>Paid:</span>
+                  <span>₹{loan.totalPaid.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
