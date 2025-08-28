@@ -7,6 +7,7 @@ export interface Loan {
   amount: number
   interestRate: number
   interestMethod: "monthly" | "yearly" | "sankda"
+  interestType: "simple" | "compound"
   dateCreated: string
   totalPaid: number
   isActive: boolean

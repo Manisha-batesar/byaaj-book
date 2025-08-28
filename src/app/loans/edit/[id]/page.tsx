@@ -28,6 +28,7 @@ export default function EditLoanPage() {
     amount: "",
     interestRate: "",
     interestMethod: "monthly" as "monthly" | "yearly" | "sankda",
+    interestType: "simple" as "simple" | "compound",
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -55,6 +56,7 @@ export default function EditLoanPage() {
       amount: loanData.amount.toString(),
       interestRate: loanData.interestMethod === "sankda" ? "12" : loanData.interestRate.toString(),
       interestMethod: loanData.interestMethod,
+      interestType: loanData.interestType || "simple", // Default to simple for existing loans
     })
     setIsLoading(false)
   }, [params.id, router])
@@ -97,6 +99,7 @@ export default function EditLoanPage() {
         amount: Number.parseFloat(formData.amount),
         interestRate: formData.interestMethod === "sankda" ? 12 : Number.parseFloat(formData.interestRate),
         interestMethod: formData.interestMethod,
+        interestType: formData.interestType,
       }
 
       const success = storage.updateLoan(loan.id, updatedLoan)
@@ -230,6 +233,32 @@ export default function EditLoanPage() {
                     <SelectItem value="monthly">{t("monthly")}</SelectItem>
                     <SelectItem value="yearly">{t("yearly")}</SelectItem>
                     <SelectItem value="sankda">{t("sankdaFixed")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="interestType">{t("interestType")} {t("required")}</Label>
+                <Select
+                  value={formData.interestType}
+                  onValueChange={(value: "simple" | "compound") => handleInputChange("interestType", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="simple">
+                      <div className="flex flex-col">
+                        <span>{t("simpleInterest")}</span>
+                        <span className="text-xs text-muted-foreground">{t("simpleInterestDesc")}</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="compound">
+                      <div className="flex flex-col">
+                        <span>{t("compoundInterest")}</span>
+                        <span className="text-xs text-muted-foreground">{t("compoundInterestDesc")}</span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

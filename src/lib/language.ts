@@ -30,6 +30,13 @@ export const translations = {
     yearly: "Yearly",
     sankda: "Sankda",
     
+    // Interest types
+    simpleInterest: "Simple Interest",
+    compoundInterest: "Compound Interest",
+    interestType: "Interest Type",
+    simpleInterestDesc: "A = P + (P × r × t) / 100",
+    compoundInterestDesc: "A = P × (1 + r/100)^t",
+    
     // Navigation
     dashboard: "Dashboard",
     loans: "Loans",
@@ -163,6 +170,7 @@ export const translations = {
     monthlyExplanation: "Monthly interest is calculated as a fixed percentage of the principal amount each month.",
     yearlyExplanation: "Yearly interest uses simple interest formula: (Principal × Rate × Time) / 100",
     sankdaExplanation: "Sankda method applies 12% yearly interest, typically calculated monthly for traditional lending.",
+    compoundExplanation: "Compound interest is calculated on the principal amount plus previously earned interest.",
     quickExamples: "Quick Examples",
     interest: "interest",
     enterPrincipalAmount: "Enter principal amount",
@@ -237,6 +245,13 @@ export const translations = {
     monthly: "मासिक",
     yearly: "वार्षिक",
     sankda: "संकड़ा",
+    
+    // Interest types
+    simpleInterest: "साधारण ब्याज",
+    compoundInterest: "चक्रवृद्धि ब्याज",
+    interestType: "ब्याज प्रकार",
+    simpleInterestDesc: "A = P + (P × r × t) / 100",
+    compoundInterestDesc: "A = P × (1 + r/100)^t",
     
     // Navigation
     dashboard: "डैशबोर्ड",
@@ -371,6 +386,7 @@ export const translations = {
     monthlyExplanation: "मासिक ब्याज को मूल राशि के एक निश्चित प्रतिशत के रूप में प्रत्येक माह की गणना की जाती है।",
     yearlyExplanation: "वार्षिक ब्याज सामान्य ब्याज फॉर्मूला का उपयोग करता है: (मूल × दर × समय) / 100",
     sankdaExplanation: "संकड़ा विधि 12% वार्षिक ब्याज लागू करती है, आमतौर पर पारंपरिक उधार देने के लिए मासिक गणना की जाती है।",
+    compoundExplanation: "चक्रवृद्धि ब्याज मूल राशि और पहले अर्जित ब्याज पर गणना की जाती है।",
     quickExamples: "त्वरित उदाहरण",
     interest: "ब्याज",
     enterPrincipalAmount: "मूल राशि दर्ज करें",

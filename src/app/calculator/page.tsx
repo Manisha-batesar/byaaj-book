@@ -27,6 +27,7 @@ export default function CalculatorPage() {
     timePeriod: "",
     timeUnit: "months" as "months" | "years",
     calculationMethod: "monthly" as "monthly" | "yearly" | "sankda",
+    interestType: "simple" as "simple" | "compound",
   })
   const [result, setResult] = useState<CalculationResult | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -62,34 +63,62 @@ export default function CalculatorPage() {
     let interestAmount = 0
     let monthlyInterest = 0
     let effectiveRate = interestRate
+    let totalAmount = 0
 
-    // Convert time period to months for calculation
+    // Convert time period to appropriate units for calculation
     const timeInMonths = formData.timeUnit === "years" ? timePeriod * 12 : timePeriod
+    const timeInYears = formData.timeUnit === "years" ? timePeriod : timePeriod / 12
 
-    switch (formData.calculationMethod) {
-      case "monthly":
-        // Monthly interest calculation
-        monthlyInterest = (principal * interestRate) / 100
-        interestAmount = monthlyInterest * timeInMonths
-        break
+    if (formData.interestType === "simple") {
+      // Simple Interest Calculations
+      switch (formData.calculationMethod) {
+        case "monthly":
+          // Monthly simple interest calculation
+          monthlyInterest = (principal * interestRate) / 100
+          interestAmount = monthlyInterest * timeInMonths
+          break
 
-      case "yearly":
-        // Yearly interest calculation (simple interest)
-        const timeInYears = timeInMonths / 12
-        interestAmount = (principal * interestRate * timeInYears) / 100
-        monthlyInterest = interestAmount / timeInMonths
-        break
+        case "yearly":
+          // Yearly simple interest calculation: A = P + (P * r * t) / 100
+          interestAmount = (principal * interestRate * timeInYears) / 100
+          monthlyInterest = interestAmount / timeInMonths
+          break
 
-      case "sankda":
-        // Sankda method (12% yearly, but calculated monthly)
-        const yearlyInterest = (principal * 12) / 100
-        monthlyInterest = yearlyInterest / 12
-        interestAmount = monthlyInterest * timeInMonths
-        effectiveRate = 12
-        break
+        case "sankda":
+          // Sankda method (12% yearly, but calculated monthly)
+          const yearlyInterest = (principal * 12) / 100
+          monthlyInterest = yearlyInterest / 12
+          interestAmount = monthlyInterest * timeInMonths
+          effectiveRate = 12
+          break
+      }
+      totalAmount = principal + interestAmount
+    } else {
+      // Compound Interest Calculations: A = P * (1 + r/100)^t
+      switch (formData.calculationMethod) {
+        case "monthly":
+          // Monthly compound interest: A = P * (1 + r/100)^t
+          totalAmount = principal * Math.pow(1 + interestRate / 100, timeInMonths)
+          interestAmount = totalAmount - principal
+          monthlyInterest = interestAmount / timeInMonths // Average monthly interest
+          break
+
+        case "yearly":
+          // Yearly compound interest: A = P * (1 + r/100)^t
+          totalAmount = principal * Math.pow(1 + interestRate / 100, timeInYears)
+          interestAmount = totalAmount - principal
+          monthlyInterest = interestAmount / timeInMonths // Average monthly interest
+          break
+
+        case "sankda":
+          // Sankda method with compound interest (12% yearly compounded)
+          totalAmount = principal * Math.pow(1 + 12 / 100, timeInYears)
+          interestAmount = totalAmount - principal
+          monthlyInterest = interestAmount / timeInMonths // Average monthly interest
+          effectiveRate = 12
+          break
+      }
     }
-
-    const totalAmount = principal + interestAmount
 
     setResult({
       principal,
@@ -118,6 +147,7 @@ export default function CalculatorPage() {
       timePeriod: "",
       timeUnit: "months",
       calculationMethod: "monthly",
+      interestType: "simple",
     })
     setResult(null)
     setErrors({})
@@ -176,6 +206,32 @@ export default function CalculatorPage() {
                   <SelectItem value="monthly">{t("monthlyInterest")}</SelectItem>
                   <SelectItem value="yearly">{t("yearlyInterest")}</SelectItem>
                   <SelectItem value="sankda">{t("sankdaFixed")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="interestType">{t("interestType")} {t("required")}</Label>
+              <Select
+                value={formData.interestType}
+                onValueChange={(value: "simple" | "compound") => handleInputChange("interestType", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="simple">
+                    <div className="flex flex-col">
+                      <span>{t("simpleInterest")}</span>
+                      <span className="text-xs text-muted-foreground">{t("simpleInterestDesc")}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="compound">
+                    <div className="flex flex-col">
+                      <span>{t("compoundInterest")}</span>
+                      <span className="text-xs text-muted-foreground">{t("compoundInterestDesc")}</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -297,11 +353,26 @@ export default function CalculatorPage() {
               {/* Method Explanation */}
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-sm font-medium mb-2">{t("methodExplanation")}</p>
-                <p className="text-sm text-muted-foreground">
-                  {formData.calculationMethod === "monthly" && t("monthlyExplanation")}
-                  {formData.calculationMethod === "yearly" && t("yearlyExplanation")}
-                  {formData.calculationMethod === "sankda" && t("sankdaExplanation")}
-                </p>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p><strong>{t("interestType")}:</strong> {t(formData.interestType === "simple" ? "simpleInterest" : "compoundInterest")}</p>
+                  <p><strong>{t("calculationMethod")}:</strong> {t(formData.calculationMethod === "monthly" ? "monthlyInterest" : formData.calculationMethod === "yearly" ? "yearlyInterest" : "sankdaFixed")}</p>
+                  
+                  {formData.interestType === "simple" && (
+                    <div className="mt-2">
+                      <p><strong>{t("simpleInterest")}:</strong></p>
+                      {formData.calculationMethod === "monthly" && <p>{t("monthlyExplanation")}</p>}
+                      {formData.calculationMethod === "yearly" && <p>{t("yearlyExplanation")}</p>}
+                      {formData.calculationMethod === "sankda" && <p>{t("sankdaExplanation")}</p>}
+                    </div>
+                  )}
+                  
+                  {formData.interestType === "compound" && (
+                    <div className="mt-2">
+                      <p><strong>{t("compoundInterest")}:</strong></p>
+                      <p>Interest is calculated on the principal amount plus previously earned interest. Formula: A = P × (1 + r/100)^t</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
