@@ -48,7 +48,7 @@ export default function AddLoanPage() {
     }
 
     if (!formData.years || Number.parseFloat(formData.years) <= 0) {
-      newErrors.years = t("validYearsRequired")
+      newErrors.years = t("validYearsRequired") || "Valid loan period is required"
     }
 
     if (formData.borrowerPhone && !/^\d{10}$/.test(formData.borrowerPhone.replace(/\D/g, ""))) {
@@ -76,7 +76,7 @@ export default function AddLoanPage() {
         interestRate: formData.interestMethod === "sankda" ? 12 : Number.parseFloat(formData.interestRate),
         interestMethod: formData.interestMethod,
         interestType: formData.interestType,
-        years: Number.parseFloat(formData.years),
+        years: formData.years ? Number.parseFloat(formData.years) : 1, // Default to 1 year if not provided
         dateCreated: new Date().toISOString(),
         totalPaid: 0,
         isActive: true,
