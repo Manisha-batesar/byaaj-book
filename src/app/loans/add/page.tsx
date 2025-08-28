@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { DatePicker } from "@/components/ui/date-picker"
 import { ArrowLeft } from "lucide-react"
 import { storage, type Loan } from "@/lib/storage"
 import { useLanguage } from "@/components/language-provider"
@@ -28,6 +29,8 @@ export default function AddLoanPage() {
     interestMethod: "monthly" as "monthly" | "yearly" | "sankda",
     interestType: "simple" as "simple" | "compound",
     years: "",
+    dateCreated: new Date() as Date,
+    expectedReturnDate: null as Date | null,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -77,7 +80,8 @@ export default function AddLoanPage() {
         interestMethod: formData.interestMethod,
         interestType: formData.interestType,
         years: formData.years ? Number.parseFloat(formData.years) : 1, // Default to 1 year if not provided
-        dateCreated: new Date().toISOString(),
+        dateCreated: formData.dateCreated.toISOString(),
+        expectedReturnDate: formData.expectedReturnDate ? formData.expectedReturnDate.toISOString() : undefined,
         totalPaid: 0,
         isActive: true,
       }
@@ -93,7 +97,7 @@ export default function AddLoanPage() {
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | Date | null) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
@@ -260,6 +264,37 @@ export default function AddLoanPage() {
                   </p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Date Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="dateCreated">Loan Date {t("required")}</Label>
+                <DatePicker
+                  value={formData.dateCreated}
+                  onChange={(date) => handleInputChange("dateCreated", date || new Date())}
+                  placeholder="Select loan date"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  The date when the loan was given to the borrower
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="expectedReturnDate">Expected Return Date</Label>
+                <DatePicker
+                  value={formData.expectedReturnDate || undefined}
+                  onChange={(date) => handleInputChange("expectedReturnDate", date || null)}
+                  placeholder="Select expected return date"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  The expected date to receive the money back (optional)
+                </p>
+              </div>
             </CardContent>
           </Card>
 

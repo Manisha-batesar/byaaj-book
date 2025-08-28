@@ -12,6 +12,14 @@ import { useLanguage } from "@/components/language-provider"
 import { LanguageSelector } from "@/components/language-selector"
 import Link from "next/link"
 
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })
+}
+
 export default function PaymentsPage() {
   const [activeLoans, setActiveLoans] = useState<Loan[]>([])
   const [recentPayments, setRecentPayments] = useState<Payment[]>([])
@@ -28,14 +36,6 @@ export default function PaymentsPage() {
   const calculateOutstanding = (loan: Loan) => {
     const finalAmount = storage.calculateFinalAmount(loan)
     return finalAmount - loan.totalPaid
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })
   }
 
   const getLoanById = (loanId: string) => {
@@ -83,9 +83,15 @@ export default function PaymentsPage() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex-1">
                         <h3 className="font-semibold">{loan.borrowerName}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {t("outstanding")}: ₹{calculateOutstanding(loan).toLocaleString()}
-                        </p>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p>{t("outstanding")}: ₹{calculateOutstanding(loan).toLocaleString()}</p>
+                          <div className="flex items-center space-x-4">
+                            <span>Loan Date: {formatDate(loan.dateCreated)}</span>
+                            {loan.expectedReturnDate && (
+                              <span>Expected Return: {formatDate(loan.expectedReturnDate)}</span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                       <div className="flex items-center space-x-3">
                         <div className="text-right">
@@ -144,7 +150,7 @@ export default function PaymentsPage() {
                           {payment.type === "full" ? t("fullPayment") : t("partialPayment")}
                         </Badge>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-1">
                           <IndianRupee size={16} />
                           <span className="font-semibold text-lg">₹{payment.amount.toLocaleString()}</span>
@@ -154,6 +160,16 @@ export default function PaymentsPage() {
                           <span className="text-sm">{formatDate(payment.date)}</span>
                         </div>
                       </div>
+                      {loan && (
+                        <div className="text-xs text-muted-foreground pt-2 border-t">
+                          <div className="flex items-center justify-between">
+                            <span>Loan Date: {formatDate(loan.dateCreated)}</span>
+                            {loan.expectedReturnDate && (
+                              <span>Expected Return: {formatDate(loan.expectedReturnDate)}</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -268,6 +284,14 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
             <p className="text-sm text-muted-foreground">
               {loan.borrowerName} • {t("outstanding")}: ₹{outstanding.toLocaleString()}
             </p>
+            <div className="text-xs text-muted-foreground space-y-1">
+              <div className="flex items-center justify-between">
+                <span>Loan Date: {formatDate(loan.dateCreated)}</span>
+                {loan.expectedReturnDate && (
+                  <span>Expected Return: {formatDate(loan.expectedReturnDate)}</span>
+                )}
+              </div>
+            </div>
             <div className="bg-muted p-3 rounded-lg">
               <div className="text-xs space-y-1">
                 <div className="flex justify-between">

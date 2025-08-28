@@ -34,7 +34,8 @@ export default function LoansPage() {
   }
 
   const calculateOutstanding = (loan: Loan) => {
-    return loan.amount - loan.totalPaid
+    const finalAmount = storage.calculateFinalAmount(loan)
+    return finalAmount - loan.totalPaid
   }
 
   return (
@@ -150,20 +151,32 @@ export default function LoansPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t("interestRate")}</p>
-                    <p className="font-medium">
-                      {loan.interestRate}% {t(loan.interestMethod)}
-                    </p>
+                <div className="space-y-3 mb-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{t("interestRate")}</p>
+                      <p className="font-medium">
+                        {loan.interestRate}% {t(loan.interestMethod)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">{t("dateCreated")}</p>
+                      <p className="font-medium flex items-center">
+                        <Calendar size={14} className="mr-1" />
+                        {formatDate(loan.dateCreated)}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t("dateCreated")}</p>
-                    <p className="font-medium flex items-center">
-                      <Calendar size={14} className="mr-1" />
-                      {formatDate(loan.dateCreated)}
-                    </p>
-                  </div>
+                  
+                  {loan.expectedReturnDate && (
+                    <div className="bg-accent/50 p-2 rounded-lg">
+                      <p className="text-sm text-muted-foreground">Expected Return Date</p>
+                      <p className="font-medium flex items-center">
+                        <Calendar size={14} className="mr-1" />
+                        {formatDate(loan.expectedReturnDate)}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {loan.totalPaid > 0 && (

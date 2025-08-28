@@ -10,6 +10,7 @@ export interface Loan {
   interestType: "simple" | "compound"
   years?: number // Optional for backward compatibility
   dateCreated: string
+  expectedReturnDate?: string // Expected date to get money back
   totalPaid: number
   isActive: boolean
 }
