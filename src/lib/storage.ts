@@ -8,6 +8,7 @@ export interface Loan {
   interestRate: number
   interestMethod: "monthly" | "yearly" | "sankda"
   interestType: "simple" | "compound"
+  years?: number // Optional for backward compatibility
   dateCreated: string
   totalPaid: number
   isActive: boolean
@@ -57,6 +58,26 @@ export const storage = {
   saveLoans: (loans: Loan[]) => {
     if (typeof window === "undefined") return
     localStorage.setItem(STORAGE_KEYS.LOANS, JSON.stringify(loans))
+  },
+
+  // Calculate final payable amount for a loan
+  calculateFinalAmount: (loan: Loan): number => {
+    const { amount, interestRate, interestType, years = 1, interestMethod } = loan
+    const rate = interestMethod === "sankda" ? 12 : interestRate
+
+    if (interestType === "simple") {
+      // Simple Interest: A = P + (P * r * t) / 100
+      const interest = (amount * rate * years) / 100
+      return amount + interest
+    } else {
+      // Compound Interest: A = P * (1 + r/100)^t
+      return amount * Math.pow(1 + rate / 100, years)
+    }
+  },
+
+  // Calculate interest amount for a loan
+  calculateInterestAmount: (loan: Loan): number => {
+    return storage.calculateFinalAmount(loan) - loan.amount
   },
 
   getPayments: (): Payment[] => {

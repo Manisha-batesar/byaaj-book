@@ -27,6 +27,7 @@ export default function AddLoanPage() {
     interestRate: "",
     interestMethod: "monthly" as "monthly" | "yearly" | "sankda",
     interestType: "simple" as "simple" | "compound",
+    years: "",
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -44,6 +45,10 @@ export default function AddLoanPage() {
 
     if (!formData.interestRate || Number.parseFloat(formData.interestRate) < 0) {
       newErrors.interestRate = t("validInterestRequired")
+    }
+
+    if (!formData.years || Number.parseFloat(formData.years) <= 0) {
+      newErrors.years = t("validYearsRequired")
     }
 
     if (formData.borrowerPhone && !/^\d{10}$/.test(formData.borrowerPhone.replace(/\D/g, ""))) {
@@ -71,6 +76,7 @@ export default function AddLoanPage() {
         interestRate: formData.interestMethod === "sankda" ? 12 : Number.parseFloat(formData.interestRate),
         interestMethod: formData.interestMethod,
         interestType: formData.interestType,
+        years: Number.parseFloat(formData.years),
         dateCreated: new Date().toISOString(),
         totalPaid: 0,
         isActive: true,
@@ -233,6 +239,20 @@ export default function AddLoanPage() {
                 </div>
               )}
 
+              <div>
+                <Label htmlFor="years">{t("loanPeriod")} ({t("years")}) {t("required")}</Label>
+                <Input
+                  id="years"
+                  type="number"
+                  step="0.5"
+                  value={formData.years}
+                  onChange={(e) => handleInputChange("years", e.target.value)}
+                  placeholder={t("yearsPlaceholder")}
+                  className={errors.years ? "border-destructive" : ""}
+                />
+                {errors.years && <p className="text-destructive text-sm mt-1">{errors.years}</p>}
+              </div>
+
               {formData.interestMethod === "sankda" && (
                 <div className="bg-muted p-3 rounded-lg">
                   <p className="text-sm text-muted-foreground">
@@ -242,6 +262,60 @@ export default function AddLoanPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Calculation Preview */}
+          {formData.amount && formData.years && (formData.interestRate || formData.interestMethod === "sankda") && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("calculationPreview")}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {(() => {
+                  const amount = Number.parseFloat(formData.amount)
+                  const years = Number.parseFloat(formData.years)
+                  const rate = formData.interestMethod === "sankda" ? 12 : Number.parseFloat(formData.interestRate)
+                  
+                  if (amount > 0 && years > 0 && rate >= 0) {
+                    let finalAmount = 0
+                    let interestAmount = 0
+
+                    if (formData.interestType === "simple") {
+                      // Simple Interest: A = P + (P * r * t) / 100
+                      interestAmount = (amount * rate * years) / 100
+                      finalAmount = amount + interestAmount
+                    } else {
+                      // Compound Interest: A = P * (1 + r/100)^t
+                      finalAmount = amount * Math.pow(1 + rate / 100, years)
+                      interestAmount = finalAmount - amount
+                    }
+
+                    return (
+                      <div className="grid grid-cols-1 gap-3">
+                        <div className="flex justify-between p-3 bg-muted rounded-lg">
+                          <span className="text-muted-foreground">{t("loanAmount")}:</span>
+                          <span className="font-semibold">₹{amount.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between p-3 bg-accent rounded-lg">
+                          <span className="text-accent-foreground/80">{t("interestAmount")}:</span>
+                          <span className="font-semibold text-accent-foreground">₹{interestAmount.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between p-3 bg-primary rounded-lg text-primary-foreground">
+                          <span className="opacity-80">{t("finalPayableAmount")}:</span>
+                          <span className="font-bold text-lg">₹{finalAmount.toLocaleString()}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground text-center">
+                          {t("interestType")}: {t(formData.interestType === "simple" ? "simpleInterest" : "compoundInterest")} | 
+                          {t("interestMethod")}: {t(formData.interestMethod === "monthly" ? "monthlyInterest" : formData.interestMethod === "yearly" ? "yearlyInterest" : "sankdaFixed")} | 
+                          {t("loanPeriod")}: {years} {t("years")}
+                        </div>
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
+              </CardContent>
+            </Card>
+          )}
 
           <div className="flex space-x-4">
             <Button type="button" variant="outline" className="flex-1 bg-transparent" onClick={() => router.back()}>

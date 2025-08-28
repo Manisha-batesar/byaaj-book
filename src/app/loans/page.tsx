@@ -126,10 +126,26 @@ export default function LoansPage() {
                     </p>
                   </div>
                   <div>
+                    <p className="text-sm text-muted-foreground">{t("finalPayableAmount")}</p>
+                    <p className="font-semibold flex items-center text-primary">
+                      <IndianRupee size={14} className="mr-1" />
+                      {storage.calculateFinalAmount(loan).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
                     <p className="text-sm text-muted-foreground">{t("outstanding")}</p>
                     <p className="font-semibold flex items-center">
                       <IndianRupee size={14} className="mr-1" />
                       {calculateOutstanding(loan).toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t("loanPeriod")}</p>
+                    <p className="font-medium">
+                      {loan.years || 1} {(loan.years || 1) === 1 ? t("years").slice(0, -1) : t("years")}
                     </p>
                   </div>
                 </div>

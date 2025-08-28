@@ -8,6 +8,7 @@ export const translations = {
     
     // Dashboard
     totalLent: "Total Lent",
+    totalPayable: "Total Payable",
     received: "Received",
     activeLoans: "Active Loans",
     quickActions: "Quick Actions",
@@ -112,6 +113,9 @@ export const translations = {
     notes: "Notes",
     loanDetails: "Loan Details",
     interestMethod: "Interest Method",
+    loanPeriod: "Loan Period",
+    selectYears: "Select Years",
+    validYearsRequired: "Valid loan period is required",
     sankdaDescription: "Sankda method automatically uses 12% yearly interest rate",
     cancel: "Cancel",
     adding: "Adding...",
@@ -124,6 +128,10 @@ export const translations = {
     notesPlaceholder: "Additional notes about the borrower or loan",
     amountPlaceholder: "Enter loan amount",
     interestPlaceholder: "Enter interest rate",
+    yearsPlaceholder: "Enter loan period in years",
+    finalPayableAmount: "Final Payable Amount",
+    interestAmount: "Interest Amount",
+    calculationPreview: "Calculation Preview",
     required: "*",
     
     // Payments Page
@@ -224,6 +232,7 @@ export const translations = {
     
     // Dashboard
     totalLent: "कुल दिया गया",
+    totalPayable: "कुल देय",
     received: "प्राप्त",
     activeLoans: "सक्रिय ऋण",
     quickActions: "त्वरित कार्य",
@@ -328,6 +337,9 @@ export const translations = {
     notes: "टिप्पणियां",
     loanDetails: "ऋण विवरण",
     interestMethod: "ब्याज विधि",
+    loanPeriod: "ऋण अवधि",
+    selectYears: "वर्ष चुनें",
+    validYearsRequired: "वैध ऋण अवधि आवश्यक है",
     sankdaDescription: "संकड़ा विधि स्वचालित रूप से 12% वार्षिक ब्याज दर का उपयोग करती है",
     cancel: "रद्द करें",
     adding: "जोड़ा जा रहा है...",
@@ -340,6 +352,10 @@ export const translations = {
     notesPlaceholder: "उधारकर्ता या ऋण के बारे में अतिरिक्त टिप्पणियां",
     amountPlaceholder: "ऋण राशि दर्ज करें",
     interestPlaceholder: "ब्याज दर दर्ज करें",
+    yearsPlaceholder: "वर्षों में ऋण अवधि दर्ज करें",
+    finalPayableAmount: "अंतिम देय राशि",
+    interestAmount: "ब्याज राशि",
+    calculationPreview: "गणना पूर्वावलोकन",
     required: "*",
     
     // Payments Page

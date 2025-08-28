@@ -13,6 +13,7 @@ import { Plus, Calculator, TrendingUp, FileText, IndianRupee, Edit3 } from "luci
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [totalLent, setTotalLent] = useState(0)
+  const [totalPayable, setTotalPayable] = useState(0)
   const [totalReceived, setTotalReceived] = useState(0)
   const [activeLoans, setActiveLoans] = useState(0)
   const router = useRouter()
@@ -31,12 +32,15 @@ export default function DashboardPage() {
     const payments = storage.getPayments()
 
     const lentAmount = loans.reduce((sum, loan) => sum + loan.amount, 0)
+    const totalPayableAmount = loans.reduce((sum, loan) => sum + storage.calculateFinalAmount(loan), 0)
     const receivedAmount = payments.reduce((sum, payment) => sum + payment.amount, 0)
     const activeLoanCount = loans.filter((loan) => loan.isActive).length
 
     setTotalLent(lentAmount)
     setTotalReceived(receivedAmount)
     setActiveLoans(activeLoanCount)
+    // Store total payable in a new state variable
+    setTotalPayable(totalPayableAmount)
   }, [router])
 
   if (!isAuthenticated) {
@@ -87,13 +91,20 @@ export default function DashboardPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
             <div className="flex items-center justify-center mb-1">
               <IndianRupee size={16} />
             </div>
             <p className="text-xs opacity-80">{t("totalLent")}</p>
             <p className="font-semibold">₹{totalLent.toLocaleString()}</p>
+          </div>
+          <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <TrendingUp size={16} />
+            </div>
+            <p className="text-xs opacity-80">{t("totalPayable")}</p>
+            <p className="font-semibold">₹{totalPayable.toLocaleString()}</p>
           </div>
           <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
             <div className="flex items-center justify-center mb-1">
@@ -156,7 +167,10 @@ export default function DashboardPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <p className="font-semibold">{loan.borrowerName}</p>
-                          <p className="text-sm text-muted-foreground">₹{loan.amount.toLocaleString()}</p>
+                          <div className="text-sm text-muted-foreground">
+                            <p>₹{loan.amount.toLocaleString()} → ₹{storage.calculateFinalAmount(loan).toLocaleString()}</p>
+                            <p className="text-xs">{loan.years || 1} {(loan.years || 1) === 1 ? 'year' : 'years'} @ {loan.interestRate}%</p>
+                          </div>
                         </div>
                         <div className="flex items-center space-x-3">
                           <div className="text-right">

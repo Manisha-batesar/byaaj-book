@@ -29,6 +29,7 @@ export default function EditLoanPage() {
     interestRate: "",
     interestMethod: "monthly" as "monthly" | "yearly" | "sankda",
     interestType: "simple" as "simple" | "compound",
+    years: "",
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -57,6 +58,7 @@ export default function EditLoanPage() {
       interestRate: loanData.interestMethod === "sankda" ? "12" : loanData.interestRate.toString(),
       interestMethod: loanData.interestMethod,
       interestType: loanData.interestType || "simple", // Default to simple for existing loans
+      years: (loanData.years || 1).toString(), // Default to 1 year for existing loans without years
     })
     setIsLoading(false)
   }, [params.id, router])
@@ -74,6 +76,10 @@ export default function EditLoanPage() {
 
     if (!formData.interestRate || Number.parseFloat(formData.interestRate) < 0) {
       newErrors.interestRate = t("validInterestRequired")
+    }
+
+    if (!formData.years || Number.parseFloat(formData.years) <= 0) {
+      newErrors.years = t("validYearsRequired")
     }
 
     if (formData.borrowerPhone && !/^\d{10}$/.test(formData.borrowerPhone.replace(/\D/g, ""))) {
@@ -100,6 +106,7 @@ export default function EditLoanPage() {
         interestRate: formData.interestMethod === "sankda" ? 12 : Number.parseFloat(formData.interestRate),
         interestMethod: formData.interestMethod,
         interestType: formData.interestType,
+        years: Number.parseFloat(formData.years),
       }
 
       const success = storage.updateLoan(loan.id, updatedLoan)
@@ -278,6 +285,20 @@ export default function EditLoanPage() {
                   {errors.interestRate && <p className="text-destructive text-sm mt-1">{errors.interestRate}</p>}
                 </div>
               )}
+
+              <div>
+                <Label htmlFor="years">{t("loanPeriod")} ({t("years")}) {t("required")}</Label>
+                <Input
+                  id="years"
+                  type="number"
+                  step="0.5"
+                  value={formData.years}
+                  onChange={(e) => handleInputChange("years", e.target.value)}
+                  placeholder={t("yearsPlaceholder")}
+                  className={errors.years ? "border-destructive" : ""}
+                />
+                {errors.years && <p className="text-destructive text-sm mt-1">{errors.years}</p>}
+              </div>
 
               {formData.interestMethod === "sankda" && (
                 <div className="bg-muted p-3 rounded-lg">
