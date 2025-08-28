@@ -8,12 +8,15 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Plus, IndianRupee, Calendar, User } from "lucide-react"
 import { storage, type Loan, type Payment } from "@/lib/storage"
+import { useLanguage } from "@/components/language-provider"
+import { LanguageSelector } from "@/components/language-selector"
 import Link from "next/link"
 
 export default function PaymentsPage() {
   const [activeLoans, setActiveLoans] = useState<Loan[]>([])
   const [recentPayments, setRecentPayments] = useState<Payment[]>([])
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null)
+  const { t } = useLanguage()
 
   useEffect(() => {
     const loans = storage.getLoans().filter((loan) => loan.isActive)
@@ -49,8 +52,9 @@ export default function PaymentsPage() {
                 <ArrowLeft size={20} />
               </Button>
             </Link>
-            <h1 className="text-xl font-bold">Payment Tracking</h1>
+            <h1 className="text-xl font-bold">{t("paymentTracking")}</h1>
           </div>
+          <LanguageSelector />
         </div>
       </div>
 
@@ -60,15 +64,15 @@ export default function PaymentsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Plus size={20} />
-              <span>Record Payment</span>
+              <span>{t("recordingPayment")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {activeLoans.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">No active loans found</p>
+                <p className="text-muted-foreground mb-4">{t("noActiveLoansPayment")}</p>
                 <Link href="/loans/add">
-                  <Button>Add Your First Loan</Button>
+                  <Button>{t("addFirstLoan")}</Button>
                 </Link>
               </div>
             ) : (
@@ -83,13 +87,13 @@ export default function PaymentsPage() {
                       <div>
                         <h3 className="font-semibold">{loan.borrowerName}</h3>
                         <p className="text-sm text-muted-foreground">
-                          Outstanding: ₹{calculateOutstanding(loan).toLocaleString()}
+                          {t("outstanding")}: ₹{calculateOutstanding(loan).toLocaleString()}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold">₹{loan.amount.toLocaleString()}</p>
                         <p className="text-sm text-muted-foreground">
-                          {loan.interestRate}% {loan.interestMethod}
+                          {loan.interestRate}% {t(loan.interestMethod)}
                         </p>
                       </div>
                     </div>
@@ -105,12 +109,12 @@ export default function PaymentsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Calendar size={20} />
-              <span>Recent Payments</span>
+              <span>{t("recentPayments")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {recentPayments.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No payments recorded yet</p>
+              <p className="text-muted-foreground text-center py-4">{t("noPaymentsRecorded")}</p>
             ) : (
               <div className="space-y-3">
                 {recentPayments.map((payment) => {
@@ -120,10 +124,10 @@ export default function PaymentsPage() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <User size={16} />
-                          <span className="font-semibold">{loan?.borrowerName || "Unknown"}</span>
+                          <span className="font-semibold">{loan?.borrowerName || t("unknown")}</span>
                         </div>
                         <Badge variant={payment.type === "full" ? "default" : "secondary"}>
-                          {payment.type === "full" ? "Full Payment" : "Partial Payment"}
+                          {payment.type === "full" ? t("fullPayment") : t("partialPayment")}
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between">
@@ -147,18 +151,18 @@ export default function PaymentsPage() {
         {/* Payment Summary */}
         <Card>
           <CardHeader>
-            <CardTitle>Payment Summary</CardTitle>
+            <CardTitle>{t("paymentSummary")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Total Received</p>
+                <p className="text-sm text-muted-foreground">{t("totalReceived")}</p>
                 <p className="text-2xl font-bold">
                   ₹{recentPayments.reduce((sum, payment) => sum + payment.amount, 0).toLocaleString()}
                 </p>
               </div>
               <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Active Loans</p>
+                <p className="text-sm text-muted-foreground">{t("activeLoans")}</p>
                 <p className="text-2xl font-bold">{activeLoans.length}</p>
               </div>
             </div>
@@ -196,6 +200,7 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
   const [paymentType, setPaymentType] = useState<"partial" | "full">("partial")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
+  const { t } = useLanguage()
 
   const outstanding = loan.amount - loan.totalPaid
 
@@ -215,12 +220,12 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
     const amount = Number.parseFloat(paymentAmount)
 
     if (!amount || amount <= 0) {
-      setError("Please enter a valid payment amount")
+      setError(t("validPaymentRequired"))
       return
     }
 
     if (amount > outstanding) {
-      setError("Payment amount cannot exceed outstanding balance")
+      setError(t("paymentExceedsBalance"))
       return
     }
 
@@ -231,10 +236,10 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
       if (success) {
         onPaymentRecorded()
       } else {
-        setError("Failed to record payment")
+        setError(t("failedToRecord"))
       }
     } catch (error) {
-      setError("An error occurred while recording payment")
+      setError(t("errorRecordingPayment"))
     } finally {
       setIsSubmitting(false)
     }
@@ -244,16 +249,16 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Record Payment</CardTitle>
+          <CardTitle>{t("recordingPayment")}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            {loan.borrowerName} • Outstanding: ₹{outstanding.toLocaleString()}
+            {loan.borrowerName} • {t("outstanding")}: ₹{outstanding.toLocaleString()}
           </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="paymentAmount" className="block text-sm font-medium mb-2">
-                Payment Amount (₹) *
+                {t("paymentAmount")} (₹) {t("required")}
               </label>
               <input
                 id="paymentAmount"
@@ -261,7 +266,7 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
                 step="0.01"
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(e.target.value)}
-                placeholder="Enter payment amount"
+                placeholder={t("amountPlaceholder")}
                 className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                 max={outstanding}
               />
@@ -275,7 +280,7 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
                 onClick={() => setPaymentAmount(outstanding.toString())}
                 className="bg-transparent"
               >
-                Full Payment
+                {t("fullPayment")}
               </Button>
               <Button
                 type="button"
@@ -284,17 +289,17 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
                 onClick={() => setPaymentAmount((outstanding / 2).toString())}
                 className="bg-transparent"
               >
-                Half Payment
+                {t("halfPayment")}
               </Button>
             </div>
 
             {paymentAmount && (
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-sm">
-                  <strong>Payment Type:</strong> {paymentType === "full" ? "Full Payment" : "Partial Payment"}
+                  <strong>{t("paymentType")}:</strong> {paymentType === "full" ? t("fullPayment") : t("partialPayment")}
                 </p>
                 <p className="text-sm">
-                  <strong>Remaining Balance:</strong> ₹
+                  <strong>{t("remainingBalance")}:</strong> ₹
                   {(outstanding - Number.parseFloat(paymentAmount || "0")).toLocaleString()}
                 </p>
               </div>
@@ -304,10 +309,10 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
 
             <div className="flex space-x-3">
               <Button type="button" variant="outline" onClick={onClose} className="flex-1 bg-transparent">
-                Cancel
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={isSubmitting} className="flex-1">
-                {isSubmitting ? "Recording..." : "Record Payment"}
+                {isSubmitting ? t("recording") : t("recordPayment")}
               </Button>
             </div>
           </form>

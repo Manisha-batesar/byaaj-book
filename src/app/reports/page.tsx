@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, TrendingUp, Users, IndianRupee, Calendar, PieChart, BarChart3 } from "lucide-react"
 import { storage, type Loan, type Payment } from "@/lib/storage"
+import { useLanguage } from "@/components/language-provider"
+import { LanguageSelector } from "@/components/language-selector"
 import Link from "next/link"
 
 interface BorrowerSummary {
@@ -29,6 +31,7 @@ export default function ReportsPage() {
   const [borrowerSummaries, setBorrowerSummaries] = useState<BorrowerSummary[]>([])
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [selectedPeriod, setSelectedPeriod] = useState<"all" | "6months" | "1year">("all")
+  const { t } = useLanguage()
 
   useEffect(() => {
     const allLoans = storage.getLoans()
@@ -151,14 +154,17 @@ export default function ReportsPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-6">
-        <div className="flex items-center space-x-3">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
-              <ArrowLeft size={20} />
-            </Button>
-          </Link>
-          <BarChart3 size={24} />
-          <h1 className="text-xl font-bold">Reports & Analytics</h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
+                <ArrowLeft size={20} />
+              </Button>
+            </Link>
+            <BarChart3 size={24} />
+            <h1 className="text-xl font-bold">{t("reportsAnalytics")}</h1>
+          </div>
+          <LanguageSelector />
         </div>
       </div>
 
@@ -169,7 +175,7 @@ export default function ReportsPage() {
             <CardContent className="p-4">
               <div className="flex items-center space-x-2 mb-2">
                 <IndianRupee size={16} className="text-primary" />
-                <p className="text-sm text-muted-foreground">Total Lent</p>
+                <p className="text-sm text-muted-foreground">{t("totalLent")}</p>
               </div>
               <p className="text-2xl font-bold">₹{totals.totalLent.toLocaleString()}</p>
             </CardContent>
@@ -179,7 +185,7 @@ export default function ReportsPage() {
             <CardContent className="p-4">
               <div className="flex items-center space-x-2 mb-2">
                 <TrendingUp size={16} className="text-green-600" />
-                <p className="text-sm text-muted-foreground">Total Received</p>
+                <p className="text-sm text-muted-foreground">{t("totalReceived")}</p>
               </div>
               <p className="text-2xl font-bold text-green-600">₹{totals.totalReceived.toLocaleString()}</p>
             </CardContent>
@@ -189,7 +195,7 @@ export default function ReportsPage() {
             <CardContent className="p-4">
               <div className="flex items-center space-x-2 mb-2">
                 <PieChart size={16} className="text-orange-600" />
-                <p className="text-sm text-muted-foreground">Outstanding</p>
+                <p className="text-sm text-muted-foreground">{t("outstanding")}</p>
               </div>
               <p className="text-2xl font-bold text-orange-600">₹{totals.totalOutstanding.toLocaleString()}</p>
             </CardContent>
@@ -199,7 +205,7 @@ export default function ReportsPage() {
             <CardContent className="p-4">
               <div className="flex items-center space-x-2 mb-2">
                 <Users size={16} className="text-blue-600" />
-                <p className="text-sm text-muted-foreground">Active Loans</p>
+                <p className="text-sm text-muted-foreground">{t("activeLoans")}</p>
               </div>
               <p className="text-2xl font-bold text-blue-600">{totals.activeLoans}</p>
             </CardContent>
@@ -211,27 +217,27 @@ export default function ReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <TrendingUp size={20} />
-              <span>Interest Analysis</span>
+              <span>{t("interestAnalysis")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-muted p-4 rounded-lg">
-                <p className="text-sm text-muted-foreground">Estimated Interest Earned</p>
+                <p className="text-sm text-muted-foreground">{t("estimatedInterestEarned")}</p>
                 <p className="text-xl font-bold">₹{Math.round(interestData.totalInterestEarned).toLocaleString()}</p>
               </div>
               <div className="bg-muted p-4 rounded-lg">
-                <p className="text-sm text-muted-foreground">Potential Interest</p>
+                <p className="text-sm text-muted-foreground">{t("potentialInterest")}</p>
                 <p className="text-xl font-bold">₹{Math.round(interestData.potentialInterest).toLocaleString()}</p>
               </div>
             </div>
             <div className="bg-accent p-3 rounded-lg">
               <p className="text-sm text-accent-foreground">
-                <strong>Collection Rate:</strong>{" "}
+                <strong>{t("collectionRate")}:</strong>{" "}
                 {interestData.potentialInterest > 0
                   ? Math.round((interestData.totalInterestEarned / interestData.potentialInterest) * 100)
                   : 0}
-                % of potential interest collected
+                % {t("potentialInterestCollected")}
               </p>
             </div>
           </CardContent>
@@ -242,7 +248,7 @@ export default function ReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Calendar size={20} />
-              <span>Monthly Trends (Last 12 Months)</span>
+              <span>{t("monthlyTrends")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -257,8 +263,8 @@ export default function ReportsPage() {
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">{data.month}</span>
                       <div className="flex space-x-4">
-                        <span className="text-primary">Lent: ₹{data.lent.toLocaleString()}</span>
-                        <span className="text-green-600">Received: ₹{data.received.toLocaleString()}</span>
+                        <span className="text-primary">{t("lent")}: ₹{data.lent.toLocaleString()}</span>
+                        <span className="text-green-600">{t("received")}: ₹{data.received.toLocaleString()}</span>
                       </div>
                     </div>
                     <div className="space-y-1">
@@ -287,12 +293,12 @@ export default function ReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Users size={20} />
-              <span>Borrower-wise Summary</span>
+              <span>{t("borrowerWiseSummary")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {borrowerSummaries.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No borrower data available</p>
+              <p className="text-muted-foreground text-center py-4">{t("noBorrowerData")}</p>
             ) : (
               <div className="space-y-4">
                 {borrowerSummaries.slice(0, 10).map((borrower, index) => (
@@ -300,24 +306,24 @@ export default function ReportsPage() {
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold">{borrower.borrowerName}</h3>
                       <div className="flex space-x-2">
-                        {borrower.activeLoans > 0 && <Badge variant="default">{borrower.activeLoans} Active</Badge>}
+                        {borrower.activeLoans > 0 && <Badge variant="default">{borrower.activeLoans} {t("active")}</Badge>}
                         {borrower.completedLoans > 0 && (
-                          <Badge variant="secondary">{borrower.completedLoans} Completed</Badge>
+                          <Badge variant="secondary">{borrower.completedLoans} {t("completed")}</Badge>
                         )}
                       </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
-                        <p className="text-muted-foreground">Total Lent</p>
+                        <p className="text-muted-foreground">{t("totalLent")}</p>
                         <p className="font-semibold">₹{borrower.totalLent.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Received</p>
+                        <p className="text-muted-foreground">{t("received")}</p>
                         <p className="font-semibold text-green-600">₹{borrower.totalReceived.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Outstanding</p>
+                        <p className="text-muted-foreground">{t("outstanding")}</p>
                         <p className="font-semibold text-orange-600">₹{borrower.outstanding.toLocaleString()}</p>
                       </div>
                     </div>
@@ -325,7 +331,7 @@ export default function ReportsPage() {
                     {borrower.totalLent > 0 && (
                       <div className="mt-3">
                         <div className="flex justify-between text-xs mb-1">
-                          <span>Recovery Rate</span>
+                          <span>{t("recoveryRate")}</span>
                           <span>{Math.round((borrower.totalReceived / borrower.totalLent) * 100)}%</span>
                         </div>
                         <div className="w-full bg-muted rounded-full h-2">
@@ -348,7 +354,7 @@ export default function ReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Calendar size={20} />
-              <span>Recent Activity</span>
+              <span>{t("recentActivity")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -361,12 +367,12 @@ export default function ReportsPage() {
                   <div key={loan.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <div>
                       <p className="font-medium">{loan.borrowerName}</p>
-                      <p className="text-sm text-muted-foreground">Loan created • {formatDate(loan.dateCreated)}</p>
+                      <p className="text-sm text-muted-foreground">{t("loanCreated")} • {formatDate(loan.dateCreated)}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">₹{loan.amount.toLocaleString()}</p>
                       <Badge variant={loan.isActive ? "default" : "secondary"}>
-                        {loan.isActive ? "Active" : "Completed"}
+                        {loan.isActive ? t("active") : t("completed")}
                       </Badge>
                     </div>
                   </div>
@@ -382,7 +388,7 @@ export default function ReportsPage() {
                     <div key={payment.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                       <div>
                         <p className="font-medium">{loan?.borrowerName || "Unknown"}</p>
-                        <p className="text-sm text-muted-foreground">Payment received • {formatDate(payment.date)}</p>
+                        <p className="text-sm text-muted-foreground">{t("paymentReceived")} • {formatDate(payment.date)}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-green-600">₹{payment.amount.toLocaleString()}</p>

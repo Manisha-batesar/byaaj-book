@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Plus, Phone, Calendar, IndianRupee } from "lucide-react"
 import { storage, type Loan } from "@/lib/storage"
+import { useLanguage } from "@/components/language-provider"
+import { LanguageSelector } from "@/components/language-selector"
 import Link from "next/link"
 
 export default function LoansPage() {
   const [loans, setLoans] = useState<Loan[]>([])
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all")
+  const { t } = useLanguage()
 
   useEffect(() => {
     setLoans(storage.getLoans())
@@ -45,14 +48,17 @@ export default function LoansPage() {
                 <ArrowLeft size={20} />
               </Button>
             </Link>
-            <h1 className="text-xl font-bold">All Loans</h1>
+            <h1 className="text-xl font-bold">{t("allLoans")}</h1>
           </div>
-          <Link href="/loans/add">
-            <Button variant="secondary" size="sm">
-              <Plus size={16} className="mr-1" />
-              Add
-            </Button>
-          </Link>
+          <div className="flex items-center space-x-3">
+            <LanguageSelector />
+            <Link href="/loans/add">
+              <Button variant="secondary" size="sm">
+                <Plus size={16} className="mr-1" />
+                {t("add")}
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -60,9 +66,9 @@ export default function LoansPage() {
       <div className="p-6 pb-0">
         <div className="flex space-x-2">
           {[
-            { key: "all", label: "All" },
-            { key: "active", label: "Active" },
-            { key: "completed", label: "Completed" },
+            { key: "all", label: t("all") },
+            { key: "active", label: t("active") },
+            { key: "completed", label: t("completed") },
           ].map((tab) => (
             <Button
               key={tab.key}
@@ -83,10 +89,12 @@ export default function LoansPage() {
           <Card>
             <CardContent className="p-8 text-center">
               <p className="text-muted-foreground mb-4">
-                {filter === "all" ? "No loans found" : `No ${filter} loans found`}
+                {filter === "all" ? t("noLoansFound") : 
+                 filter === "active" ? t("noActiveLoansFound") : 
+                 t("noCompletedLoansFound")}
               </p>
               <Link href="/loans/add">
-                <Button>Add Your First Loan</Button>
+                <Button>{t("addFirstLoan")}</Button>
               </Link>
             </CardContent>
           </Card>
@@ -105,20 +113,20 @@ export default function LoansPage() {
                     )}
                   </div>
                   <Badge variant={loan.isActive ? "default" : "secondary"}>
-                    {loan.isActive ? "Active" : "Completed"}
+                    {loan.isActive ? t("active") : t("completed")}
                   </Badge>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div>
-                    <p className="text-sm text-muted-foreground">Loan Amount</p>
+                    <p className="text-sm text-muted-foreground">{t("loanAmount")}</p>
                     <p className="font-semibold flex items-center">
                       <IndianRupee size={14} className="mr-1" />
                       {loan.amount.toLocaleString()}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Outstanding</p>
+                    <p className="text-sm text-muted-foreground">{t("outstanding")}</p>
                     <p className="font-semibold flex items-center">
                       <IndianRupee size={14} className="mr-1" />
                       {calculateOutstanding(loan).toLocaleString()}
@@ -128,13 +136,13 @@ export default function LoansPage() {
 
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div>
-                    <p className="text-sm text-muted-foreground">Interest Rate</p>
+                    <p className="text-sm text-muted-foreground">{t("interestRate")}</p>
                     <p className="font-medium">
-                      {loan.interestRate}% {loan.interestMethod}
+                      {loan.interestRate}% {t(loan.interestMethod)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Date Created</p>
+                    <p className="text-sm text-muted-foreground">{t("dateCreated")}</p>
                     <p className="font-medium flex items-center">
                       <Calendar size={14} className="mr-1" />
                       {formatDate(loan.dateCreated)}
@@ -145,8 +153,8 @@ export default function LoansPage() {
                 {loan.totalPaid > 0 && (
                   <div className="mb-3">
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Payment Progress</span>
-                      <span className="font-medium">₹{loan.totalPaid.toLocaleString()} paid</span>
+                      <span className="text-muted-foreground">{t("paymentProgress")}</span>
+                      <span className="font-medium">₹{loan.totalPaid.toLocaleString()} {t("paid")}</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
                       <div
@@ -165,12 +173,12 @@ export default function LoansPage() {
 
                 <div className="flex space-x-2 mt-4">
                   <Button variant="outline" size="sm" className="flex-1 bg-transparent">
-                    View Details
+                    {t("viewDetails")}
                   </Button>
                   {loan.isActive && (
                     <Link href="/payments" className="flex-1">
                       <Button size="sm" className="w-full">
-                        Record Payment
+                        {t("recordPayment")}
                       </Button>
                     </Link>
                   )}

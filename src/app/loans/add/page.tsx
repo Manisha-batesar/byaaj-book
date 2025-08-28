@@ -12,10 +12,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft } from "lucide-react"
 import { storage, type Loan } from "@/lib/storage"
+import { useLanguage } from "@/components/language-provider"
+import { LanguageSelector } from "@/components/language-selector"
 import Link from "next/link"
 
 export default function AddLoanPage() {
   const router = useRouter()
+  const { t } = useLanguage()
   const [formData, setFormData] = useState({
     borrowerName: "",
     borrowerPhone: "",
@@ -31,19 +34,19 @@ export default function AddLoanPage() {
     const newErrors: Record<string, string> = {}
 
     if (!formData.borrowerName.trim()) {
-      newErrors.borrowerName = "Borrower name is required"
+      newErrors.borrowerName = t("borrowerNameRequired")
     }
 
     if (!formData.amount || Number.parseFloat(formData.amount) <= 0) {
-      newErrors.amount = "Valid loan amount is required"
+      newErrors.amount = t("validAmountRequired")
     }
 
     if (!formData.interestRate || Number.parseFloat(formData.interestRate) < 0) {
-      newErrors.interestRate = "Valid interest rate is required"
+      newErrors.interestRate = t("validInterestRequired")
     }
 
     if (formData.borrowerPhone && !/^\d{10}$/.test(formData.borrowerPhone.replace(/\D/g, ""))) {
-      newErrors.borrowerPhone = "Please enter a valid 10-digit phone number"
+      newErrors.borrowerPhone = t("validPhoneRequired")
     }
 
     setErrors(newErrors)
@@ -93,13 +96,16 @@ export default function AddLoanPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-6">
-        <div className="flex items-center space-x-3">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
-              <ArrowLeft size={20} />
-            </Button>
-          </Link>
-          <h1 className="text-xl font-bold">Add New Loan</h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
+                <ArrowLeft size={20} />
+              </Button>
+            </Link>
+            <h1 className="text-xl font-bold">{t("addNewLoan")}</h1>
+          </div>
+          <LanguageSelector />
         </div>
       </div>
 
@@ -108,40 +114,40 @@ export default function AddLoanPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Borrower Information</CardTitle>
+              <CardTitle>{t("borrowerInformation")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="borrowerName">Borrower Name *</Label>
+                <Label htmlFor="borrowerName">{t("borrowerName")} {t("required")}</Label>
                 <Input
                   id="borrowerName"
                   value={formData.borrowerName}
                   onChange={(e) => handleInputChange("borrowerName", e.target.value)}
-                  placeholder="Enter borrower's full name"
+                  placeholder={t("borrowerNamePlaceholder")}
                   className={errors.borrowerName ? "border-destructive" : ""}
                 />
                 {errors.borrowerName && <p className="text-destructive text-sm mt-1">{errors.borrowerName}</p>}
               </div>
 
               <div>
-                <Label htmlFor="borrowerPhone">Phone Number</Label>
+                <Label htmlFor="borrowerPhone">{t("phoneNumber")}</Label>
                 <Input
                   id="borrowerPhone"
                   value={formData.borrowerPhone}
                   onChange={(e) => handleInputChange("borrowerPhone", e.target.value)}
-                  placeholder="Enter 10-digit phone number"
+                  placeholder={t("phonePlaceholder")}
                   className={errors.borrowerPhone ? "border-destructive" : ""}
                 />
                 {errors.borrowerPhone && <p className="text-destructive text-sm mt-1">{errors.borrowerPhone}</p>}
               </div>
 
               <div>
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes">{t("notes")}</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => handleInputChange("notes", e.target.value)}
-                  placeholder="Additional notes about the borrower or loan"
+                  placeholder={t("notesPlaceholder")}
                   rows={3}
                 />
               </div>
@@ -150,24 +156,24 @@ export default function AddLoanPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Loan Details</CardTitle>
+              <CardTitle>{t("loanDetails")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="amount">Loan Amount (₹) *</Label>
+                <Label htmlFor="amount">{t("loanAmount")} (₹) {t("required")}</Label>
                 <Input
                   id="amount"
                   type="number"
                   value={formData.amount}
                   onChange={(e) => handleInputChange("amount", e.target.value)}
-                  placeholder="Enter loan amount"
+                  placeholder={t("amountPlaceholder")}
                   className={errors.amount ? "border-destructive" : ""}
                 />
                 {errors.amount && <p className="text-destructive text-sm mt-1">{errors.amount}</p>}
               </div>
 
               <div>
-                <Label htmlFor="interestMethod">Interest Method *</Label>
+                <Label htmlFor="interestMethod">{t("interestMethod")} {t("required")}</Label>
                 <Select
                   value={formData.interestMethod}
                   onValueChange={(value: "monthly" | "yearly" | "sankda") => handleInputChange("interestMethod", value)}
@@ -176,23 +182,23 @@ export default function AddLoanPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                    <SelectItem value="sankda">Sankda (12% yearly)</SelectItem>
+                    <SelectItem value="monthly">{t("monthly")}</SelectItem>
+                    <SelectItem value="yearly">{t("yearly")}</SelectItem>
+                    <SelectItem value="sankda">{t("sankdaFixed")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {formData.interestMethod !== "sankda" && (
                 <div>
-                  <Label htmlFor="interestRate">Interest Rate (%) *</Label>
+                  <Label htmlFor="interestRate">{t("interestRate")} (%) {t("required")}</Label>
                   <Input
                     id="interestRate"
                     type="number"
                     step="0.1"
                     value={formData.interestRate}
                     onChange={(e) => handleInputChange("interestRate", e.target.value)}
-                    placeholder="Enter interest rate"
+                    placeholder={t("interestPlaceholder")}
                     className={errors.interestRate ? "border-destructive" : ""}
                   />
                   {errors.interestRate && <p className="text-destructive text-sm mt-1">{errors.interestRate}</p>}
@@ -202,7 +208,7 @@ export default function AddLoanPage() {
               {formData.interestMethod === "sankda" && (
                 <div className="bg-muted p-3 rounded-lg">
                   <p className="text-sm text-muted-foreground">
-                    Sankda method automatically uses 12% yearly interest rate
+                    {t("sankdaDescription")}
                   </p>
                 </div>
               )}
@@ -211,10 +217,10 @@ export default function AddLoanPage() {
 
           <div className="flex space-x-4">
             <Button type="button" variant="outline" className="flex-1 bg-transparent" onClick={() => router.back()}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" className="flex-1" disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Add Loan"}
+              {isSubmitting ? t("adding") : t("addLoan")}
             </Button>
           </div>
         </form>

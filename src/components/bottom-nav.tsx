@@ -3,13 +3,15 @@
 import { Home, Settings } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
+import { useLanguage } from "@/components/language-provider"
 
 export function BottomNav() {
   const pathname = usePathname()
+  const { t } = useLanguage()
 
   const navItems = [
-    { href: "/dashboard", icon: Home, label: "Home" },
-    { href: "/settings", icon: Settings, label: "Settings" },
+    { href: "/dashboard", icon: Home, label: t("dashboard") },
+    { href: "/settings", icon: Settings, label: t("settings") },
   ]
 
   return (

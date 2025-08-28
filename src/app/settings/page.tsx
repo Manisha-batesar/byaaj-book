@@ -7,7 +7,9 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { BottomNav } from "@/components/bottom-nav"
+import { LanguageSelector } from "@/components/language-selector"
 import { PinInput } from "@/components/pin-input"
+import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
 import { Lock, LogOut, Trash2, Download, Upload, Info, Shield } from "lucide-react"
 
@@ -18,6 +20,7 @@ export default function SettingsPage() {
   const [tempPin, setTempPin] = useState("")
   const [showDataExport, setShowDataExport] = useState(false)
   const router = useRouter()
+  const { t } = useLanguage()
 
   useEffect(() => {
     if (!storage.isAuthenticated()) {
@@ -33,7 +36,7 @@ export default function SettingsPage() {
   }
 
   const handleClearData = () => {
-    if (confirm("Are you sure you want to clear all data? This action cannot be undone.")) {
+    if (confirm(t("clearDataConfirm"))) {
       localStorage.clear()
       router.push("/")
     }
@@ -45,7 +48,7 @@ export default function SettingsPage() {
         if (pin === storage.getPin()) {
           setPinChangeStep("new")
         } else {
-          alert("Incorrect current PIN")
+          alert(t("incorrectPIN"))
           setShowPinChange(false)
           setPinChangeStep("current")
         }
@@ -57,12 +60,12 @@ export default function SettingsPage() {
       case "confirm":
         if (pin === tempPin) {
           storage.setPin(pin)
-          alert("PIN changed successfully")
+          alert(t("pinChangedSuccess"))
           setShowPinChange(false)
           setPinChangeStep("current")
           setTempPin("")
         } else {
-          alert("PINs do not match")
+          alert(t("pinsDoNotMatch"))
           setPinChangeStep("new")
           setTempPin("")
         }
@@ -99,17 +102,17 @@ export default function SettingsPage() {
         const data = JSON.parse(e.target?.result as string)
 
         if (data.loans && data.payments) {
-          if (confirm("This will replace all existing data. Are you sure?")) {
+          if (confirm(t("replaceDataConfirm"))) {
             storage.saveLoans(data.loans)
             storage.savePayments(data.payments)
-            alert("Data imported successfully")
+            alert(t("dataImportedSuccess"))
             window.location.reload()
           }
         } else {
-          alert("Invalid backup file format")
+          alert(t("invalidBackupFile"))
         }
       } catch (error) {
-        alert("Error reading backup file")
+        alert(t("errorReadingBackup"))
       }
     }
     reader.readAsText(file)
@@ -121,14 +124,14 @@ export default function SettingsPage() {
 
   if (showPinChange) {
     const titles = {
-      current: "Enter Current PIN",
-      new: "Enter New PIN",
-      confirm: "Confirm New PIN",
+      current: t("enterCurrentPIN"),
+      new: t("enterNewPIN"),
+      confirm: t("confirmNewPIN"),
     }
     const descriptions = {
-      current: "Enter your current 4-digit PIN",
-      new: "Create a new 4-digit PIN",
-      confirm: "Confirm your new 4-digit PIN",
+      current: t("enterCurrentPINDesc"),
+      new: t("createNewPINDesc"),
+      confirm: t("confirmNewPINDesc"),
     }
 
     return (
@@ -140,7 +143,10 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-6">
-        <h1 className="text-2xl font-bold">Settings</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">{t("settings")}</h1>
+          <LanguageSelector />
+        </div>
       </div>
 
       {/* Settings Options */}
@@ -150,7 +156,7 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Shield size={20} />
-              <span>Security</span>
+              <span>{t("security")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -160,11 +166,11 @@ export default function SettingsPage() {
               onClick={() => setShowPinChange(true)}
             >
               <Lock size={16} className="mr-2" />
-              Change PIN
+              {t("changePIN")}
             </Button>
             <div className="bg-muted p-3 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                Your PIN protects access to all your loan data. Choose a PIN that's easy to remember but hard to guess.
+                {t("pinProtection")}
               </p>
             </div>
           </CardContent>
@@ -175,13 +181,13 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Download size={20} />
-              <span>Data Management</span>
+              <span>{t("dataManagement")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button variant="outline" className="w-full justify-start bg-transparent" onClick={exportData}>
               <Download size={16} className="mr-2" />
-              Export Data (Backup)
+              {t("exportData")}
             </Button>
 
             <div>
@@ -192,14 +198,13 @@ export default function SettingsPage() {
                 onClick={() => document.getElementById("import-file")?.click()}
               >
                 <Upload size={16} className="mr-2" />
-                Import Data (Restore)
+                {t("importData")}
               </Button>
             </div>
 
             <div className="bg-muted p-3 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                Export your data to create a backup. Import to restore from a previous backup. All data is stored
-                locally on your device.
+                {t("dataBackupInfo")}
               </p>
             </div>
           </CardContent>
@@ -210,33 +215,32 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Info size={20} />
-              <span>App Information</span>
+              <span>{t("appInformation")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">Version</p>
+                <p className="text-muted-foreground">{t("version")}</p>
                 <p className="font-semibold">1.0.0</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Storage</p>
-                <p className="font-semibold">Local Device</p>
+                <p className="text-muted-foreground">{t("storage")}</p>
+                <p className="font-semibold">{t("localDevice")}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Total Loans</p>
+                <p className="text-muted-foreground">{t("totalLoans")}</p>
                 <p className="font-semibold">{storage.getLoans().length}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Total Payments</p>
+                <p className="text-muted-foreground">{t("totalPayments")}</p>
                 <p className="font-semibold">{storage.getPayments().length}</p>
               </div>
             </div>
 
             <div className="bg-accent p-3 rounded-lg">
               <p className="text-sm text-accent-foreground">
-                <strong>ByajBook</strong> - Simple offline-first loan management for personal money lending and interest
-                tracking.
+                <strong>{t("appName")}</strong> - {t("appDescription")}
               </p>
             </div>
           </CardContent>
@@ -247,17 +251,17 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Lock size={20} />
-              <span>Privacy & Data</span>
+              <span>{t("privacyData")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="bg-muted p-3 rounded-lg space-y-2">
-              <p className="text-sm font-medium">Your data is completely private:</p>
+              <p className="text-sm font-medium">{t("dataPrivacyInfo")}</p>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• All data stored locally on your device</li>
-                <li>• No data sent to external servers</li>
-                <li>• Works completely offline</li>
-                <li>• PIN-protected access</li>
+                <li>• {t("dataPrivacyPoint1")}</li>
+                <li>• {t("dataPrivacyPoint2")}</li>
+                <li>• {t("dataPrivacyPoint3")}</li>
+                <li>• {t("dataPrivacyPoint4")}</li>
               </ul>
             </div>
           </CardContent>
@@ -268,17 +272,17 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Trash2 size={20} />
-              <span>Danger Zone</span>
+              <span>{t("dangerZone")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button variant="destructive" className="w-full justify-start" onClick={handleClearData}>
               <Trash2 size={16} className="mr-2" />
-              Clear All Data
+              {t("clearAllData")}
             </Button>
             <div className="bg-destructive/10 p-3 rounded-lg">
               <p className="text-sm text-destructive">
-                This will permanently delete all loans, payments, and settings. This action cannot be undone.
+                {t("dangerZoneInfo")}
               </p>
             </div>
           </CardContent>
@@ -289,7 +293,7 @@ export default function SettingsPage() {
           <CardContent className="pt-6">
             <Button variant="outline" className="w-full justify-start bg-transparent" onClick={handleLogout}>
               <LogOut size={16} className="mr-2" />
-              Logout
+              {t("logout")}
             </Button>
           </CardContent>
         </Card>

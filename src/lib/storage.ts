@@ -25,6 +25,7 @@ export const STORAGE_KEYS = {
   PAYMENTS: "byajbook_payments",
   PIN: "byajbook_pin",
   IS_AUTHENTICATED: "byajbook_auth",
+  LANGUAGE: "byajbook_language",
 } as const
 
 export const storage = {
@@ -126,5 +127,16 @@ export const storage = {
     if (totalSize < 1024) return `${totalSize} B`
     if (totalSize < 1024 * 1024) return `${Math.round(totalSize / 1024)} KB`
     return `${Math.round(totalSize / (1024 * 1024))} MB`
+  },
+
+  getLanguage: (): "en" | "hi" => {
+    if (typeof window === "undefined") return "en"
+    const language = localStorage.getItem(STORAGE_KEYS.LANGUAGE)
+    return language === "hi" ? "hi" : "en"
+  },
+
+  setLanguage: (language: "en" | "hi") => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(STORAGE_KEYS.LANGUAGE, language)
   },
 }

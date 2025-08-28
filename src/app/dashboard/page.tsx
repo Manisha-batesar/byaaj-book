@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
 import { BottomNav } from "@/components/bottom-nav"
+import { LanguageSelector } from "@/components/language-selector"
+import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
 import { Plus, Calculator, TrendingUp, FileText, IndianRupee } from "lucide-react"
 
@@ -14,6 +16,7 @@ export default function DashboardPage() {
   const [totalReceived, setTotalReceived] = useState(0)
   const [activeLoans, setActiveLoans] = useState(0)
   const router = useRouter()
+  const { t } = useLanguage()
 
   useEffect(() => {
     if (!storage.isAuthenticated()) {
@@ -42,29 +45,29 @@ export default function DashboardPage() {
 
   const actionCards = [
     {
-      title: "Add Loan",
-      description: "Create a new loan entry",
+      title: t("addLoan"),
+      description: t("addLoanDesc"),
       icon: Plus,
       href: "/loans/add",
       color: "bg-primary text-primary-foreground",
     },
     {
-      title: "Track Payments",
-      description: "Record loan payments",
+      title: t("trackPayments"),
+      description: t("trackPaymentsDesc"),
       icon: TrendingUp,
       href: "/payments",
       color: "bg-secondary text-secondary-foreground",
     },
     {
-      title: "Interest Calculator",
-      description: "Calculate interest amounts",
+      title: t("interestCalculator"),
+      description: t("interestCalculatorDesc"),
       icon: Calculator,
       href: "/calculator",
       color: "bg-accent text-accent-foreground",
     },
     {
-      title: "Reports",
-      description: "View summaries and history",
+      title: t("reports"),
+      description: t("reportsDesc"),
       icon: FileText,
       href: "/reports",
       color: "bg-muted text-muted-foreground",
@@ -75,9 +78,12 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <img src="/bb-logo.png" alt="ByajBook" className="h-10 w-auto" />
-          <h1 className="text-2xl font-bold">ByajBook</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <img src="/bb-logo.png" alt="ByajBook" className="h-16 w-16 rounded-full" />
+            <h1 className="text-2xl font-bold">{t("appName")}</h1>
+          </div>
+          <LanguageSelector />
         </div>
 
         {/* Summary Cards */}
@@ -86,18 +92,18 @@ export default function DashboardPage() {
             <div className="flex items-center justify-center mb-1">
               <IndianRupee size={16} />
             </div>
-            <p className="text-xs opacity-80">Total Lent</p>
+            <p className="text-xs opacity-80">{t("totalLent")}</p>
             <p className="font-semibold">₹{totalLent.toLocaleString()}</p>
           </div>
           <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
             <div className="flex items-center justify-center mb-1">
               <TrendingUp size={16} />
             </div>
-            <p className="text-xs opacity-80">Received</p>
+            <p className="text-xs opacity-80">{t("received")}</p>
             <p className="font-semibold">₹{totalReceived.toLocaleString()}</p>
           </div>
           <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
-            <p className="text-xs opacity-80">Active Loans</p>
+            <p className="text-xs opacity-80">{t("activeLoans")}</p>
             <p className="font-semibold text-lg">{activeLoans}</p>
           </div>
         </div>
@@ -105,7 +111,7 @@ export default function DashboardPage() {
 
       {/* Action Cards */}
       <div className="p-6 space-y-4">
-        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+        <h2 className="text-lg font-semibold mb-4">{t("quickActions")}</h2>
         <div className="grid grid-cols-2 gap-4">
           {actionCards.map((card) => {
             const Icon = card.icon
@@ -128,15 +134,15 @@ export default function DashboardPage() {
         {/* Recent Loans Section */}
         <div className="mt-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Recent Loans</h2>
+            <h2 className="text-lg font-semibold">{t("recentLoans")}</h2>
             <Link href="/loans" className="text-primary text-sm font-medium">
-              View All
+              {t("viewAll")}
             </Link>
           </div>
           {activeLoans === 0 ? (
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-muted-foreground">No loans yet. Add your first loan to get started!</p>
+                <p className="text-muted-foreground">{t("noLoansYet")}</p>
               </CardContent>
             </Card>
           ) : (
@@ -154,7 +160,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium">{loan.interestRate}%</p>
-                          <p className="text-xs text-muted-foreground">{loan.interestMethod}</p>
+                          <p className="text-xs text-muted-foreground">{t(loan.interestMethod)}</p>
                         </div>
                       </div>
                     </CardContent>

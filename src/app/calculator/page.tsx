@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Calculator, IndianRupee } from "lucide-react"
+import { useLanguage } from "@/components/language-provider"
+import { LanguageSelector } from "@/components/language-selector"
 import Link from "next/link"
 
 interface CalculationResult {
@@ -18,6 +20,7 @@ interface CalculationResult {
 }
 
 export default function CalculatorPage() {
+  const { t } = useLanguage()
   const [formData, setFormData] = useState({
     principal: "",
     interestRate: "",
@@ -32,17 +35,17 @@ export default function CalculatorPage() {
     const newErrors: Record<string, string> = {}
 
     if (!formData.principal || Number.parseFloat(formData.principal) <= 0) {
-      newErrors.principal = "Valid principal amount is required"
+      newErrors.principal = t("validPrincipalRequired")
     }
 
     if (formData.calculationMethod !== "sankda") {
       if (!formData.interestRate || Number.parseFloat(formData.interestRate) <= 0) {
-        newErrors.interestRate = "Valid interest rate is required"
+        newErrors.interestRate = t("validInterestRequired")
       }
     }
 
     if (!formData.timePeriod || Number.parseFloat(formData.timePeriod) <= 0) {
-      newErrors.timePeriod = "Valid time period is required"
+      newErrors.timePeriod = t("validTimeRequired")
     }
 
     setErrors(newErrors)
@@ -124,14 +127,17 @@ export default function CalculatorPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-6">
-        <div className="flex items-center space-x-3">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
-              <ArrowLeft size={20} />
-            </Button>
-          </Link>
-          <Calculator size={24} />
-          <h1 className="text-xl font-bold">Interest Calculator</h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
+                <ArrowLeft size={20} />
+              </Button>
+            </Link>
+            <Calculator size={24} />
+            <h1 className="text-xl font-bold">{t("interestCalculator")}</h1>
+          </div>
+          <LanguageSelector />
         </div>
       </div>
 
@@ -139,24 +145,24 @@ export default function CalculatorPage() {
         {/* Input Form */}
         <Card>
           <CardHeader>
-            <CardTitle>Calculate Interest</CardTitle>
+            <CardTitle>{t("calculateInterest")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="principal">Principal Amount (₹) *</Label>
+              <Label htmlFor="principal">{t("principalAmount")} (₹) {t("required")}</Label>
               <Input
                 id="principal"
                 type="number"
                 value={formData.principal}
                 onChange={(e) => handleInputChange("principal", e.target.value)}
-                placeholder="Enter principal amount"
+                placeholder={t("enterPrincipalAmount")}
                 className={errors.principal ? "border-destructive" : ""}
               />
               {errors.principal && <p className="text-destructive text-sm mt-1">{errors.principal}</p>}
             </div>
 
             <div>
-              <Label htmlFor="calculationMethod">Calculation Method *</Label>
+              <Label htmlFor="calculationMethod">{t("calculationMethod")} {t("required")}</Label>
               <Select
                 value={formData.calculationMethod}
                 onValueChange={(value: "monthly" | "yearly" | "sankda") =>
@@ -167,23 +173,23 @@ export default function CalculatorPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="monthly">Monthly Interest</SelectItem>
-                  <SelectItem value="yearly">Yearly Interest (Simple)</SelectItem>
-                  <SelectItem value="sankda">Sankda (12% yearly)</SelectItem>
+                  <SelectItem value="monthly">{t("monthlyInterest")}</SelectItem>
+                  <SelectItem value="yearly">{t("yearlyInterest")}</SelectItem>
+                  <SelectItem value="sankda">{t("sankdaFixed")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {formData.calculationMethod !== "sankda" && (
               <div>
-                <Label htmlFor="interestRate">Interest Rate (%) *</Label>
+                <Label htmlFor="interestRate">{t("interestRate")} (%) {t("required")}</Label>
                 <Input
                   id="interestRate"
                   type="number"
                   step="0.1"
                   value={formData.interestRate}
                   onChange={(e) => handleInputChange("interestRate", e.target.value)}
-                  placeholder="Enter interest rate"
+                  placeholder={t("enterInterestRate")}
                   className={errors.interestRate ? "border-destructive" : ""}
                 />
                 {errors.interestRate && <p className="text-destructive text-sm mt-1">{errors.interestRate}</p>}
@@ -192,25 +198,25 @@ export default function CalculatorPage() {
 
             {formData.calculationMethod === "sankda" && (
               <div className="bg-muted p-3 rounded-lg">
-                <p className="text-sm text-muted-foreground">Sankda method uses a fixed 12% yearly interest rate</p>
+                <p className="text-sm text-muted-foreground">{t("sankdaMethodInfo")}</p>
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="timePeriod">Time Period *</Label>
+                <Label htmlFor="timePeriod">{t("timePeriod")} {t("required")}</Label>
                 <Input
                   id="timePeriod"
                   type="number"
                   value={formData.timePeriod}
                   onChange={(e) => handleInputChange("timePeriod", e.target.value)}
-                  placeholder="Enter time"
+                  placeholder={t("enterTime")}
                   className={errors.timePeriod ? "border-destructive" : ""}
                 />
                 {errors.timePeriod && <p className="text-destructive text-sm mt-1">{errors.timePeriod}</p>}
               </div>
               <div>
-                <Label htmlFor="timeUnit">Unit</Label>
+                <Label htmlFor="timeUnit">{t("unit")}</Label>
                 <Select
                   value={formData.timeUnit}
                   onValueChange={(value: "months" | "years") => handleInputChange("timeUnit", value)}
@@ -219,8 +225,8 @@ export default function CalculatorPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="months">Months</SelectItem>
-                    <SelectItem value="years">Years</SelectItem>
+                    <SelectItem value="months">{t("months")}</SelectItem>
+                    <SelectItem value="years">{t("years")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -228,10 +234,10 @@ export default function CalculatorPage() {
 
             <div className="flex space-x-3">
               <Button onClick={calculateInterest} className="flex-1">
-                Calculate
+                {t("calculate")}
               </Button>
               <Button variant="outline" onClick={resetCalculator} className="bg-transparent">
-                Reset
+                {t("reset")}
               </Button>
             </div>
           </CardContent>
@@ -243,23 +249,23 @@ export default function CalculatorPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <IndianRupee size={20} />
-                <span>Calculation Results</span>
+                <span>{t("calculationResults")}</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
                 <div className="bg-muted p-4 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Principal Amount</p>
+                  <p className="text-sm text-muted-foreground">{t("principalAmount")}</p>
                   <p className="text-2xl font-bold">₹{result.principal.toLocaleString()}</p>
                 </div>
 
                 <div className="bg-accent p-4 rounded-lg">
-                  <p className="text-sm text-accent-foreground/80">Total Interest</p>
+                  <p className="text-sm text-accent-foreground/80">{t("totalInterest")}</p>
                   <p className="text-2xl font-bold text-accent-foreground">₹{result.interestAmount.toLocaleString()}</p>
                 </div>
 
                 <div className="bg-primary p-4 rounded-lg text-primary-foreground">
-                  <p className="text-sm opacity-80">Total Amount</p>
+                  <p className="text-sm opacity-80">{t("totalAmount")}</p>
                   <p className="text-3xl font-bold">₹{result.totalAmount.toLocaleString()}</p>
                 </div>
               </div>
@@ -267,37 +273,34 @@ export default function CalculatorPage() {
               {/* Additional Details */}
               <div className="border-t pt-4 space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Effective Rate:</span>
+                  <span className="text-muted-foreground">{t("effectiveRate")}:</span>
                   <span className="font-semibold">
-                    {result.effectiveRate}% {formData.calculationMethod}
+                    {result.effectiveRate}% {t(formData.calculationMethod)}
                   </span>
                 </div>
 
                 {result.monthlyInterest && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Monthly Interest:</span>
+                    <span className="text-muted-foreground">{t("monthlyInterestLabel")}:</span>
                     <span className="font-semibold">₹{result.monthlyInterest.toLocaleString()}</span>
                   </div>
                 )}
 
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Time Period:</span>
+                  <span className="text-muted-foreground">{t("timePeriod")}:</span>
                   <span className="font-semibold">
-                    {formData.timePeriod} {formData.timeUnit}
+                    {formData.timePeriod} {t(formData.timeUnit)}
                   </span>
                 </div>
               </div>
 
               {/* Method Explanation */}
               <div className="bg-muted p-3 rounded-lg">
-                <p className="text-sm font-medium mb-2">Calculation Method:</p>
+                <p className="text-sm font-medium mb-2">{t("methodExplanation")}</p>
                 <p className="text-sm text-muted-foreground">
-                  {formData.calculationMethod === "monthly" &&
-                    "Monthly interest is calculated as a fixed percentage of the principal amount each month."}
-                  {formData.calculationMethod === "yearly" &&
-                    "Yearly interest uses simple interest formula: (Principal × Rate × Time) / 100"}
-                  {formData.calculationMethod === "sankda" &&
-                    "Sankda method applies 12% yearly interest, typically calculated monthly for traditional lending."}
+                  {formData.calculationMethod === "monthly" && t("monthlyExplanation")}
+                  {formData.calculationMethod === "yearly" && t("yearlyExplanation")}
+                  {formData.calculationMethod === "sankda" && t("sankdaExplanation")}
                 </p>
               </div>
             </CardContent>
@@ -307,21 +310,21 @@ export default function CalculatorPage() {
         {/* Quick Examples */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Examples</CardTitle>
+            <CardTitle>{t("quickExamples")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between p-2 bg-muted rounded">
-                <span>₹10,000 @ 2% monthly for 6 months</span>
-                <span className="font-semibold">₹1,200 interest</span>
+                <span>₹10,000 @ 2% {t("monthly")} for 6 {t("months")}</span>
+                <span className="font-semibold">₹1,200 {t("interest")}</span>
               </div>
               <div className="flex justify-between p-2 bg-muted rounded">
-                <span>₹50,000 @ 12% yearly for 1 year</span>
-                <span className="font-semibold">₹6,000 interest</span>
+                <span>₹50,000 @ 12% {t("yearly")} for 1 {t("years")}</span>
+                <span className="font-semibold">₹6,000 {t("interest")}</span>
               </div>
               <div className="flex justify-between p-2 bg-muted rounded">
-                <span>₹25,000 Sankda for 8 months</span>
-                <span className="font-semibold">₹2,000 interest</span>
+                <span>₹25,000 {t("sankda")} for 8 {t("months")}</span>
+                <span className="font-semibold">₹2,000 {t("interest")}</span>
               </div>
             </div>
           </CardContent>
