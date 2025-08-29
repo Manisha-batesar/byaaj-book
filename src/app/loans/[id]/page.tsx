@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { ArrowLeft, Phone, Calendar, IndianRupee, Edit3, Trash2, User, Clock, FileText } from "lucide-react"
+import { ArrowLeft, Phone, Calendar, IndianRupee, Edit3, Trash2, Clock, FileText } from "lucide-react"
 import { storage, type Loan, type Payment } from "@/lib/storage"
 import { useLanguage } from "@/components/language-provider"
 import { LanguageSelector } from "@/components/language-selector"
@@ -78,6 +78,11 @@ export default function LoanDetailsPage() {
   const finalAmount = storage.calculateFinalAmount(loan)
   const outstandingAmount = finalAmount - loan.totalPaid
 
+  // Get client's first name initial
+  const getClientInitial = (name: string) => {
+    return name.trim().charAt(0).toUpperCase()
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
@@ -101,7 +106,9 @@ export default function LoanDetailsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <User size={20} />
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                {getClientInitial(loan.borrowerName)}
+              </div>
               <span>Client Information</span>
             </CardTitle>
           </CardHeader>

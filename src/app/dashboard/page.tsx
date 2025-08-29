@@ -104,6 +104,15 @@ export default function DashboardPage() {
     }
   }
 
+  const handleLoanClick = (loanId: string, event: React.MouseEvent) => {
+    // Prevent navigation if clicking on a button
+    const target = event.target as HTMLElement
+    if (target.closest('button') || target.closest('a')) {
+      return
+    }
+    router.push(`/loans/${loanId}`)
+  }
+
   if (!isAuthenticated) {
     return null
   }
@@ -239,7 +248,11 @@ export default function DashboardPage() {
               {loans
                 .slice(0, 3)
                 .map((loan) => (
-                  <Card key={loan.id}>
+                  <Card 
+                    key={loan.id} 
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={(e) => handleLoanClick(loan.id, e)}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
