@@ -4,11 +4,22 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { BottomNav } from "@/components/bottom-nav"
 import { LanguageSelector } from "@/components/language-selector"
 import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
-import { Plus, Calculator, TrendingUp, FileText, IndianRupee, Edit3 } from "lucide-react"
+import { Plus, Calculator, TrendingUp, FileText, IndianRupee, Edit3, Trash2 } from "lucide-react"
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -17,6 +28,8 @@ export default function DashboardPage() {
   const [totalReceived, setTotalReceived] = useState(0)
   const [activeLoans, setActiveLoans] = useState(0)
   const [pendingPayments, setPendingPayments] = useState(0)
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
+  const [loans, setLoans] = useState<any[]>([])
   const router = useRouter()
   const { t } = useLanguage()
 
@@ -30,6 +43,7 @@ export default function DashboardPage() {
 
     // Calculate summary stats
     const loans = storage.getLoans()
+    setLoans(loans) // Store loans in state
     const payments = storage.getPayments()
 
     const lentAmount = loans.reduce((sum, loan) => sum + loan.amount, 0)
@@ -51,6 +65,43 @@ export default function DashboardPage() {
     setTotalPayable(totalPayableAmount)
     setPendingPayments(pendingAmount)
   }, [router])
+
+  const handleDeleteLoan = async (loanId: string) => {
+    setIsDeleting(loanId)
+    try {
+      const success = storage.deleteLoan(loanId)
+      if (success) {
+        // Refresh all data after deletion
+        const updatedLoans = storage.getLoans()
+        setLoans(updatedLoans)
+        
+        // Recalculate summary stats
+        const payments = storage.getPayments()
+        const lentAmount = updatedLoans.reduce((sum, loan) => sum + loan.amount, 0)
+        const totalPayableAmount = updatedLoans.reduce((sum, loan) => sum + storage.calculateFinalAmount(loan), 0)
+        const receivedAmount = payments.reduce((sum, payment) => sum + payment.amount, 0)
+        const activeLoanCount = updatedLoans.filter((loan) => loan.isActive).length
+        
+        const activeLoansData = updatedLoans.filter((loan) => loan.isActive)
+        const pendingAmount = activeLoansData.reduce((sum, loan) => {
+          const finalAmount = storage.calculateFinalAmount(loan)
+          return sum + (finalAmount - loan.totalPaid)
+        }, 0)
+
+        setTotalLent(lentAmount)
+        setTotalReceived(receivedAmount)
+        setActiveLoans(activeLoanCount)
+        setTotalPayable(totalPayableAmount)
+        setPendingPayments(pendingAmount)
+      } else {
+        console.error("Failed to delete loan")
+      }
+    } catch (error) {
+      console.error("Error deleting loan:", error)
+    } finally {
+      setIsDeleting(null)
+    }
+  }
 
   if (!isAuthenticated) {
     return null
@@ -181,8 +232,7 @@ export default function DashboardPage() {
             </Card>
           ) : (
             <div className="space-y-3">
-              {storage
-                .getLoans()
+              {loans
                 .slice(0, 3)
                 .map((loan) => (
                   <Card key={loan.id}>
@@ -195,7 +245,7 @@ export default function DashboardPage() {
                             <p className="text-xs">{loan.years || 1} {(loan.years || 1) === 1 ? 'year' : 'years'} @ {loan.interestRate}%</p>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
                           <div className="text-right">
                             <p className="text-sm font-medium">{loan.interestRate}%</p>
                             <p className="text-xs text-muted-foreground">{t(loan.interestMethod)}</p>
@@ -205,6 +255,36 @@ export default function DashboardPage() {
                               <Edit3 size={16} className="text-muted-foreground hover:text-foreground" />
                             </button>
                           </Link>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button 
+                                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                disabled={isDeleting === loan.id}
+                              >
+                                <Trash2 
+                                  size={16} 
+                                  className="text-red-400 hover:text-red-600" 
+                                />
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t("deleteLoan")}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t("deleteLoanConfirm")}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteLoan(loan.id)}
+                                  className="bg-red-600 hover:bg-red-700 text-white"
+                                >
+                                  {isDeleting === loan.id ? t("loading") : t("delete")}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </CardContent>

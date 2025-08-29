@@ -56,6 +56,28 @@ export const storage = {
     return true
   },
 
+  deleteLoan: (id: string): boolean => {
+    if (typeof window === "undefined") return false
+    const loans = storage.getLoans()
+    const payments = storage.getPayments()
+    
+    // Find loan index
+    const loanIndex = loans.findIndex((loan) => loan.id === id)
+    if (loanIndex === -1) return false
+    
+    // Remove loan
+    loans.splice(loanIndex, 1)
+    
+    // Remove all payments for this loan
+    const filteredPayments = payments.filter((payment) => payment.loanId !== id)
+    
+    // Save updates
+    storage.saveLoans(loans)
+    storage.savePayments(filteredPayments)
+    
+    return true
+  },
+
   saveLoans: (loans: Loan[]) => {
     if (typeof window === "undefined") return
     localStorage.setItem(STORAGE_KEYS.LOANS, JSON.stringify(loans))

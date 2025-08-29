@@ -13,7 +13,7 @@ export const translations = {
     activeLoans: "Active Loans",
     quickActions: "Quick Actions",
     recentLoans: "Recent Loans",
-    viewAll: "View All",
+    viewAll: "View All Detail of Loans",
     noLoansYet: "No loans yet. Add your first loan to get started!",
     
     // Actions
@@ -217,6 +217,11 @@ export const translations = {
     warning: "Warning",
     info: "Info",
     edit: "Edit",
+    delete: "Delete",
+    deleteLoan: "Delete Loan",
+    deleteLoanConfirm: "Are you sure you want to delete this loan? This action cannot be undone and will also remove all associated payment records.",
+    loanDeleted: "Loan deleted successfully",
+    failedToDeleteLoan: "Failed to delete loan",
     
     // Edit Loan
     editLoan: "Edit Loan",
@@ -237,7 +242,7 @@ export const translations = {
     activeLoans: "सक्रिय ऋण",
     quickActions: "त्वरित कार्य",
     recentLoans: "हाल के ऋण",
-    viewAll: "सभी देखें",
+    viewAll: "ऋणों का सम्पूर्ण विवरण देखें",
     noLoansYet: "अभी तक कोई ऋण नहीं। शुरुआत करने के लिए अपना पहला ऋण जोड़ें!",
     
     // Actions
@@ -441,6 +446,11 @@ export const translations = {
     warning: "चेतावनी",
     info: "जानकारी",
     edit: "संपादित करें",
+    delete: "हटाएं",
+    deleteLoan: "ऋण हटाएं",
+    deleteLoanConfirm: "क्या आप वाकई इस ऋण को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती और इससे सभी संबंधित भुगतान रिकॉर्ड भी हटा दिए जाएंगे।",
+    loanDeleted: "ऋण सफलतापूर्वक हटा दिया गया",
+    failedToDeleteLoan: "ऋण हटाने में असफल",
     
     // Edit Loan
     editLoan: "ऋण संपादित करें",

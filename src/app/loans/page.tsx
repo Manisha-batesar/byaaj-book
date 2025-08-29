@@ -4,7 +4,18 @@ import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Plus, Phone, Calendar, IndianRupee, Edit3 } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { ArrowLeft, Plus, Phone, Calendar, IndianRupee, Edit3, Trash2 } from "lucide-react"
 import { storage, type Loan } from "@/lib/storage"
 import { useLanguage } from "@/components/language-provider"
 import { LanguageSelector } from "@/components/language-selector"
@@ -13,10 +24,32 @@ import Link from "next/link"
 export default function LoansPage() {
   const [loans, setLoans] = useState<Loan[]>([])
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all")
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const { t } = useLanguage()
 
   useEffect(() => {
     setLoans(storage.getLoans())
+    
+    // Add sample data if no loans exist (for testing purposes)
+    const existingLoans = storage.getLoans()
+    if (existingLoans.length === 0) {
+      const sampleLoan: Loan = {
+        id: Date.now().toString(),
+        borrowerName: "John Doe",
+        borrowerPhone: "9876543210",
+        notes: "Sample loan for testing",
+        amount: 10000,
+        interestRate: 12,
+        interestMethod: "yearly",
+        interestType: "simple",
+        years: 1,
+        dateCreated: new Date().toISOString(),
+        totalPaid: 0,
+        isActive: true,
+      }
+      storage.saveLoans([sampleLoan])
+      setLoans([sampleLoan])
+    }
   }, [])
 
   const filteredLoans = loans.filter((loan) => {
@@ -36,6 +69,27 @@ export default function LoansPage() {
   const calculateOutstanding = (loan: Loan) => {
     const finalAmount = storage.calculateFinalAmount(loan)
     return finalAmount - loan.totalPaid
+  }
+
+  const handleDeleteLoan = async (loanId: string) => {
+    console.log("Delete button clicked for loan:", loanId)
+    setIsDeleting(loanId)
+    try {
+      const success = storage.deleteLoan(loanId)
+      console.log("Delete operation result:", success)
+      if (success) {
+        // Refresh the loans list
+        setLoans(storage.getLoans())
+        console.log("Loan deleted successfully")
+      } else {
+        // Handle error - could show a toast notification
+        console.error("Failed to delete loan")
+      }
+    } catch (error) {
+      console.error("Error deleting loan:", error)
+    } finally {
+      setIsDeleting(null)
+    }
   }
 
   return (
@@ -207,6 +261,36 @@ export default function LoansPage() {
                       {t("edit")}
                     </Button>
                   </Link>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 bg-transparent border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                        disabled={isDeleting === loan.id}
+                      >
+                        <Trash2 size={14} className="mr-1" />
+                        {isDeleting === loan.id ? t("loading") : t("delete")}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t("deleteLoan")}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t("deleteLoanConfirm")}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteLoan(loan.id)}
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          {t("delete")}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   {loan.isActive && (
                     <Link href="/payments" className="flex-1">
                       <Button size="sm" className="w-full">
