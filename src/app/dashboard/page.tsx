@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { BottomNav } from "@/components/bottom-nav"
 import { LanguageSelector } from "@/components/language-selector"
+import { SearchClientButton } from "@/components/search-client-button"
 import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
 import { Plus, Calculator, TrendingUp, FileText, IndianRupee, Edit3, Trash2 } from "lucide-react"
@@ -147,7 +148,10 @@ export default function DashboardPage() {
             <img src="/bb-logo.png" alt="ByajBook" className="h-16 w-16 rounded-full" />
             <h1 className="text-2xl font-bold">{t("appName")}</h1>
           </div>
-          <LanguageSelector />
+          <div className="flex items-center gap-2">
+            <SearchClientButton />
+            <LanguageSelector />
+          </div>
         </div>
 
         {/* Summary Cards */}
