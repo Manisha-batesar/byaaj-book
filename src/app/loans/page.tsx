@@ -158,14 +158,20 @@ export default function LoansPage() {
             <Card key={loan.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold text-lg">{loan.borrowerName}</h3>
-                    {loan.borrowerPhone && (
-                      <div className="flex items-center text-sm text-muted-foreground mt-1">
-                        <Phone size={14} className="mr-1" />
-                        {loan.borrowerPhone}
-                      </div>
-                    )}
+                  <div className="flex items-center space-x-3">
+                    {/* User Avatar with First Letter */}
+                    <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-lg">
+                      {loan.borrowerName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">{loan.borrowerName}</h3>
+                      {loan.borrowerPhone && (
+                        <div className="flex items-center text-sm text-muted-foreground mt-1">
+                          <Phone size={14} className="mr-1" />
+                          {loan.borrowerPhone}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <Badge variant={loan.isActive ? "default" : "secondary"}>
                     {loan.isActive ? t("active") : t("completed")}

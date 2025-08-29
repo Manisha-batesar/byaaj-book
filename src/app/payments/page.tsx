@@ -6,11 +6,13 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Plus, IndianRupee, Calendar, User, Edit3 } from "lucide-react"
+import { ArrowLeft, Plus, IndianRupee, Calendar, User, Edit3, Phone, ChevronRight } from "lucide-react"
 import { storage, type Loan, type Payment } from "@/lib/storage"
 import { useLanguage } from "@/components/language-provider"
 import { LanguageSelector } from "@/components/language-selector"
+import { BottomNav } from "@/components/bottom-nav"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("en-IN", {
@@ -21,25 +23,36 @@ const formatDate = (dateString: string) => {
 }
 
 export default function PaymentsPage() {
-  const [activeLoans, setActiveLoans] = useState<Loan[]>([])
-  const [recentPayments, setRecentPayments] = useState<Payment[]>([])
+  const [allLoans, setAllLoans] = useState<Loan[]>([])
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null)
   const { t } = useLanguage()
+  const router = useRouter()
 
   useEffect(() => {
-    const loans = storage.getLoans().filter((loan) => loan.isActive)
-    const payments = storage.getPayments().slice(-10).reverse() // Last 10 payments
-    setActiveLoans(loans)
-    setRecentPayments(payments)
-  }, [])
+    if (!storage.isAuthenticated()) {
+      router.push("/")
+      return
+    }
+    
+    const loans = storage.getLoans()
+    setAllLoans(loans)
+  }, [router])
 
   const calculateOutstanding = (loan: Loan) => {
     const finalAmount = storage.calculateFinalAmount(loan)
     return finalAmount - loan.totalPaid
   }
 
-  const getLoanById = (loanId: string) => {
-    return storage.getLoans().find((loan) => loan.id === loanId)
+  const getLastPaymentDate = (loanId: string) => {
+    const payments = storage.getPaymentsForLoan(loanId)
+    if (payments.length === 0) return null
+    const lastPayment = payments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+    return lastPayment.date
+  }
+
+  // Get client's first name initial
+  const getClientInitial = (name: string) => {
+    return name.trim().charAt(0).toUpperCase()
   }
 
   return (
@@ -59,146 +72,129 @@ export default function PaymentsPage() {
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        {/* Active Loans for Payment */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Plus size={20} />
-              <span>{t("recordingPayment")}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {activeLoans.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">{t("noActiveLoansPayment")}</p>
-                <Link href="/loans/add">
-                  <Button>{t("addFirstLoan")}</Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {activeLoans.map((loan) => (
-                  <div key={loan.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
+      <div className="p-6 pb-20 space-y-4">
+        {/* Clients List - Contact App Style */}
+        {allLoans.length === 0 ? (
+          <div className="text-center py-16">
+            <User size={48} className="mx-auto mb-4 text-muted-foreground" />
+            <p className="text-muted-foreground mb-4">{t("noLoansFound")}</p>
+            <Link href="/loans/add">
+              <Button>{t("addFirstLoan")}</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {allLoans.map((loan) => {
+              const outstanding = calculateOutstanding(loan)
+              const lastPaymentDate = getLastPaymentDate(loan.id)
+              const finalAmount = storage.calculateFinalAmount(loan)
+
+              return (
+                <Card 
+                  key={loan.id} 
+                  className="transition-all duration-200 hover:shadow-md cursor-pointer"
+                  onClick={() => router.push(`/loans/${loan.id}`)}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h3 className="font-semibold">{loan.borrowerName}</h3>
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          <p>{t("outstanding")}: ₹{calculateOutstanding(loan).toLocaleString()}</p>
-                          <div className="flex items-center space-x-4">
-                            <span>Loan Date: {formatDate(loan.dateCreated)}</span>
-                            {loan.expectedReturnDate && (
-                              <span>Expected Return: {formatDate(loan.expectedReturnDate)}</span>
-                            )}
+                        {/* Client Name with Avatar - Big and Bold */}
+                        <div className="flex items-center space-x-3 mb-1">
+                          <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+                            {getClientInitial(loan.borrowerName)}
                           </div>
+                          <h2 className="text-xl font-bold text-foreground">
+                            {loan.borrowerName}
+                          </h2>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="text-right">
-                          <p className="font-semibold">₹{storage.calculateFinalAmount(loan).toLocaleString()}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {loan.interestRate}% {t(loan.interestMethod)}
-                          </p>
-                        </div>
-                        <Link href={`/loans/edit/${loan.id}`}>
-                          <button className="p-2 hover:bg-muted rounded-lg transition-colors">
-                            <Edit3 size={16} className="text-muted-foreground hover:text-foreground" />
-                          </button>
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1 bg-transparent"
-                        onClick={() => setSelectedLoan(loan)}
-                      >
-                        {t("recordPayment")}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                        
+                        {/* Contact Number - Small text */}
+                        {loan.borrowerPhone && (
+                          <div className="flex items-center space-x-1 mb-3 ml-15">
+                            <Phone size={14} className="text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
+                              {loan.borrowerPhone}
+                            </span>
+                          </div>
+                        )}
 
-        {/* Recent Payments */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Calendar size={20} />
-              <span>{t("recentPayments")}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentPayments.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">{t("noPaymentsRecorded")}</p>
-            ) : (
-              <div className="space-y-3">
-                {recentPayments.map((payment) => {
-                  const loan = getLoanById(payment.loanId)
-                  return (
-                    <div key={payment.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <User size={16} />
-                          <span className="font-semibold">{loan?.borrowerName || t("unknown")}</span>
-                        </div>
-                        <Badge variant={payment.type === "full" ? "default" : "secondary"}>
-                          {payment.type === "full" ? t("fullPayment") : t("partialPayment")}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-1">
-                          <IndianRupee size={16} />
-                          <span className="font-semibold text-lg">₹{payment.amount.toLocaleString()}</span>
-                        </div>
-                        <div className="flex items-center space-x-1 text-muted-foreground">
-                          <Calendar size={14} />
-                          <span className="text-sm">{formatDate(payment.date)}</span>
-                        </div>
-                      </div>
-                      {loan && (
-                        <div className="text-xs text-muted-foreground pt-2 border-t">
+                        {/* Loan Details */}
+                        <div className="space-y-2 ml-15">
+                          {/* Total Loan Amount */}
                           <div className="flex items-center justify-between">
-                            <span>Loan Date: {formatDate(loan.dateCreated)}</span>
-                            {loan.expectedReturnDate && (
-                              <span>Expected Return: {formatDate(loan.expectedReturnDate)}</span>
-                            )}
+                            <span className="text-sm text-muted-foreground">{t("totalLoanAmount")}:</span>
+                            <span className="text-sm font-semibold">₹{loan.amount.toLocaleString()}</span>
+                          </div>
+
+                          {/* Pending/Due Amount */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">
+                              {loan.isActive ? t("pendingAmount") : t("finalAmount")}:
+                            </span>
+                            <span className={`text-sm font-semibold ${
+                              loan.isActive 
+                                ? outstanding > 0 
+                                  ? "text-red-600" 
+                                  : "text-green-600"
+                                : "text-muted-foreground"
+                            }`}>
+                              {loan.isActive 
+                                ? `₹${outstanding.toLocaleString()}`
+                                : `₹${finalAmount.toLocaleString()}`
+                              }
+                            </span>
+                          </div>
+
+                          {/* Last Payment Date */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">{t("lastPayment")}:</span>
+                            <span className="text-sm">
+                              {lastPaymentDate 
+                                ? formatDate(lastPaymentDate)
+                                : t("noPaymentsYet")
+                              }
+                            </span>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Payment Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("paymentSummary")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">{t("totalReceived")}</p>
-                <p className="text-2xl font-bold">
-                  ₹{recentPayments.reduce((sum, payment) => sum + payment.amount, 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">{t("activeLoans")}</p>
-                <p className="text-2xl font-bold">{activeLoans.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                        {/* Status Badge */}
+                        <div className="mt-3 flex items-center justify-between ml-15">
+                          <Badge variant={loan.isActive ? "default" : "secondary"}>
+                            {loan.isActive ? "Active" : "Completed"}
+                          </Badge>
+                          
+                          {/* Quick Actions for Active Loans */}
+                          {loan.isActive && outstanding > 0 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-transparent text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedLoan(loan)
+                              }}
+                            >
+                              {t("recordPayment")}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Chevron Right Arrow */}
+                      <div className="ml-4">
+                        <ChevronRight size={20} className="text-muted-foreground" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        )}
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNav />
 
       {/* Payment Modal */}
       {selectedLoan && (
@@ -207,10 +203,8 @@ export default function PaymentsPage() {
           onClose={() => setSelectedLoan(null)}
           onPaymentRecorded={() => {
             // Refresh data
-            const loans = storage.getLoans().filter((loan) => loan.isActive)
-            const payments = storage.getPayments().slice(-10).reverse()
-            setActiveLoans(loans)
-            setRecentPayments(payments)
+            const loans = storage.getLoans()
+            setAllLoans(loans)
             setSelectedLoan(null)
           }}
         />

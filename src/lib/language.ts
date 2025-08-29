@@ -154,6 +154,11 @@ export const translations = {
     paymentType: "Payment Type",
     remainingBalance: "Remaining Balance",
     recording: "Recording...",
+    totalLoanAmount: "Total Loan Amount",
+    pendingAmount: "Pending Amount",
+    finalAmount: "Final Amount",
+    lastPayment: "Last Payment",
+    noPaymentsYet: "No payments yet",
     
     // Calculator Page
     calculateInterest: "Calculate Interest",
@@ -383,6 +388,11 @@ export const translations = {
     paymentType: "भुगतान प्रकार",
     remainingBalance: "शेष राशि",
     recording: "रिकॉर्ड कर रहे हैं...",
+    totalLoanAmount: "कुल ऋण राशि",
+    pendingAmount: "बकाया राशि",
+    finalAmount: "अंतिम राशि",
+    lastPayment: "अंतिम भुगतान",
+    noPaymentsYet: "अभी तक कोई भुगतान नहीं",
     
     // Calculator Page
     calculateInterest: "ब्याज की गणना करें",

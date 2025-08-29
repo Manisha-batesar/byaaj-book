@@ -255,11 +255,17 @@ export default function DashboardPage() {
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <p className="font-semibold">{loan.borrowerName}</p>
-                          <div className="text-sm text-muted-foreground">
-                            <p>₹{loan.amount.toLocaleString()} → ₹{storage.calculateFinalAmount(loan).toLocaleString()}</p>
-                            <p className="text-xs">{loan.years || 1} {(loan.years || 1) === 1 ? 'year' : 'years'} @ {loan.interestRate}%</p>
+                        <div className="flex items-center space-x-3 flex-1">
+                          {/* User Avatar with First Letter */}
+                          <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
+                            {loan.borrowerName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold">{loan.borrowerName}</p>
+                            <div className="text-sm text-muted-foreground">
+                              <p>₹{loan.amount.toLocaleString()} → ₹{storage.calculateFinalAmount(loan).toLocaleString()}</p>
+                              <p className="text-xs">{loan.years || 1} {(loan.years || 1) === 1 ? 'year' : 'years'} @ {loan.interestRate}%</p>
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">

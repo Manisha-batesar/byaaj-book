@@ -304,7 +304,13 @@ export default function ReportsPage() {
                 {borrowerSummaries.slice(0, 10).map((borrower, index) => (
                   <div key={index} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold">{borrower.borrowerName}</h3>
+                      <div className="flex items-center space-x-3">
+                        {/* User Avatar with First Letter */}
+                        <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
+                          {borrower.borrowerName.charAt(0).toUpperCase()}
+                        </div>
+                        <h3 className="font-semibold">{borrower.borrowerName}</h3>
+                      </div>
                       <div className="flex space-x-2">
                         {borrower.activeLoans > 0 && <Badge variant="default">{borrower.activeLoans} {t("active")}</Badge>}
                         {borrower.completedLoans > 0 && (
@@ -365,9 +371,15 @@ export default function ReportsPage() {
                 .reverse()
                 .map((loan) => (
                   <div key={loan.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <div>
-                      <p className="font-medium">{loan.borrowerName}</p>
-                      <p className="text-sm text-muted-foreground">{t("loanCreated")} • {formatDate(loan.dateCreated)}</p>
+                    <div className="flex items-center space-x-3">
+                      {/* User Avatar with First Letter */}
+                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs">
+                        {loan.borrowerName.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium">{loan.borrowerName}</p>
+                        <p className="text-sm text-muted-foreground">{t("loanCreated")} • {formatDate(loan.dateCreated)}</p>
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">₹{loan.amount.toLocaleString()}</p>
@@ -386,9 +398,15 @@ export default function ReportsPage() {
                   const loan = loans.find((l) => l.id === payment.loanId)
                   return (
                     <div key={payment.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">{loan?.borrowerName || "Unknown"}</p>
-                        <p className="text-sm text-muted-foreground">{t("paymentReceived")} • {formatDate(payment.date)}</p>
+                      <div className="flex items-center space-x-3">
+                        {/* User Avatar with First Letter */}
+                        <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold text-xs">
+                          {loan?.borrowerName?.charAt(0).toUpperCase() || "?"}
+                        </div>
+                        <div>
+                          <p className="font-medium">{loan?.borrowerName || "Unknown"}</p>
+                          <p className="text-sm text-muted-foreground">{t("paymentReceived")} • {formatDate(payment.date)}</p>
+                        </div>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-green-600">₹{payment.amount.toLocaleString()}</p>
