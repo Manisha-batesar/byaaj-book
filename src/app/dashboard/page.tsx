@@ -227,13 +227,13 @@ export default function DashboardPage() {
               const Icon = card.icon
               return (
                 <Link key={card.title} href={card.href}>
-                  <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className={`w-12 h-12 rounded-lg ${card.color} flex items-center justify-center mb-3`}>
-                        <Icon size={24} />
+                  <Card className="cursor-pointer hover:shadow-md transition-shadow h-32">
+                    <CardContent className="p-4 h-full flex flex-col">
+                      <div className={`w-12 h-12 rounded-xl ${card.color} flex items-center justify-center mb-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105`}>
+                        <Icon size={24} className="drop-shadow-sm" />
                       </div>
-                      <CardTitle className="text-sm font-semibold mb-1">{card.title}</CardTitle>
-                      <CardDescription className="text-xs">{card.description}</CardDescription>
+                      <CardTitle className="text-sm font-semibold mb-1 flex-shrink-0">{card.title}</CardTitle>
+                      <CardDescription className="text-xs flex-1 line-clamp-2">{card.description}</CardDescription>
                     </CardContent>
                   </Card>
                 </Link>
@@ -274,7 +274,7 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3 flex-1">
                             {/* User Avatar with First Letter */}
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm ${
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm shadow-md ${
                               isOverdue ? 'bg-red-500 text-white' : 'bg-primary text-primary-foreground'
                             }`}>
                               {loan.borrowerName.charAt(0).toUpperCase()}

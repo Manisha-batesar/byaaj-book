@@ -171,8 +171,8 @@ export default function ReportsPage() {
       <div className="p-6 space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-4">
-          <Card>
-            <CardContent className="p-4">
+          <Card className="h-24">
+            <CardContent className="p-4 h-full flex flex-col justify-between">
               <div className="flex items-center space-x-2 mb-2">
                 <IndianRupee size={16} className="text-primary" />
                 <p className="text-sm text-muted-foreground">{t("totalLent")}</p>
@@ -181,8 +181,8 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
+          <Card className="h-24">
+            <CardContent className="p-4 h-full flex flex-col justify-between">
               <div className="flex items-center space-x-2 mb-2">
                 <TrendingUp size={16} className="text-green-600" />
                 <p className="text-sm text-muted-foreground">{t("totalReceived")}</p>
@@ -191,8 +191,8 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
+          <Card className="h-24">
+            <CardContent className="p-4 h-full flex flex-col justify-between">
               <div className="flex items-center space-x-2 mb-2">
                 <PieChart size={16} className="text-orange-600" />
                 <p className="text-sm text-muted-foreground">{t("outstanding")}</p>
@@ -201,8 +201,8 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
+          <Card className="h-24">
+            <CardContent className="p-4 h-full flex flex-col justify-between">
               <div className="flex items-center space-x-2 mb-2">
                 <Users size={16} className="text-blue-600" />
                 <p className="text-sm text-muted-foreground">{t("activeLoans")}</p>
@@ -306,7 +306,7 @@ export default function ReportsPage() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         {/* User Avatar with First Letter */}
-                        <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
+                        <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm shadow-md">
                           {borrower.borrowerName.charAt(0).toUpperCase()}
                         </div>
                         <h3 className="font-semibold">{borrower.borrowerName}</h3>
@@ -373,7 +373,7 @@ export default function ReportsPage() {
                   <div key={loan.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <div className="flex items-center space-x-3">
                       {/* User Avatar with First Letter */}
-                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs">
+                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs shadow-md">
                         {loan.borrowerName.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -400,7 +400,7 @@ export default function ReportsPage() {
                     <div key={payment.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                       <div className="flex items-center space-x-3">
                         {/* User Avatar with First Letter */}
-                        <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold text-xs">
+                        <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold text-xs shadow-md">
                           {loan?.borrowerName?.charAt(0).toUpperCase() || "?"}
                         </div>
                         <div>
