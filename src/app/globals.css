@@ -90,6 +90,14 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Ensure buttons and interactive elements show pointer cursor */
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  .btn {
+    @apply cursor-pointer;
+  }
 }
 
 @layer utilities {

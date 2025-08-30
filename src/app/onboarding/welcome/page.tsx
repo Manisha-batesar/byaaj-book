@@ -11,11 +11,7 @@ export default function WelcomePage() {
 
   return (
     <div className="flex flex-col items-center text-center mt-6">
-      <div className="w-full flex items-center">
-        <button className="text-sm text-muted-foreground" onClick={() => router.back()}>
-          ← Back
-        </button>
-      </div>
+  {/* back button removed for the welcome (first) onboarding page */}
 
       <div className="flex-1 flex flex-col items-center">
       <div className="text-6xl">🙏</div>
