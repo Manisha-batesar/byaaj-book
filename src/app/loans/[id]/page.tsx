@@ -95,7 +95,7 @@ export default function LoanDetailsPage() {
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="text-xl font-bold">Loan Details</h1>
+            <h1 className="text-xl font-bold">{t("viewDetails")}</h1>
           </div>
           <LanguageSelector />
         </div>
@@ -109,17 +109,17 @@ export default function LoanDetailsPage() {
               <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
                 {getClientInitial(loan.borrowerName)}
               </div>
-              <span>Client Information</span>
+              <span>{t("borrowerInformation")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-sm text-muted-foreground">Name</p>
+              <p className="text-sm text-muted-foreground">{t("borrowerName")}</p>
               <p className="font-semibold text-lg">{loan.borrowerName}</p>
             </div>
             {loan.borrowerPhone && (
               <div>
-                <p className="text-sm text-muted-foreground">Phone Number</p>
+                <p className="text-sm text-muted-foreground">{t("phoneNumber")}</p>
                 <div className="flex items-center space-x-2">
                   <Phone size={16} />
                   <p className="font-medium">{loan.borrowerPhone}</p>
@@ -128,7 +128,7 @@ export default function LoanDetailsPage() {
             )}
             {loan.notes && (
               <div>
-                <p className="text-sm text-muted-foreground">Notes</p>
+                <p className="text-sm text-muted-foreground">{t("notes")}</p>
                 <p className="text-sm bg-muted p-2 rounded">{loan.notes}</p>
               </div>
             )}
@@ -140,39 +140,39 @@ export default function LoanDetailsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <IndianRupee size={20} />
-              <span>Loan Details</span>
+              <span>{t("loanDetails")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Principal Amount</p>
+                <p className="text-sm text-muted-foreground">{t("principalAmount")}</p>
                 <p className="font-semibold text-lg">₹{loan.amount.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Final Amount</p>
+                <p className="text-sm text-muted-foreground">{t("finalPayableAmount")}</p>
                 <p className="font-semibold text-lg text-green-600">₹{finalAmount.toLocaleString()}</p>
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Interest Rate</p>
+                <p className="text-sm text-muted-foreground">{t("interestRate")}</p>
                 <p className="font-medium">{loan.interestRate}%</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Interest Method</p>
+                <p className="text-sm text-muted-foreground">{t("interestMethod")}</p>
                 <Badge variant="outline">{t(loan.interestMethod)}</Badge>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Loan Period</p>
+                <p className="text-sm text-muted-foreground">{t("loanPeriod")}</p>
                 <p className="font-medium">{loan.years || 1} {(loan.years || 1) === 1 ? 'year' : 'years'}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Date Created</p>
+                <p className="text-sm text-muted-foreground">{t("dateCreated")}</p>
                 <div className="flex items-center space-x-2">
                   <Calendar size={16} />
                   <p className="font-medium">{new Date(loan.dateCreated).toLocaleDateString()}</p>
@@ -181,9 +181,9 @@ export default function LoanDetailsPage() {
             </div>
 
             <div>
-              <p className="text-sm text-muted-foreground">Status</p>
+              <p className="text-sm text-muted-foreground">{t("status")}</p>
               <Badge variant={loan.isActive ? "default" : "secondary"}>
-                {loan.isActive ? "Active" : "Completed"}
+                {loan.isActive ? t("active") : t("completed")}
               </Badge>
             </div>
           </CardContent>
@@ -194,17 +194,17 @@ export default function LoanDetailsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Clock size={20} />
-              <span>Payment Summary</span>
+              <span>{t("paymentSummary")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Total Paid</p>
+                <p className="text-sm text-muted-foreground">{t("paid")}</p>
                 <p className="font-semibold text-lg text-blue-600">₹{loan.totalPaid.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Outstanding</p>
+                <p className="text-sm text-muted-foreground">{t("outstanding")}</p>
                 <p className="font-semibold text-lg text-red-600">₹{outstandingAmount.toLocaleString()}</p>
               </div>
             </div>
@@ -212,7 +212,7 @@ export default function LoanDetailsPage() {
             {/* Progress Bar */}
             <div>
               <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                <span>Payment Progress</span>
+                <span>{t("paymentProgress")}</span>
                 <span>{Math.round((loan.totalPaid / finalAmount) * 100)}%</span>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
@@ -231,7 +231,7 @@ export default function LoanDetailsPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <FileText size={20} />
-                <span>Payment History</span>
+                <span>{t("recentPayments")}</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -248,7 +248,7 @@ export default function LoanDetailsPage() {
                       </div>
                       <div className="text-right">
                         <Badge variant="outline" className="text-xs">
-                          {payment.type}
+                          {payment.type === "full" ? t("fullPayment") : t("partialPayment")}
                         </Badge>
                       </div>
                     </div>
@@ -263,7 +263,7 @@ export default function LoanDetailsPage() {
           <Link href={`/loans/edit/${loan.id}`} className="flex-1">
             <Button className="w-full" variant="outline">
               <Edit3 size={16} className="mr-2" />
-              Edit Loan
+              {t("editLoan")}
             </Button>
           </Link>
           
@@ -271,23 +271,23 @@ export default function LoanDetailsPage() {
             <AlertDialogTrigger asChild>
               <Button variant="destructive" className="flex-1">
                 <Trash2 size={16} className="mr-2" />
-                Delete Loan
+                {t("deleteLoan")}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete Loan</AlertDialogTitle>
+                <AlertDialogTitle>{t("deleteLoan")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to delete this loan? This action cannot be undone.
+                  {t("deleteLoanConfirm")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleDeleteLoan}
                   className="bg-red-600 hover:bg-red-700"
                 >
-                  {isDeleting ? "Deleting..." : "Delete"}
+                  {isDeleting ? t("loading") : t("delete")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -299,7 +299,7 @@ export default function LoanDetailsPage() {
           <Link href={`/payments?loanId=${loan.id}`}>
             <Button className="w-full" size="lg">
               <IndianRupee size={16} className="mr-2" />
-              Record Payment
+              {t("recordPayment")}
             </Button>
           </Link>
         )}
