@@ -170,46 +170,46 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 pb-20">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="h-24">
-            <CardContent className="p-4 h-full flex flex-col justify-between">
-              <div className="flex items-center space-x-2 mb-2">
-                <IndianRupee size={16} className="text-primary" />
-                <p className="text-sm text-muted-foreground">{t("totalLent")}</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <Card className="min-h-[100px] sm:min-h-[120px]">
+            <CardContent className="p-3 sm:p-4 h-full flex flex-col justify-between">
+              <div className="flex items-center space-x-1 sm:space-x-2 mb-1 sm:mb-2">
+                <IndianRupee size={14} className="text-primary sm:w-4 sm:h-4" />
+                <p className="text-xs sm:text-sm text-muted-foreground leading-tight">{t("totalLent")}</p>
               </div>
-              <p className="text-2xl font-bold">₹{totals.totalLent.toLocaleString()}</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold leading-tight">₹{totals.totalLent.toLocaleString()}</p>
             </CardContent>
           </Card>
 
-          <Card className="h-24">
-            <CardContent className="p-4 h-full flex flex-col justify-between">
-              <div className="flex items-center space-x-2 mb-2">
-                <TrendingUp size={16} className="text-green-600" />
-                <p className="text-sm text-muted-foreground">{t("totalReceived")}</p>
+          <Card className="min-h-[100px] sm:min-h-[120px]">
+            <CardContent className="p-3 sm:p-4 h-full flex flex-col justify-between">
+              <div className="flex items-center space-x-1 sm:space-x-2 mb-1 sm:mb-2">
+                <TrendingUp size={14} className="text-green-600 sm:w-4 sm:h-4" />
+                <p className="text-xs sm:text-sm text-muted-foreground leading-tight">{t("totalReceived")}</p>
               </div>
-              <p className="text-2xl font-bold text-green-600">₹{totals.totalReceived.toLocaleString()}</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 leading-tight">₹{totals.totalReceived.toLocaleString()}</p>
             </CardContent>
           </Card>
 
-          <Card className="h-24">
-            <CardContent className="p-4 h-full flex flex-col justify-between">
-              <div className="flex items-center space-x-2 mb-2">
-                <PieChart size={16} className="text-orange-600" />
-                <p className="text-sm text-muted-foreground">{t("outstanding")}</p>
+          <Card className="min-h-[100px] sm:min-h-[120px]">
+            <CardContent className="p-3 sm:p-4 h-full flex flex-col justify-between">
+              <div className="flex items-center space-x-1 sm:space-x-2 mb-1 sm:mb-2">
+                <PieChart size={14} className="text-orange-600 sm:w-4 sm:h-4" />
+                <p className="text-xs sm:text-sm text-muted-foreground leading-tight">{t("outstanding")}</p>
               </div>
-              <p className="text-2xl font-bold text-orange-600">₹{totals.totalOutstanding.toLocaleString()}</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600 leading-tight">₹{totals.totalOutstanding.toLocaleString()}</p>
             </CardContent>
           </Card>
 
-          <Card className="h-24">
-            <CardContent className="p-4 h-full flex flex-col justify-between">
-              <div className="flex items-center space-x-2 mb-2">
-                <Users size={16} className="text-blue-600" />
-                <p className="text-sm text-muted-foreground">{t("activeLoans")}</p>
+          <Card className="min-h-[100px] sm:min-h-[120px]">
+            <CardContent className="p-3 sm:p-4 h-full flex flex-col justify-between">
+              <div className="flex items-center space-x-1 sm:space-x-2 mb-1 sm:mb-2">
+                <Users size={14} className="text-blue-600 sm:w-4 sm:h-4" />
+                <p className="text-xs sm:text-sm text-muted-foreground leading-tight">{t("activeLoans")}</p>
               </div>
-              <p className="text-2xl font-bold text-blue-600">{totals.activeLoans}</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 leading-tight">{totals.activeLoans}</p>
             </CardContent>
           </Card>
         </div>
@@ -223,18 +223,18 @@ export default function ReportsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-muted p-4 rounded-lg">
-                <p className="text-sm text-muted-foreground">{t("estimatedInterestEarned")}</p>
-                <p className="text-xl font-bold">₹{Math.round(interestData.totalInterestEarned).toLocaleString()}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-muted p-3 sm:p-4 rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1 leading-tight">{t("estimatedInterestEarned")}</p>
+                <p className="text-lg sm:text-xl font-bold">₹{Math.round(interestData.totalInterestEarned).toLocaleString()}</p>
               </div>
-              <div className="bg-muted p-4 rounded-lg">
-                <p className="text-sm text-muted-foreground">{t("potentialInterest")}</p>
-                <p className="text-xl font-bold">₹{Math.round(interestData.potentialInterest).toLocaleString()}</p>
+              <div className="bg-muted p-3 sm:p-4 rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1 leading-tight">{t("potentialInterest")}</p>
+                <p className="text-lg sm:text-xl font-bold">₹{Math.round(interestData.potentialInterest).toLocaleString()}</p>
               </div>
             </div>
             <div className="bg-accent p-3 rounded-lg">
-              <p className="text-sm text-accent-foreground">
+              <p className="text-xs sm:text-sm text-accent-foreground">
                 <strong>{t("collectionRate")}:</strong>{" "}
                 {interestData.potentialInterest > 0
                   ? Math.round((interestData.totalInterestEarned / interestData.potentialInterest) * 100)
@@ -262,9 +262,9 @@ export default function ReportsPage() {
 
                 return (
                   <div key={index} className="space-y-2">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex flex-col sm:flex-row sm:justify-between text-sm space-y-1 sm:space-y-0">
                       <span className="font-medium">{data.month}</span>
-                      <div className="flex space-x-4">
+                      <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-1 sm:space-y-0 text-xs sm:text-sm">
                         <span className="text-primary">{t("lent")}: ₹{data.lent.toLocaleString()}</span>
                         <span className="text-green-600">{t("received")}: ₹{data.received.toLocaleString()}</span>
                       </div>
@@ -304,34 +304,34 @@ export default function ReportsPage() {
             ) : (
               <div className="space-y-4">
                 {borrowerSummaries.slice(0, 10).map((borrower, index) => (
-                  <div key={index} className="border rounded-lg p-4">
+                  <div key={index} className="border rounded-lg p-3 sm:p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2 sm:space-x-3">
                         {/* User Avatar with First Letter */}
-                        <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs sm:text-sm">
                           {borrower.borrowerName.charAt(0).toUpperCase()}
                         </div>
-                        <h3 className="font-semibold">{borrower.borrowerName}</h3>
+                        <h3 className="font-semibold text-sm sm:text-base">{borrower.borrowerName}</h3>
                       </div>
-                      <div className="flex space-x-2">
-                        {borrower.activeLoans > 0 && <Badge variant="default">{borrower.activeLoans} {t("active")}</Badge>}
+                      <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
+                        {borrower.activeLoans > 0 && <Badge variant="default" className="text-xs">{borrower.activeLoans} {t("active")}</Badge>}
                         {borrower.completedLoans > 0 && (
-                          <Badge variant="secondary">{borrower.completedLoans} {t("completed")}</Badge>
+                          <Badge variant="secondary" className="text-xs">{borrower.completedLoans} {t("completed")}</Badge>
                         )}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-sm">
                       <div>
-                        <p className="text-muted-foreground">{t("totalLent")}</p>
+                        <p className="text-muted-foreground text-xs sm:text-sm">{t("totalLent")}</p>
                         <p className="font-semibold">₹{borrower.totalLent.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">{t("received")}</p>
+                        <p className="text-muted-foreground text-xs sm:text-sm">{t("received")}</p>
                         <p className="font-semibold text-green-600">₹{borrower.totalReceived.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">{t("outstanding")}</p>
+                        <p className="text-muted-foreground text-xs sm:text-sm">{t("outstanding")}</p>
                         <p className="font-semibold text-orange-600">₹{borrower.outstanding.toLocaleString()}</p>
                       </div>
                     </div>
@@ -373,19 +373,19 @@ export default function ReportsPage() {
                 .reverse()
                 .map((loan) => (
                   <div key={loan.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                       {/* User Avatar with First Letter */}
-                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs">
+                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs flex-shrink-0">
                         {loan.borrowerName.charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <p className="font-medium">{loan.borrowerName}</p>
-                        <p className="text-sm text-muted-foreground">{t("loanCreated")} • {formatDate(loan.dateCreated)}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm sm:text-base truncate">{loan.borrowerName}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{t("loanCreated")} • {formatDate(loan.dateCreated)}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">₹{loan.amount.toLocaleString()}</p>
-                      <Badge variant={loan.isActive ? "default" : "secondary"}>
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <p className="font-semibold text-sm sm:text-base">₹{loan.amount.toLocaleString()}</p>
+                      <Badge variant={loan.isActive ? "default" : "secondary"} className="text-xs">
                         {loan.isActive ? t("active") : t("completed")}
                       </Badge>
                     </div>
@@ -400,19 +400,19 @@ export default function ReportsPage() {
                   const loan = loans.find((l) => l.id === payment.loanId)
                   return (
                     <div key={payment.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                         {/* User Avatar with First Letter */}
-                        <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold text-xs">
+                        <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold text-xs flex-shrink-0">
                           {loan?.borrowerName?.charAt(0).toUpperCase() || "?"}
                         </div>
-                        <div>
-                          <p className="font-medium">{loan?.borrowerName || "Unknown"}</p>
-                          <p className="text-sm text-muted-foreground">{t("paymentReceived")} • {formatDate(payment.date)}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm sm:text-base truncate">{loan?.borrowerName || "Unknown"}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">{t("paymentReceived")} • {formatDate(payment.date)}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-green-600">₹{payment.amount.toLocaleString()}</p>
-                        <Badge variant={payment.type === "full" ? "default" : "secondary"}>{payment.type}</Badge>
+                      <div className="text-right flex-shrink-0 ml-2">
+                        <p className="font-semibold text-green-600 text-sm sm:text-base">₹{payment.amount.toLocaleString()}</p>
+                        <Badge variant={payment.type === "full" ? "default" : "secondary"} className="text-xs">{payment.type}</Badge>
                       </div>
                     </div>
                   )
