@@ -28,6 +28,9 @@ export default function LoansPage() {
   const { t } = useLanguage()
 
   useEffect(() => {
+    // Sync loan completion status first
+    storage.syncLoanCompletionStatus()
+    
     setLoans(storage.getLoans())
     
     // Add sample data if no loans exist (for testing purposes)
@@ -68,8 +71,7 @@ export default function LoansPage() {
   }
 
   const calculateOutstanding = (loan: Loan) => {
-    const finalAmount = storage.calculateFinalAmount(loan)
-    return finalAmount - loan.totalPaid
+    return storage.calculateOutstandingAmount(loan)
   }
 
   const handleDeleteLoan = async (loanId: string) => {
@@ -159,160 +161,216 @@ export default function LoansPage() {
             </CardContent>
           </Card>
         ) : (
-          filteredLoans.map((loan) => (
-            <Card key={loan.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    {/* User Avatar with First Letter */}
-                    <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-lg">
-                      {loan.borrowerName.charAt(0).toUpperCase()}
+          filteredLoans.map((loan) => {
+            const outstanding = calculateOutstanding(loan)
+            const isCompleted = !loan.isActive
+            
+            return (
+              <Card 
+                key={loan.id} 
+                className={`hover:shadow-md transition-shadow ${
+                  isCompleted ? 'border-green-200 bg-green-50' : ''
+                }`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      {/* User Avatar with First Letter */}
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold text-lg ${
+                        isCompleted 
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-primary text-primary-foreground'
+                      }`}>
+                        {loan.borrowerName.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h3 className={`font-semibold text-lg ${
+                          isCompleted ? 'text-green-700' : ''
+                        }`}>
+                          {loan.borrowerName}
+                        </h3>
+                        {loan.borrowerPhone && (
+                          <div className="flex items-center text-sm text-muted-foreground mt-1">
+                            <Phone size={14} className="mr-1" />
+                            {loan.borrowerPhone}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Badge 
+                      variant={loan.isActive ? "default" : "secondary"}
+                      className={`${
+                        isCompleted 
+                          ? 'bg-green-100 text-green-700 border-green-200' 
+                          : ''
+                      }`}
+                    >
+                      {loan.isActive ? t("active") : t("completed")}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{t("loanAmount")}</p>
+                      <p className="font-semibold flex items-center">
+                        <IndianRupee size={14} className="mr-1" />
+                        {loan.amount.toLocaleString()}
+                      </p>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg">{loan.borrowerName}</h3>
-                      {loan.borrowerPhone && (
-                        <div className="flex items-center text-sm text-muted-foreground mt-1">
-                          <Phone size={14} className="mr-1" />
-                          {loan.borrowerPhone}
-                        </div>
+                      <p className="text-sm text-muted-foreground">{t("finalPayableAmount")}</p>
+                      <p className="font-semibold flex items-center text-primary">
+                        <IndianRupee size={14} className="mr-1" />
+                        {storage.calculateFinalAmount(loan).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        {isCompleted ? "Total Paid" : t("outstanding")}
+                      </p>
+                      <p className={`font-semibold flex items-center ${
+                        isCompleted 
+                          ? 'text-green-600' 
+                          : outstanding > 0 
+                            ? 'text-red-600' 
+                            : 'text-green-600'
+                      }`}>
+                        <IndianRupee size={14} className="mr-1" />
+                        {isCompleted 
+                          ? loan.totalPaid.toLocaleString()
+                          : outstanding.toLocaleString()
+                        }
+                      </p>
+                      {isCompleted && (
+                        <p className="text-xs text-green-600 font-medium">Fully Paid</p>
                       )}
                     </div>
-                  </div>
-                  <Badge variant={loan.isActive ? "default" : "secondary"}>
-                    {loan.isActive ? t("active") : t("completed")}
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t("loanAmount")}</p>
-                    <p className="font-semibold flex items-center">
-                      <IndianRupee size={14} className="mr-1" />
-                      {loan.amount.toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t("finalPayableAmount")}</p>
-                    <p className="font-semibold flex items-center text-primary">
-                      <IndianRupee size={14} className="mr-1" />
-                      {storage.calculateFinalAmount(loan).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t("outstanding")}</p>
-                    <p className="font-semibold flex items-center">
-                      <IndianRupee size={14} className="mr-1" />
-                      {calculateOutstanding(loan).toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t("loanPeriod")}</p>
-                    <p className="font-medium">
-                      {loan.years || 1} {(loan.years || 1) === 1 ? t("years").slice(0, -1) : t("years")}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3 mb-3">
-                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">{t("interestRate")}</p>
+                      <p className="text-sm text-muted-foreground">{t("loanPeriod")}</p>
                       <p className="font-medium">
-                        {loan.interestRate}% {t(loan.interestMethod)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">{t("dateCreated")}</p>
-                      <p className="font-medium flex items-center">
-                        <Calendar size={14} className="mr-1" />
-                        {formatDate(loan.dateCreated)}
+                        {loan.years || 1} {(loan.years || 1) === 1 ? t("years").slice(0, -1) : t("years")}
                       </p>
                     </div>
                   </div>
-                  
-                  {loan.expectedReturnDate && (
-                    <div className="bg-accent/50 p-2 rounded-lg">
-                      <p className="text-sm text-muted-foreground">Expected Return Date</p>
-                      <p className="font-medium flex items-center">
-                        <Calendar size={14} className="mr-1" />
-                        {formatDate(loan.expectedReturnDate)}
-                      </p>
+
+                  <div className="space-y-3 mb-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">{t("interestRate")}</p>
+                        <p className="font-medium">
+                          {loan.interestRate}% {t(loan.interestMethod)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">{t("dateCreated")}</p>
+                        <p className="font-medium flex items-center">
+                          <Calendar size={14} className="mr-1" />
+                          {formatDate(loan.dateCreated)}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {loan.expectedReturnDate && (
+                      <div className="bg-accent/50 p-2 rounded-lg">
+                        <p className="text-sm text-muted-foreground">Expected Return Date</p>
+                        <p className="font-medium flex items-center">
+                          <Calendar size={14} className="mr-1" />
+                          {formatDate(loan.expectedReturnDate)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {loan.totalPaid > 0 && (
+                    <div className="mb-3">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-muted-foreground">{t("paymentProgress")}</span>
+                        <span className="font-medium">
+                          ₹{loan.totalPaid.toLocaleString()} {t("paid")}
+                          {isCompleted && <span className="text-green-600 ml-1">✓</span>}
+                        </span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${
+                            isCompleted ? 'bg-green-500' : 'bg-primary'
+                          }`}
+                          style={{ 
+                            width: `${Math.min((loan.totalPaid / storage.calculateFinalAmount(loan)) * 100, 100)}%` 
+                          }}
+                        />
+                      </div>
                     </div>
                   )}
-                </div>
 
-                {loan.totalPaid > 0 && (
-                  <div className="mb-3">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">{t("paymentProgress")}</span>
-                      <span className="font-medium">₹{loan.totalPaid.toLocaleString()} {t("paid")}</span>
+                  {loan.notes && (
+                    <div className="mt-3 p-3 bg-muted rounded-lg">
+                      <p className="text-sm">{loan.notes}</p>
                     </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full transition-all"
-                        style={{ width: `${(loan.totalPaid / loan.amount) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {loan.notes && (
-                  <div className="mt-3 p-3 bg-muted rounded-lg">
-                    <p className="text-sm">{loan.notes}</p>
-                  </div>
-                )}
-
-                <div className="flex space-x-2 mt-4">
-                  <Link href={`/loans/edit/${loan.id}`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full bg-transparent">
-                      <Edit3 size={14} className="mr-1" />
-                      {t("edit")}
-                    </Button>
-                  </Link>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1 bg-transparent border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                        disabled={isDeleting === loan.id}
-                      >
-                        <Trash2 size={14} className="mr-1" />
-                        {isDeleting === loan.id ? t("loading") : t("delete")}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>{t("deleteLoan")}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {t("deleteLoanConfirm")}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteLoan(loan.id)}
-                          className="bg-red-600 hover:bg-red-700 text-white"
-                        >
-                          {t("delete")}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  {loan.isActive && (
-                    <Link href="/payments" className="flex-1">
-                      <Button size="sm" className="w-full">
-                        {t("recordPayment")}
+                  <div className="flex space-x-2 mt-4">
+                    <Link href={`/loans/edit/${loan.id}`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full bg-transparent">
+                        <Edit3 size={14} className="mr-1" />
+                        {t("edit")}
                       </Button>
                     </Link>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1 bg-transparent border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          disabled={isDeleting === loan.id}
+                        >
+                          <Trash2 size={14} className="mr-1" />
+                          {isDeleting === loan.id ? t("loading") : t("delete")}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{t("deleteLoan")}</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {t("deleteLoanConfirm")}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteLoan(loan.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                          >
+                            {t("delete")}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    {loan.isActive && outstanding > 0 && (
+                      <Link href="/payments" className="flex-1">
+                        <Button size="sm" className="w-full">
+                          {t("recordPayment")}
+                        </Button>
+                      </Link>
+                    )}
+                    {isCompleted && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="flex-1 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                        disabled
+                      >
+                        ✓ Completed
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })
         )}
       </div>
     </div>

@@ -43,6 +43,9 @@ export default function DashboardPage() {
 
     setIsAuthenticated(true)
 
+    // Sync loan completion status first
+    storage.syncLoanCompletionStatus()
+
     // Calculate summary stats
     const loans = storage.getLoans()
     setLoans(loans) // Store loans in state
@@ -56,8 +59,7 @@ export default function DashboardPage() {
     // Calculate pending payments (outstanding amount from active loans)
     const activeLoansData = loans.filter((loan) => loan.isActive)
     const pendingAmount = activeLoansData.reduce((sum, loan) => {
-      const finalAmount = storage.calculateFinalAmount(loan)
-      return sum + (finalAmount - loan.totalPaid)
+      return sum + storage.getOutstandingAmount(loan)
     }, 0)
 
     setTotalLent(lentAmount)
@@ -85,8 +87,7 @@ export default function DashboardPage() {
         
         const activeLoansData = updatedLoans.filter((loan) => loan.isActive)
         const pendingAmount = activeLoansData.reduce((sum, loan) => {
-          const finalAmount = storage.calculateFinalAmount(loan)
-          return sum + (finalAmount - loan.totalPaid)
+          return sum + storage.getOutstandingAmount(loan)
         }, 0)
 
         setTotalLent(lentAmount)
@@ -253,7 +254,7 @@ export default function DashboardPage() {
               {t("viewAll")} <ChevronRight size={16} />
             </Link>
           </div>
-          {activeLoans === 0 ? (
+          {loans.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center">
                 <p className="text-muted-foreground">{t("noLoansYet")}</p>
@@ -261,10 +262,13 @@ export default function DashboardPage() {
             </Card>
           ) : (
             <div className="space-y-3">
+              {/* Active Loans */}
               {loans
-                .slice(0, 3)
+                .filter(loan => loan.isActive)
+                .slice(0, 2)
                 .map((loan) => {
                   const isOverdue = overdueLoans.some(overdueLoan => overdueLoan.id === loan.id)
+                  const outstanding = storage.calculateOutstandingAmount(loan)
                   return (
                     <Card 
                       key={loan.id} 
@@ -283,14 +287,19 @@ export default function DashboardPage() {
                               {loan.borrowerName.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1">
-                              <p className={`font-semibold ${isOverdue ? 'text-red-700' : ''}`}>
-                                {loan.borrowerName}
-                                {isOverdue && <span className="text-red-500 text-xs ml-2">(OVERDUE)</span>}
-                              </p>
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className={`font-semibold ${isOverdue ? 'text-red-700' : ''}`}>
+                                  {loan.borrowerName}
+                                </p>
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                                  Active
+                                </span>
+                                {isOverdue && <span className="text-red-500 text-xs font-medium">(OVERDUE)</span>}
+                              </div>
                               <div className="text-sm text-muted-foreground">
                                 <p>₹{loan.amount.toLocaleString()} → ₹{storage.calculateFinalAmount(loan).toLocaleString()}</p>
                                 <p className="text-xs">
-                                  {loan.years || 1} {(loan.years || 1) === 1 ? 'year' : 'years'} @ {loan.interestRate}%
+                                  Outstanding: ₹{outstanding.toLocaleString()}
                                   {loan.dueDate && (
                                     <span className={`ml-2 ${isOverdue ? 'text-red-600 font-medium' : ''}`}>
                                       Due: {new Date(loan.dueDate).toLocaleDateString()}
@@ -346,6 +355,86 @@ export default function DashboardPage() {
                     </Card>
                   )
                 })}
+              
+              {/* Completed Loans */}
+              {loans
+                .filter(loan => !loan.isActive)
+                .slice(0, 1)
+                .map((loan) => (
+                  <Card 
+                    key={loan.id} 
+                    className="cursor-pointer hover:shadow-md transition-shadow border-green-200 bg-green-50"
+                    onClick={(e) => handleLoanClick(loan.id, e)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3 flex-1">
+                          {/* User Avatar with First Letter */}
+                          <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-semibold text-sm shadow-md">
+                            {loan.borrowerName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="font-semibold text-green-700">
+                                {loan.borrowerName}
+                              </p>
+                              <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                                Completed
+                              </span>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              <p>₹{loan.amount.toLocaleString()} → ₹{storage.calculateFinalAmount(loan).toLocaleString()}</p>
+                              <p className="text-xs text-green-600 font-medium">
+                                Fully Paid • Completed on {new Date(storage.getPaymentsForLoan(loan.id).slice(-1)[0]?.date || loan.dateCreated).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="text-right">
+                            <p className="text-sm font-medium">{loan.interestRate}%</p>
+                            <p className="text-xs text-muted-foreground">{t(loan.interestMethod)}</p>
+                          </div>
+                          <Link href={`/loans/edit/${loan.id}`}>
+                            <button className="p-2 hover:bg-muted rounded-lg transition-colors">
+                              <Edit3 size={16} className="text-muted-foreground hover:text-foreground" />
+                            </button>
+                          </Link>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button 
+                                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                disabled={isDeleting === loan.id}
+                              >
+                                <Trash2 
+                                  size={16} 
+                                  className="text-red-400 hover:text-red-600" 
+                                />
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t("deleteLoan")}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t("deleteLoanConfirm")}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteLoan(loan.id)}
+                                  className="bg-red-600 hover:bg-red-700 text-white"
+                                >
+                                  {isDeleting === loan.id ? t("loading") : t("delete")}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
             </div>
           )}
         </div>

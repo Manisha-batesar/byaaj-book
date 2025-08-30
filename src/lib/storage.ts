@@ -120,6 +120,52 @@ export const storage = {
     return storage.calculateFinalAmount(loan) - loan.amount
   },
 
+  // Calculate outstanding amount for a loan
+  calculateOutstandingAmount: (loan: Loan): number => {
+    const finalAmount = storage.calculateFinalAmount(loan)
+    const outstanding = finalAmount - loan.totalPaid
+    return Math.max(0, outstanding) // Ensure it's never negative
+  },
+
+  // Check if a loan is completed (fully paid)
+  isLoanCompleted: (loan: Loan): boolean => {
+    const finalAmount = storage.calculateFinalAmount(loan)
+    // Use a small tolerance for floating point comparison
+    return loan.totalPaid >= finalAmount - 0.01
+  },
+
+  // Get the outstanding amount for a loan
+  getOutstandingAmount: (loan: Loan): number => {
+    const finalAmount = storage.calculateFinalAmount(loan)
+    const outstanding = finalAmount - loan.totalPaid
+    // Return 0 if outstanding is very small (to handle floating point precision)
+    return outstanding < 0.01 ? 0 : outstanding
+  },
+
+  // Sync loan completion status - ensure isActive matches actual completion status
+  syncLoanCompletionStatus: () => {
+    if (typeof window === "undefined") return false
+    
+    const loans = storage.getLoans()
+    let hasChanges = false
+    
+    const updatedLoans = loans.map(loan => {
+      const isCompleted = storage.isLoanCompleted(loan)
+      if (loan.isActive === isCompleted) {
+        // Need to update: if completed but still active, or if not completed but inactive
+        hasChanges = true
+        return { ...loan, isActive: !isCompleted }
+      }
+      return loan
+    })
+    
+    if (hasChanges) {
+      storage.saveLoans(updatedLoans)
+    }
+    
+    return hasChanges
+  },
+
   getPayments: (): Payment[] => {
     if (typeof window === "undefined") return []
     const data = localStorage.getItem(STORAGE_KEYS.PAYMENTS)
@@ -142,10 +188,10 @@ export const storage = {
 
     const loan = loans[loanIndex]
     const finalAmount = storage.calculateFinalAmount(loan)
-    const outstanding = finalAmount - loan.totalPaid
+    const outstanding = storage.getOutstandingAmount(loan)
 
     // Validate payment amount
-    if (amount <= 0 || amount > outstanding) return false
+    if (amount <= 0 || amount > outstanding + 0.01) return false // Add small tolerance
 
     // Create new payment record
     const newPayment: Payment = {
@@ -156,11 +202,16 @@ export const storage = {
       type,
     }
 
-    // Update loan
+    // Calculate new total paid
+    const newTotalPaid = loan.totalPaid + amount
+    
+    // Update loan - mark as inactive (completed) if payment covers outstanding amount
+    const isCompleted = storage.isLoanCompleted({ ...loan, totalPaid: newTotalPaid })
+    
     loans[loanIndex] = {
       ...loan,
-      totalPaid: loan.totalPaid + amount,
-      isActive: type === "full" || loan.totalPaid + amount < finalAmount,
+      totalPaid: newTotalPaid,
+      isActive: !isCompleted, // Active only if not completed
     }
 
     // Save updates

@@ -34,13 +34,15 @@ export default function PaymentsPage() {
       return
     }
     
+    // Sync loan completion status first
+    storage.syncLoanCompletionStatus()
+    
     const loans = storage.getLoans()
     setAllLoans(loans)
   }, [router])
 
   const calculateOutstanding = (loan: Loan) => {
-    const finalAmount = storage.calculateFinalAmount(loan)
-    return finalAmount - loan.totalPaid
+    return storage.getOutstandingAmount(loan)
   }
   const getLastPaymentDate = (loanId: string) => {
     const payments = storage.getPaymentsForLoan(loanId)
@@ -90,11 +92,14 @@ export default function PaymentsPage() {
               const outstanding = calculateOutstanding(loan)
               const lastPaymentDate = getLastPaymentDate(loan.id)
               const finalAmount = storage.calculateFinalAmount(loan)
+              const isCompleted = !loan.isActive
 
               return (
                 <Card 
                   key={loan.id} 
-                  className="transition-all duration-200 hover:shadow-md cursor-pointer"
+                  className={`transition-all duration-200 hover:shadow-md cursor-pointer ${
+                    isCompleted ? 'border-green-200 bg-green-50' : ''
+                  }`}
                   onClick={() => router.push(`/loans/${loan.id}`)}
                 >
                   <CardContent className="p-6">
@@ -102,10 +107,16 @@ export default function PaymentsPage() {
                       <div className="flex-1">
                         {/* Client Name with Avatar - Big and Bold */}
                         <div className="flex items-center space-x-3 mb-1">
-                          <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                            isCompleted 
+                              ? 'bg-green-500 text-white' 
+                              : 'bg-primary text-primary-foreground'
+                          }`}>
                             {getClientInitial(loan.borrowerName)}
                           </div>
-                          <h2 className="text-xl font-bold text-foreground">
+                          <h2 className={`text-xl font-bold ${
+                            isCompleted ? 'text-green-700' : 'text-foreground'
+                          }`}>
                             {loan.borrowerName}
                           </h2>
                         </div>
@@ -138,7 +149,7 @@ export default function PaymentsPage() {
                                 ? outstanding > 0 
                                   ? "text-red-600" 
                                   : "text-green-600"
-                                : "text-muted-foreground"
+                                : "text-green-600"
                             }`}>
                               {loan.isActive 
                                 ? `₹${outstanding.toLocaleString()}`
@@ -161,7 +172,14 @@ export default function PaymentsPage() {
 
                         {/* Status Badge */}
                         <div className="mt-3 flex items-center justify-between ml-15">
-                          <Badge variant={loan.isActive ? "default" : "secondary"}>
+                          <Badge 
+                            variant={loan.isActive ? "default" : "secondary"}
+                            className={`${
+                              isCompleted 
+                                ? 'bg-green-100 text-green-700 border-green-200' 
+                                : ''
+                            }`}
+                          >
                             {loan.isActive ? "Active" : "Completed"}
                           </Badge>
                           
@@ -178,6 +196,13 @@ export default function PaymentsPage() {
                             >
                               {t("recordPayment")}
                             </Button>
+                          )}
+                          
+                          {/* Completed Status for Completed Loans */}
+                          {isCompleted && (
+                            <span className="text-xs text-green-600 font-medium">
+                              ✓ Fully Paid
+                            </span>
                           )}
                         </div>
                       </div>
@@ -232,7 +257,7 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
 
   useEffect(() => {
     // Auto-set to full payment if amount matches outstanding
-    if (paymentAmount && Number.parseFloat(paymentAmount) === outstanding) {
+    if (paymentAmount && Number.parseFloat(paymentAmount) >= outstanding) {
       setPaymentType("full")
     } else if (paymentAmount && Number.parseFloat(paymentAmount) < outstanding) {
       setPaymentType("partial")
@@ -258,8 +283,15 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
     setIsSubmitting(true)
 
     try {
-      const success = storage.recordPayment(loan.id, amount, paymentType)
+      const amount = Number.parseFloat(paymentAmount)
+      const isFullPayment = amount >= outstanding
+      
+      const success = storage.recordPayment(loan.id, amount, isFullPayment ? "full" : "partial")
       if (success) {
+        // Show different success message for completed loans
+        if (isFullPayment) {
+          console.log(`Loan for ${loan.borrowerName} has been completed!`)
+        }
         onPaymentRecorded()
       } else {
         setError(t("failedToRecord"))
@@ -359,6 +391,11 @@ function PaymentModal({ loan, onClose, onPaymentRecorded }: PaymentModalProps) {
                   <strong>{t("remainingBalance")}:</strong> ₹
                   {(outstanding - Number.parseFloat(paymentAmount || "0")).toLocaleString()}
                 </p>
+                {Number.parseFloat(paymentAmount || "0") >= outstanding && (
+                  <p className="text-sm text-green-600 font-medium mt-2">
+                    ✓ This payment will complete the loan!
+                  </p>
+                )}
               </div>
             )}
 
