@@ -151,6 +151,7 @@ export default function AddLoanPage() {
                 <Input
                   ref={borrowerNameRef}
                   id="borrowerName"
+                  autoFocus
                   value={formData.borrowerName}
                   onChange={(e) => handleInputChange("borrowerName", e.target.value)}
                   placeholder={t("borrowerNamePlaceholder")}
@@ -163,8 +164,36 @@ export default function AddLoanPage() {
                 <Label htmlFor="borrowerPhone" className="mb-2 block">{t("phoneNumber")}</Label>
                 <Input
                   id="borrowerPhone"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="\d*"
+                  maxLength={10}
                   value={formData.borrowerPhone}
-                  onChange={(e) => handleInputChange("borrowerPhone", e.target.value)}
+                  onChange={(e) => {
+                    // Keep only digits and limit to 10 characters
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 10)
+                    handleInputChange("borrowerPhone", digits)
+                  }}
+                  onKeyDown={(e) => {
+                    // Allow control keys and digits only
+                    const allowedKeys = [
+                      "Backspace",
+                      "Delete",
+                      "ArrowLeft",
+                      "ArrowRight",
+                      "Tab",
+                    ]
+                    if (allowedKeys.includes(e.key)) return
+                    if (!/^[0-9]$/.test(e.key)) {
+                      e.preventDefault()
+                    }
+                  }}
+                  onPaste={(e: React.ClipboardEvent<HTMLInputElement>) => {
+                    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 10)
+                    // Prevent the default paste and set sanitized value instead
+                    e.preventDefault()
+                    handleInputChange("borrowerPhone", pasted)
+                  }}
                   placeholder={t("phonePlaceholder")}
                   className={errors.borrowerPhone ? "border-destructive" : ""}
                 />
