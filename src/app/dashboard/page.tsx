@@ -226,7 +226,7 @@ export default function DashboardPage() {
             {actionCards.map((card) => {
               const Icon = card.icon
               return (
-                <Link key={card.title} href={card.href}>
+                <Link key={card.title} href={card.href + (card.href === '/loans/add' ? '?autofocus=borrowerName' : '')}>
                   <Card className="cursor-pointer hover:shadow-md transition-shadow h-32">
                     <CardContent className="p-4 h-full flex flex-col">
                       <div className={`w-14 h-14 rounded-lg ${card.color} flex items-center justify-center mb-3 p-3`}>

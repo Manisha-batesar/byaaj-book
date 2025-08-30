@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,7 @@ export default function AddLoanPage() {
   const router = useRouter()
   const { t } = useLanguage()
   const borrowerNameRef = useRef<HTMLInputElement>(null)
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
     borrowerName: "",
     borrowerPhone: "",
@@ -37,12 +38,38 @@ export default function AddLoanPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Auto-focus the first input when component mounts
+  // Auto-focus the first input when component mounts. If navigation included
+  // ?autofocus=borrowerName then focus and attempt a re-focus shortly after
+  // to trigger the on-screen keyboard on mobile devices.
   useEffect(() => {
-    if (borrowerNameRef.current) {
+    const autofocusTarget = searchParams?.get("autofocus")
+    const shouldAutofocus = autofocusTarget === "borrowerName"
+
+    if (shouldAutofocus && borrowerNameRef.current) {
+      // Initial focus (synchronous)
+      borrowerNameRef.current.focus()
+
+      // Some mobile browsers only open the keyboard if focus happens after a
+      // short delay or inside a user gesture. Re-focus after a tiny timeout to
+      // improve reliability.
+      const tId = window.setTimeout(() => {
+        borrowerNameRef.current?.focus()
+        // Move cursor to end
+        const el = borrowerNameRef.current
+        if (el) {
+          const len = el.value?.length || 0
+          el.setSelectionRange(len, len)
+        }
+      }, 150)
+
+      return () => window.clearTimeout(tId)
+    }
+
+    // Default auto-focus when no explicit param present
+    if (!searchParams?.get("autofocus") && borrowerNameRef.current) {
       borrowerNameRef.current.focus()
     }
-  }, [])
+  }, [searchParams])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -151,7 +178,6 @@ export default function AddLoanPage() {
                 <Input
                   ref={borrowerNameRef}
                   id="borrowerName"
-                  autoFocus
                   value={formData.borrowerName}
                   onChange={(e) => handleInputChange("borrowerName", e.target.value)}
                   placeholder={t("borrowerNamePlaceholder")}
