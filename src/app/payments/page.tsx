@@ -42,7 +42,6 @@ export default function PaymentsPage() {
     const finalAmount = storage.calculateFinalAmount(loan)
     return finalAmount - loan.totalPaid
   }
-
   const getLastPaymentDate = (loanId: string) => {
     const payments = storage.getPaymentsForLoan(loanId)
     if (payments.length === 0) return null

@@ -181,7 +181,7 @@ export default function LoanDetailsPage() {
             </div>
 
             <div>
-              <p className="text-sm text-muted-foreground">{t("status")}</p>
+              <p className="text-sm text-muted-foreground">Status</p>
               <Badge variant={loan.isActive ? "default" : "secondary"}>
                 {loan.isActive ? t("active") : t("completed")}
               </Badge>
