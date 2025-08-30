@@ -142,8 +142,8 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 bg-primary text-primary-foreground p-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t("settings")}</h1>
           <LanguageSelector />

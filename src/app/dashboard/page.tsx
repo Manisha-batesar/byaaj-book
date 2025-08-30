@@ -157,9 +157,9 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6">
-        <div className="flex items-center justify-between mb-6">
+      {/* Sticky Header - Only top part with logo, name, search, language */}
+      <div className="sticky top-0 z-50 bg-primary text-primary-foreground p-6">
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img src="/bb-logo.png" alt="ByajBook" className="h-16 w-16 rounded-full" />
             <h1 className="text-2xl font-bold">{t("appName")}</h1>
@@ -169,45 +169,48 @@ export default function DashboardPage() {
             <LanguageSelector />
           </div>
         </div>
+      </div>
 
+      {/* Scrollable Content */}
+      <div className="p-6">
         {/* Summary Cards */}
         <div className="space-y-4">
           {/* First row - 2 cards */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
+            <div className="bg-card border rounded-lg p-3 text-center">
               <div className="flex items-center justify-center mb-1">
-                <IndianRupee size={16} />
+                <IndianRupee size={16} className="text-primary" />
               </div>
-              <p className="text-xs opacity-80">{t("totalLent")}</p>
+              <p className="text-xs text-muted-foreground">{t("totalLent")}</p>
               <p className="font-semibold">₹{totalLent.toLocaleString()}</p>
             </div>
-            <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
+            <div className="bg-card border rounded-lg p-3 text-center">
               <div className="flex items-center justify-center mb-1">
-                <TrendingUp size={16} />
+                <TrendingUp size={16} className="text-primary" />
               </div>
-              <p className="text-xs opacity-80">{t("totalPayable")}</p>
+              <p className="text-xs text-muted-foreground">{t("totalPayable")}</p>
               <p className="font-semibold">₹{totalPayable.toLocaleString()}</p>
             </div>
           </div>
           
           {/* Second row - 3 cards */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
+            <div className="bg-card border rounded-lg p-3 text-center">
               <div className="flex items-center justify-center mb-1">
-                <TrendingUp size={14} />
+                <TrendingUp size={14} className="text-green-600" />
               </div>
-              <p className="text-xs opacity-80">{t("received")}</p>
+              <p className="text-xs text-muted-foreground">{t("received")}</p>
               <p className="font-semibold text-sm">₹{totalReceived.toLocaleString()}</p>
             </div>
-            <div className="bg-red-100/20 border border-red-200/30 rounded-lg p-3 text-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
               <div className="flex items-center justify-center mb-1">
-                <IndianRupee size={14} className="text-red-300" />
+                <IndianRupee size={14} className="text-red-600" />
               </div>
-              <p className="text-xs opacity-80">Pending</p>
-              <p className="font-semibold text-sm text-red-200">₹{pendingPayments.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">Pending</p>
+              <p className="font-semibold text-sm text-red-600">₹{pendingPayments.toLocaleString()}</p>
             </div>
-            <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
-              <p className="text-xs opacity-80">{t("activeLoans")}</p>
+            <div className="bg-card border rounded-lg p-3 text-center">
+              <p className="text-xs text-muted-foreground">{t("activeLoans")}</p>
               <p className="font-semibold">{activeLoans}</p>
             </div>
           </div>
