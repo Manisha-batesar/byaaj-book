@@ -140,7 +140,7 @@ export default function AddLoanPage() {
 
       {/* Form */}
       <div className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+  <form onSubmit={handleSubmit} className="space-y-6 theme-golden">
           <Card>
             <CardHeader>
               <CardTitle>{t("borrowerInformation")}</CardTitle>
