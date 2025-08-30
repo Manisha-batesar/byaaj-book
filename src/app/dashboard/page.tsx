@@ -21,7 +21,7 @@ import { SearchClientButton } from "@/components/search-client-button"
 import { DueReminders } from "@/components/due-reminders"
 import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
-import { Plus, Calculator, TrendingUp, FileText, IndianRupee, Edit3, Trash2 } from "lucide-react"
+import { Plus, Calculator, TrendingUp, FileText, IndianRupee, Edit3, Trash2, ChevronRight } from "lucide-react"
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -249,8 +249,8 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">{t("recentLoans")}</h2>
-            <Link href="/loans" className="text-primary text-sm font-medium">
-              {t("viewAll")}
+            <Link href="/loans" className="text-primary text-sm font-medium underline flex items-center gap-1">
+              {t("viewAll")} <ChevronRight size={16} />
             </Link>
           </div>
           {activeLoans === 0 ? (
