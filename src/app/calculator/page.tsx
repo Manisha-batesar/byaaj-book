@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { BottomNav } from "@/components/bottom-nav"
 import { ArrowLeft, Calculator, IndianRupee } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
 import { LanguageSelector } from "@/components/language-selector"
@@ -154,7 +155,7 @@ export default function CalculatorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-6">
         <div className="flex items-center justify-between">
@@ -403,6 +404,8 @@ export default function CalculatorPage() {
           </CardContent>
         </Card>
       </div>
+
+      <BottomNav />
     </div>
   )
 }

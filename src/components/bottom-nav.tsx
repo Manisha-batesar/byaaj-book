@@ -24,11 +24,13 @@ export function BottomNav() {
               key={href}
               href={href}
               className={`flex flex-col items-center justify-center flex-1 h-full space-y-1 ${
-                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                isActive 
+                  ? "text-primary-foreground bg-primary" 
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon size={20} />
-              <span className="text-xs font-medium">{label}</span>
+              <span className={`text-xs ${isActive ? "font-bold" : "font-medium"}`}>{label}</span>
             </Link>
           )
         })}

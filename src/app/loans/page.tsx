@@ -44,6 +44,7 @@ export default function LoansPage() {
         interestType: "simple",
         years: 1,
         dateCreated: new Date().toISOString(),
+        dueDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // Due in 1 year
         totalPaid: 0,
         isActive: true,
       }
@@ -130,7 +131,11 @@ export default function LoansPage() {
               variant={filter === tab.key ? "default" : "outline"}
               size="sm"
               onClick={() => setFilter(tab.key as typeof filter)}
-              className="bg-transparent"
+              className={`transition-all duration-200 ${
+                filter === tab.key 
+                  ? 'bg-primary text-primary-foreground font-bold shadow-md' 
+                  : 'bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary/50'
+              }`}
             >
               {tab.label}
             </Button>
