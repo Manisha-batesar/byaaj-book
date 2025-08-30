@@ -184,15 +184,15 @@ export default function LoansPage() {
                         {loan.borrowerName.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <h3 className={`font-semibold text-lg ${
+                        <h3 className={`font-semibold text-lg truncate ${
                           isCompleted ? 'text-green-700' : ''
                         }`}>
                           {loan.borrowerName}
                         </h3>
                         {loan.borrowerPhone && (
                           <div className="flex items-center text-sm text-muted-foreground mt-1">
-                            <Phone size={14} className="mr-1" />
-                            {loan.borrowerPhone}
+                            <Phone size={14} className="mr-1 flex-shrink-0" />
+                            <span className="truncate">{loan.borrowerPhone}</span>
                           </div>
                         )}
                       </div>
@@ -210,47 +210,49 @@ export default function LoansPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm text-muted-foreground">{t("loanAmount")}</p>
-                      <p className="font-semibold flex items-center">
-                        <IndianRupee size={14} className="mr-1" />
-                        {loan.amount.toLocaleString()}
+                      <p className="font-semibold flex items-center truncate">
+                        <IndianRupee size={14} className="mr-1 flex-shrink-0" />
+                        <span className="truncate">{loan.amount.toLocaleString()}</span>
                       </p>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm text-muted-foreground">{t("finalPayableAmount")}</p>
-                      <p className="font-semibold flex items-center text-primary">
-                        <IndianRupee size={14} className="mr-1" />
-                        {storage.calculateFinalAmount(loan).toLocaleString()}
+                      <p className="font-semibold flex items-center text-primary truncate">
+                        <IndianRupee size={14} className="mr-1 flex-shrink-0" />
+                        <span className="truncate">{storage.calculateFinalAmount(loan).toLocaleString()}</span>
                       </p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm text-muted-foreground">
                         {isCompleted ? "Total Paid" : t("outstanding")}
                       </p>
-                      <p className={`font-semibold flex items-center ${
+                      <p className={`font-semibold flex items-center truncate ${
                         isCompleted 
                           ? 'text-green-600' 
                           : outstanding > 0 
                             ? 'text-red-600' 
                             : 'text-green-600'
                       }`}>
-                        <IndianRupee size={14} className="mr-1" />
-                        {isCompleted 
-                          ? loan.totalPaid.toLocaleString()
-                          : outstanding.toLocaleString()
-                        }
+                        <IndianRupee size={14} className="mr-1 flex-shrink-0" />
+                        <span className="truncate">
+                          {isCompleted 
+                            ? loan.totalPaid.toLocaleString()
+                            : outstanding.toLocaleString()
+                          }
+                        </span>
                       </p>
                       {isCompleted && (
                         <p className="text-xs text-green-600 font-medium">Fully Paid</p>
                       )}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm text-muted-foreground">{t("loanPeriod")}</p>
-                      <p className="font-medium">
+                      <p className="font-medium truncate">
                         {loan.years || 1} {(loan.years || 1) === 1 ? t("years").slice(0, -1) : t("years")}
                       </p>
                     </div>
@@ -258,17 +260,17 @@ export default function LoansPage() {
 
                   <div className="space-y-3 mb-3">
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-sm text-muted-foreground">{t("interestRate")}</p>
-                        <p className="font-medium">
+                        <p className="font-medium truncate">
                           {loan.interestRate}% {t(loan.interestMethod)}
                         </p>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-sm text-muted-foreground">{t("dateCreated")}</p>
-                        <p className="font-medium flex items-center">
-                          <Calendar size={14} className="mr-1" />
-                          {formatDate(loan.dateCreated)}
+                        <p className="font-medium flex items-center truncate">
+                          <Calendar size={14} className="mr-1 flex-shrink-0" />
+                          <span className="truncate">{formatDate(loan.dateCreated)}</span>
                         </p>
                       </div>
                     </div>
@@ -276,9 +278,9 @@ export default function LoansPage() {
                     {loan.expectedReturnDate && (
                       <div className="bg-accent/50 p-2 rounded-lg">
                         <p className="text-sm text-muted-foreground">Expected Return Date</p>
-                        <p className="font-medium flex items-center">
-                          <Calendar size={14} className="mr-1" />
-                          {formatDate(loan.expectedReturnDate)}
+                        <p className="font-medium flex items-center truncate">
+                          <Calendar size={14} className="mr-1 flex-shrink-0" />
+                          <span className="truncate">{formatDate(loan.expectedReturnDate)}</span>
                         </p>
                       </div>
                     )}
@@ -288,18 +290,19 @@ export default function LoansPage() {
                     <div className="mb-3">
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-muted-foreground">{t("paymentProgress")}</span>
-                        <span className="font-medium">
-                          ₹{loan.totalPaid.toLocaleString()} {t("paid")}
+                        <span className="font-medium flex items-center flex-shrink-0">
+                          <span className="truncate">₹{loan.totalPaid.toLocaleString()} {t("paid")}</span>
                           {isCompleted && <span className="text-green-600 ml-1">✓</span>}
                         </span>
                       </div>
-                      <div className="w-full bg-muted rounded-full h-2">
+                      <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                         <div
-                          className={`h-2 rounded-full transition-all ${
+                          className={`h-2 rounded-full transition-all duration-300 ${
                             isCompleted ? 'bg-green-500' : 'bg-primary'
                           }`}
                           style={{ 
-                            width: `${Math.min((loan.totalPaid / storage.calculateFinalAmount(loan)) * 100, 100)}%` 
+                            width: `${Math.min((loan.totalPaid / storage.calculateFinalAmount(loan)) * 100, 100)}%`,
+                            maxWidth: '100%'
                           }}
                         />
                       </div>
@@ -308,11 +311,11 @@ export default function LoansPage() {
 
                   {loan.notes && (
                     <div className="mt-3 p-3 bg-muted rounded-lg">
-                      <p className="text-sm">{loan.notes}</p>
+                      <p className="text-sm break-words">{loan.notes}</p>
                     </div>
                   )}
 
-                  <div className="flex space-x-2 mt-4">
+                  <div className="flex flex-col sm:flex-row gap-2 mt-4">
                     <Link href={`/loans/edit/${loan.id}`} className="flex-1">
                       <Button variant="outline" size="sm" className="w-full bg-transparent">
                         <Edit3 size={14} className="mr-1" />

@@ -115,21 +115,21 @@ export default function LoanDetailsPage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">{t("borrowerName")}</p>
-              <p className="font-semibold text-lg">{loan.borrowerName}</p>
+              <p className="font-semibold text-lg truncate">{loan.borrowerName}</p>
             </div>
             {loan.borrowerPhone && (
               <div>
                 <p className="text-sm text-muted-foreground">{t("phoneNumber")}</p>
-                <div className="flex items-center space-x-2">
-                  <Phone size={16} />
-                  <p className="font-medium">{loan.borrowerPhone}</p>
+                <div className="flex items-center space-x-2 min-w-0">
+                  <Phone size={16} className="flex-shrink-0" />
+                  <p className="font-medium truncate">{loan.borrowerPhone}</p>
                 </div>
               </div>
             )}
             {loan.notes && (
               <div>
                 <p className="text-sm text-muted-foreground">{t("notes")}</p>
-                <p className="text-sm bg-muted p-2 rounded">{loan.notes}</p>
+                <p className="text-sm bg-muted p-2 rounded break-words">{loan.notes}</p>
               </div>
             )}
           </CardContent>
@@ -145,37 +145,37 @@ export default function LoanDetailsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">{t("principalAmount")}</p>
-                <p className="font-semibold text-lg">₹{loan.amount.toLocaleString()}</p>
+                <p className="font-semibold text-lg truncate">₹{loan.amount.toLocaleString()}</p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">{t("finalPayableAmount")}</p>
-                <p className="font-semibold text-lg text-green-600">₹{finalAmount.toLocaleString()}</p>
+                <p className="font-semibold text-lg text-green-600 truncate">₹{finalAmount.toLocaleString()}</p>
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">{t("interestRate")}</p>
-                <p className="font-medium">{loan.interestRate}%</p>
+                <p className="font-medium truncate">{loan.interestRate}%</p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">{t("interestMethod")}</p>
-                <Badge variant="outline">{t(loan.interestMethod)}</Badge>
+                <Badge variant="outline" className="truncate max-w-full">{t(loan.interestMethod)}</Badge>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">{t("loanPeriod")}</p>
-                <p className="font-medium">{loan.years || 1} {(loan.years || 1) === 1 ? 'year' : 'years'}</p>
+                <p className="font-medium truncate">{loan.years || 1} {(loan.years || 1) === 1 ? 'year' : 'years'}</p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">{t("dateCreated")}</p>
-                <div className="flex items-center space-x-2">
-                  <Calendar size={16} />
-                  <p className="font-medium">{new Date(loan.dateCreated).toLocaleDateString()}</p>
+                <div className="flex items-center space-x-2 min-w-0">
+                  <Calendar size={16} className="flex-shrink-0" />
+                  <p className="font-medium truncate">{new Date(loan.dateCreated).toLocaleDateString()}</p>
                 </div>
               </div>
             </div>
@@ -199,13 +199,13 @@ export default function LoanDetailsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">{t("paid")}</p>
-                <p className="font-semibold text-lg text-blue-600">₹{loan.totalPaid.toLocaleString()}</p>
+                <p className="font-semibold text-lg text-blue-600 truncate">₹{loan.totalPaid.toLocaleString()}</p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">{t("outstanding")}</p>
-                <p className="font-semibold text-lg text-red-600">₹{outstandingAmount.toLocaleString()}</p>
+                <p className="font-semibold text-lg text-red-600 truncate">₹{outstandingAmount.toLocaleString()}</p>
               </div>
             </div>
             
@@ -215,10 +215,13 @@ export default function LoanDetailsPage() {
                 <span>{t("paymentProgress")}</span>
                 <span>{Math.round((loan.totalPaid / finalAmount) * 100)}%</span>
               </div>
-              <div className="w-full bg-muted rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${Math.min((loan.totalPaid / finalAmount) * 100, 100)}%` }}
+                  style={{ 
+                    width: `${Math.min((loan.totalPaid / finalAmount) * 100, 100)}%`,
+                    maxWidth: '100%'
+                  }}
                 />
               </div>
             </div>
@@ -239,14 +242,14 @@ export default function LoanDetailsPage() {
                 {payments
                   .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                   .map((payment) => (
-                    <div key={payment.id} className="flex justify-between items-center p-3 bg-muted/40 rounded-lg">
-                      <div>
-                        <p className="font-medium">₹{payment.amount.toLocaleString()}</p>
+                    <div key={payment.id} className="flex justify-between items-center p-3 bg-muted/40 rounded-lg min-w-0">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">₹{payment.amount.toLocaleString()}</p>
                         <p className="text-sm text-muted-foreground">
                           {new Date(payment.date).toLocaleDateString()}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex-shrink-0 ml-2">
                         <Badge variant="outline" className="text-xs">
                           {payment.type === "full" ? t("fullPayment") : t("partialPayment")}
                         </Badge>
@@ -259,7 +262,7 @@ export default function LoanDetailsPage() {
         )}
 
         {/* Action Buttons */}
-        <div className="flex space-x-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Link href={`/loans/edit/${loan.id}`} className="flex-1">
             <Button className="w-full" variant="outline">
               <Edit3 size={16} className="mr-2" />
