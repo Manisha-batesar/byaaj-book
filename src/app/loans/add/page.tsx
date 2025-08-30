@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,6 +20,7 @@ import Link from "next/link"
 export default function AddLoanPage() {
   const router = useRouter()
   const { t } = useLanguage()
+  const borrowerNameRef = useRef<HTMLInputElement>(null)
   const [formData, setFormData] = useState({
     borrowerName: "",
     borrowerPhone: "",
@@ -35,6 +36,13 @@ export default function AddLoanPage() {
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Auto-focus the first input when component mounts
+  useEffect(() => {
+    if (borrowerNameRef.current) {
+      borrowerNameRef.current.focus()
+    }
+  }, [])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -139,8 +147,9 @@ export default function AddLoanPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="borrowerName">{t("borrowerName")} {t("required")}</Label>
+                <Label htmlFor="borrowerName" className="mb-2 block">{t("borrowerName")} {t("required")}</Label>
                 <Input
+                  ref={borrowerNameRef}
                   id="borrowerName"
                   value={formData.borrowerName}
                   onChange={(e) => handleInputChange("borrowerName", e.target.value)}
@@ -151,7 +160,7 @@ export default function AddLoanPage() {
               </div>
 
               <div>
-                <Label htmlFor="borrowerPhone">{t("phoneNumber")}</Label>
+                <Label htmlFor="borrowerPhone" className="mb-2 block">{t("phoneNumber")}</Label>
                 <Input
                   id="borrowerPhone"
                   value={formData.borrowerPhone}
@@ -163,7 +172,7 @@ export default function AddLoanPage() {
               </div>
 
               <div>
-                <Label htmlFor="notes">{t("notes")}</Label>
+                <Label htmlFor="notes" className="mb-2 block">{t("notes")}</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
@@ -181,7 +190,7 @@ export default function AddLoanPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="amount">{t("loanAmount")} (₹) {t("required")}</Label>
+                <Label htmlFor="amount" className="mb-2 block">{t("loanAmount")} (₹) {t("required")}</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -194,7 +203,7 @@ export default function AddLoanPage() {
               </div>
 
               <div>
-                <Label htmlFor="interestMethod">{t("interestMethod")} {t("required")}</Label>
+                <Label htmlFor="interestMethod" className="mb-2 block">{t("interestMethod")} {t("required")}</Label>
                 <Select
                   value={formData.interestMethod}
                   onValueChange={(value: "monthly" | "yearly" | "sankda") => handleInputChange("interestMethod", value)}
@@ -211,7 +220,7 @@ export default function AddLoanPage() {
               </div>
 
               <div>
-                <Label htmlFor="interestType">{t("interestType")} {t("required")}</Label>
+                <Label htmlFor="interestType" className="mb-2 block">{t("interestType")} {t("required")}</Label>
                 <Select
                   value={formData.interestType}
                   onValueChange={(value: "simple" | "compound") => handleInputChange("interestType", value)}
@@ -238,7 +247,7 @@ export default function AddLoanPage() {
 
               {formData.interestMethod !== "sankda" && (
                 <div>
-                  <Label htmlFor="interestRate">{t("interestRate")} (%) {t("required")}</Label>
+                  <Label htmlFor="interestRate" className="mb-2 block">{t("interestRate")} (%) {t("required")}</Label>
                   <Input
                     id="interestRate"
                     type="number"
@@ -253,7 +262,7 @@ export default function AddLoanPage() {
               )}
 
               <div>
-                <Label htmlFor="years">{t("loanPeriod")} ({t("years")}) {t("required")}</Label>
+                <Label htmlFor="years" className="mb-2 block">{t("loanPeriod")} ({t("years")}) {t("required")}</Label>
                 <Input
                   id="years"
                   type="number"
@@ -282,7 +291,7 @@ export default function AddLoanPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="dateCreated">Loan Date {t("required")}</Label>
+                <Label htmlFor="dateCreated" className="mb-2 block">Loan Date {t("required")}</Label>
                 <DatePicker
                   value={formData.dateCreated}
                   onChange={(date) => handleInputChange("dateCreated", date || new Date())}
@@ -294,7 +303,7 @@ export default function AddLoanPage() {
               </div>
 
               <div>
-                <Label htmlFor="expectedReturnDate">Expected Return Date</Label>
+                <Label htmlFor="expectedReturnDate" className="mb-2 block">Expected Return Date</Label>
                 <DatePicker
                   value={formData.expectedReturnDate || undefined}
                   onChange={(date) => handleInputChange("expectedReturnDate", date || null)}
@@ -306,7 +315,7 @@ export default function AddLoanPage() {
               </div>
 
               <div>
-                <Label htmlFor="dueDate">Due Date {t("required")}</Label>
+                <Label htmlFor="dueDate" className="mb-2 block">Due Date {t("required")}</Label>
                 <DatePicker
                   value={formData.dueDate || undefined}
                   onChange={(date) => handleInputChange("dueDate", date || null)}
