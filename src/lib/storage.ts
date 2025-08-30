@@ -11,6 +11,7 @@ export interface Loan {
   years?: number // Optional for backward compatibility
   dateCreated: string
   expectedReturnDate?: string // Expected date to get money back
+  dueDate: string // Due date for the loan - REQUIRED for new loans
   totalPaid: number
   isActive: boolean
 }
@@ -23,12 +24,28 @@ export interface Payment {
   type: "partial" | "full"
 }
 
+export interface ReminderSettings {
+  daysBeforeDue: 1 | 2 | 3
+  isEnabled: boolean
+}
+
+export interface DueReminder {
+  id: string
+  loanId: string
+  borrowerName: string
+  amount: number
+  dueDate: string
+  daysUntilDue: number
+  isOverdue: boolean
+}
+
 export const STORAGE_KEYS = {
   LOANS: "byajbook_loans",
   PAYMENTS: "byajbook_payments",
   PIN: "byajbook_pin",
   IS_AUTHENTICATED: "byajbook_auth",
   LANGUAGE: "byajbook_language",
+  REMINDER_SETTINGS: "byajbook_reminder_settings",
 } as const
 
 export const storage = {
@@ -202,5 +219,72 @@ export const storage = {
   setLanguage: (language: "en" | "hi") => {
     if (typeof window === "undefined") return
     localStorage.setItem(STORAGE_KEYS.LANGUAGE, language)
+  },
+
+  getReminderSettings: (): ReminderSettings => {
+    if (typeof window === "undefined") return { daysBeforeDue: 2, isEnabled: true }
+    const settings = localStorage.getItem(STORAGE_KEYS.REMINDER_SETTINGS)
+    return settings ? JSON.parse(settings) : { daysBeforeDue: 2, isEnabled: true }
+  },
+
+  setReminderSettings: (settings: ReminderSettings) => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(STORAGE_KEYS.REMINDER_SETTINGS, JSON.stringify(settings))
+  },
+
+  getDueReminders: (): DueReminder[] => {
+    if (typeof window === "undefined") return []
+    
+    const loans = storage.getLoans()
+    const settings = storage.getReminderSettings()
+    const today = new Date()
+    const reminders: DueReminder[] = []
+
+    if (!settings.isEnabled) return reminders
+
+    loans.forEach(loan => {
+      if (!loan.isActive || !loan.dueDate) return
+
+      const dueDate = new Date(loan.dueDate)
+      const timeDiff = dueDate.getTime() - today.getTime()
+      const daysUntilDue = Math.ceil(timeDiff / (1000 * 3600 * 24))
+      
+      // Show reminder if due date is within the configured days or overdue
+      if (daysUntilDue <= settings.daysBeforeDue || daysUntilDue < 0) {
+        reminders.push({
+          id: `reminder_${loan.id}`,
+          loanId: loan.id,
+          borrowerName: loan.borrowerName,
+          amount: loan.amount,
+          dueDate: loan.dueDate,
+          daysUntilDue,
+          isOverdue: daysUntilDue < 0
+        })
+      }
+    })
+
+    return reminders.sort((a, b) => a.daysUntilDue - b.daysUntilDue)
+  },
+
+  getOverdueLoans: (): Loan[] => {
+    if (typeof window === "undefined") return []
+    
+    const loans = storage.getLoans()
+    const today = new Date()
+    
+    return loans.filter(loan => {
+      if (!loan.isActive || !loan.dueDate) return false
+      
+      const dueDate = new Date(loan.dueDate)
+      return dueDate < today
+    })
+  },
+
+  isLoanOverdue: (loan: Loan): boolean => {
+    if (!loan.dueDate || !loan.isActive) return false
+    
+    const today = new Date()
+    const dueDate = new Date(loan.dueDate)
+    return dueDate < today
   },
 }

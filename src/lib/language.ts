@@ -235,6 +235,25 @@ export const translations = {
     loanNotFound: "Loan not found",
     failedToUpdateLoan: "Failed to update loan",
     errorUpdatingLoan: "Error updating loan",
+
+    // Due Date & Reminders
+    dueDate: "Due Date",
+    dueDateRequired: "Due date is required",
+    selectDueDate: "Select due date",
+    dueReminders: "Due Reminders",
+    reminderSettings: "Reminder Settings",
+    reminderDays: "Reminder Days",
+    enableReminders: "Enable Reminders",
+    showRemindersBefore: "Show reminders before due date",
+    day: "day",
+    days: "days",
+    dueToday: "Due Today",
+    dueIn: "Due in",
+    overdue: "Overdue",
+    overdueBy: "Overdue by",
+    noReminders: "No reminders at this time",
+    reminderFor: "Reminder for",
+    loanDueReminder: "Loan Due Reminder",
   },
   hi: {
     // App name
@@ -469,6 +488,25 @@ export const translations = {
     loanNotFound: "ऋण नहीं मिला",
     failedToUpdateLoan: "ऋण अपडेट करने में असफल",
     errorUpdatingLoan: "ऋण अपडेट करने में त्रुटि",
+
+    // Due Date & Reminders
+    dueDate: "देय तिथि",
+    dueDateRequired: "देय तिथि आवश्यक है",
+    selectDueDate: "देय तिथि चुनें",
+    dueReminders: "देय रिमाइंडर",
+    reminderSettings: "रिमाइंडर सेटिंग्स",
+    reminderDays: "रिमाइंडर दिन",
+    enableReminders: "रिमाइंडर सक्षम करें",
+    showRemindersBefore: "देय तिथि से पहले रिमाइंडर दिखाएं",
+    day: "दिन",
+    days: "दिन",
+    dueToday: "आज देय",
+    dueIn: "देय है",
+    overdue: "अतिदेय",
+    overdueBy: "से अतिदेय",
+    noReminders: "इस समय कोई रिमाइंडर नहीं",
+    reminderFor: "के लिए रिमाइंडर",
+    loanDueReminder: "ऋण देय रिमाइंडर",
   },
 } as const
 

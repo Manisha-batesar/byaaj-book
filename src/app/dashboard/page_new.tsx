@@ -63,6 +63,7 @@ export default function DashboardPage() {
     setTotalLent(lentAmount)
     setTotalReceived(receivedAmount)
     setActiveLoans(activeLoanCount)
+    // Store total payable in a new state variable
     setTotalPayable(totalPayableAmount)
     setPendingPayments(pendingAmount)
   }, [router])
@@ -148,13 +149,6 @@ export default function DashboardPage() {
     },
   ]
 
-  // Filter overdue loans for highlighting
-  const currentDate = new Date()
-  const overdueLoans = loans.filter(loan => {
-    if (!loan.isActive || !loan.dueDate) return false
-    return new Date(loan.dueDate) < currentDate
-  })
-
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
@@ -214,36 +208,35 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-6 space-y-6">
-        {/* Due Reminders Section */}
-        <DueReminders />
+      {/* Action Cards */}
+      <div className="p-6 space-y-4">
+        <h2 className="text-lg font-semibold mb-4">{t("quickActions")}</h2>
+        <div className="grid grid-cols-2 gap-4">
+          {actionCards.map((card) => {
+            const Icon = card.icon
+            return (
+              <Link key={card.title} href={card.href}>
+                <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className={`w-12 h-12 rounded-lg ${card.color} flex items-center justify-center mb-3`}>
+                      <Icon size={24} />
+                    </div>
+                    <CardTitle className="text-sm font-semibold mb-1">{card.title}</CardTitle>
+                    <CardDescription className="text-xs">{card.description}</CardDescription>
+                  </CardContent>
+                </Card>
+              </Link>
+            )
+          })}
+        </div>
 
-        {/* Action Cards */}
-        <div>
-          <h2 className="text-lg font-semibold mb-4">{t("quickActions")}</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {actionCards.map((card) => {
-              const Icon = card.icon
-              return (
-                <Link key={card.title} href={card.href}>
-                  <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className={`w-12 h-12 rounded-lg ${card.color} flex items-center justify-center mb-3`}>
-                        <Icon size={24} />
-                      </div>
-                      <CardTitle className="text-sm font-semibold mb-1">{card.title}</CardTitle>
-                      <CardDescription className="text-xs">{card.description}</CardDescription>
-                    </CardContent>
-                  </Card>
-                </Link>
-              )
-            })}
-          </div>
+        {/* Due Reminders Section */}
+        <div className="mt-6">
+          <DueReminders />
         </div>
 
         {/* Recent Loans Section */}
-        <div>
+        <div className="mt-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">{t("recentLoans")}</h2>
             <Link href="/loans" className="text-primary text-sm font-medium">
@@ -261,12 +254,12 @@ export default function DashboardPage() {
               {loans
                 .slice(0, 3)
                 .map((loan) => {
-                  const isOverdue = overdueLoans.some(overdueLoan => overdueLoan.id === loan.id)
+                  const isOverdue = storage.isLoanOverdue(loan)
                   return (
                     <Card 
                       key={loan.id} 
                       className={`cursor-pointer hover:shadow-md transition-shadow ${
-                        isOverdue ? 'border-red-200 bg-red-50' : ''
+                        isOverdue ? 'border-red-300 bg-red-50' : ''
                       }`}
                       onClick={(e) => handleLoanClick(loan.id, e)}
                     >
@@ -275,25 +268,29 @@ export default function DashboardPage() {
                           <div className="flex items-center space-x-3 flex-1">
                             {/* User Avatar with First Letter */}
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm ${
-                              isOverdue ? 'bg-red-500 text-white' : 'bg-primary text-primary-foreground'
+                              isOverdue 
+                                ? 'bg-red-600 text-white' 
+                                : 'bg-primary text-primary-foreground'
                             }`}>
                               {loan.borrowerName.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1">
                               <p className={`font-semibold ${isOverdue ? 'text-red-700' : ''}`}>
                                 {loan.borrowerName}
-                                {isOverdue && <span className="text-red-500 text-xs ml-2">(OVERDUE)</span>}
+                                {isOverdue && (
+                                  <span className="ml-2 text-xs bg-red-600 text-white px-2 py-1 rounded">
+                                    {t("overdue")}
+                                  </span>
+                                )}
                               </p>
                               <div className="text-sm text-muted-foreground">
                                 <p>₹{loan.amount.toLocaleString()} → ₹{storage.calculateFinalAmount(loan).toLocaleString()}</p>
-                                <p className="text-xs">
-                                  {loan.years || 1} {(loan.years || 1) === 1 ? 'year' : 'years'} @ {loan.interestRate}%
-                                  {loan.dueDate && (
-                                    <span className={`ml-2 ${isOverdue ? 'text-red-600 font-medium' : ''}`}>
-                                      Due: {new Date(loan.dueDate).toLocaleDateString()}
-                                    </span>
-                                  )}
-                                </p>
+                                <p className="text-xs">{loan.years || 1} {(loan.years || 1) === 1 ? 'year' : 'years'} @ {loan.interestRate}%</p>
+                                {loan.dueDate && (
+                                  <p className={`text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-muted-foreground'}`}>
+                                    {t("dueDate")}: {new Date(loan.dueDate).toLocaleDateString()}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>

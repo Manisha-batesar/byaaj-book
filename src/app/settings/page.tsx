@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button"
 import { BottomNav } from "@/components/bottom-nav"
 import { LanguageSelector } from "@/components/language-selector"
 import { PinInput } from "@/components/pin-input"
+import { ReminderSettingsCard } from "@/components/reminder-settings"
 import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
-import { Lock, LogOut, Trash2, Download, Upload, Info, Shield } from "lucide-react"
+import { Lock, LogOut, Trash2, Download, Upload, Info, Shield, Bell } from "lucide-react"
 
 export default function SettingsPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -173,6 +174,19 @@ export default function SettingsPage() {
                 {t("pinProtection")}
               </p>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Reminder Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Bell size={20} />
+              <span>{t("reminderSettings")}</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ReminderSettingsCard />
           </CardContent>
         </Card>
 

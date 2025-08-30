@@ -33,6 +33,7 @@ export default function EditLoanPage() {
     years: "",
     dateCreated: new Date() as Date,
     expectedReturnDate: null as Date | null,
+    dueDate: null as Date | null,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -64,6 +65,7 @@ export default function EditLoanPage() {
       years: (loanData.years || 1).toString(), // Default to 1 year for existing loans without years
       dateCreated: new Date(loanData.dateCreated),
       expectedReturnDate: loanData.expectedReturnDate ? new Date(loanData.expectedReturnDate) : null,
+      dueDate: loanData.dueDate ? new Date(loanData.dueDate) : null,
     })
     setIsLoading(false)
   }, [params.id, router])
@@ -85,6 +87,10 @@ export default function EditLoanPage() {
 
     if (!formData.years || Number.parseFloat(formData.years) <= 0) {
       newErrors.years = t("validYearsRequired")
+    }
+
+    if (!formData.dueDate) {
+      newErrors.dueDate = t("dueDateRequired") || "Due date is required"
     }
 
     if (formData.borrowerPhone && !/^\d{10}$/.test(formData.borrowerPhone.replace(/\D/g, ""))) {
@@ -114,6 +120,7 @@ export default function EditLoanPage() {
         years: Number.parseFloat(formData.years),
         dateCreated: formData.dateCreated.toISOString(),
         expectedReturnDate: formData.expectedReturnDate ? formData.expectedReturnDate.toISOString() : undefined,
+        dueDate: formData.dueDate!.toISOString(),
       }
 
       const success = storage.updateLoan(loan.id, updatedLoan)
@@ -343,6 +350,20 @@ export default function EditLoanPage() {
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   The expected date to receive the money back (optional)
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="dueDate">Due Date {t("required")}</Label>
+                <DatePicker
+                  value={formData.dueDate || undefined}
+                  onChange={(date) => handleInputChange("dueDate", date || null)}
+                  placeholder="Select due date"
+                  className={errors.dueDate ? "border-destructive" : ""}
+                />
+                {errors.dueDate && <p className="text-destructive text-sm mt-1">{errors.dueDate}</p>}
+                <p className="text-xs text-muted-foreground mt-1">
+                  The date when the loan payment is due (required for reminders)
                 </p>
               </div>
             </CardContent>
