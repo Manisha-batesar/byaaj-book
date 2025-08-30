@@ -9,15 +9,14 @@ export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is already authenticated
-    if (storage.isAuthenticated()) {
-      router.push("/dashboard")
+    // If user hasn't seen onboarding, route them there first
+    if (!storage.getOnboardingSeen()) {
+      router.push('/onboarding/welcome')
       return
     }
 
-    // Always redirect to dashboard - no automatic PIN entry
-    // Users will access PIN functionality through settings
-    router.push("/dashboard")
+    // Otherwise go to dashboard (auth handled in settings)
+    router.push('/dashboard')
   }, [router])
 
   if (isLoading) {

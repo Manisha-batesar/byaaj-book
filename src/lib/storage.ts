@@ -46,6 +46,7 @@ export const STORAGE_KEYS = {
   IS_AUTHENTICATED: "byajbook_auth",
   LANGUAGE: "byajbook_language",
   REMINDER_SETTINGS: "byajbook_reminder_settings",
+  ONBOARDING_SEEN: "byajbook_onboarding_seen",
 } as const
 
 export const storage = {
@@ -232,7 +233,9 @@ export const storage = {
 
   setPin: (pin: string) => {
     if (typeof window === "undefined") return
-    localStorage.setItem(STORAGE_KEYS.PIN, pin)
+  localStorage.setItem(STORAGE_KEYS.PIN, pin)
+  // If user sets a PIN, consider onboarding complete (users can disable onboarding by setting PIN)
+  localStorage.setItem(STORAGE_KEYS.ONBOARDING_SEEN, "true")
   },
 
   deletePin: () => {
@@ -281,6 +284,17 @@ export const storage = {
     if (typeof window === "undefined") return { daysBeforeDue: 2, isEnabled: true }
     const settings = localStorage.getItem(STORAGE_KEYS.REMINDER_SETTINGS)
     return settings ? JSON.parse(settings) : { daysBeforeDue: 2, isEnabled: true }
+  },
+
+  // Onboarding seen flag - used to determine whether to show onboarding screens
+  getOnboardingSeen: (): boolean => {
+    if (typeof window === "undefined") return false
+    return localStorage.getItem(STORAGE_KEYS.ONBOARDING_SEEN) === "true"
+  },
+
+  setOnboardingSeen: (seen: boolean) => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(STORAGE_KEYS.ONBOARDING_SEEN, seen ? "true" : "false")
   },
 
   setReminderSettings: (settings: ReminderSettings) => {
