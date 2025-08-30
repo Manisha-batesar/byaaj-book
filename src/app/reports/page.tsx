@@ -161,7 +161,9 @@ export default function ReportsPage() {
                 <ArrowLeft size={20} />
               </Button>
             </Link>
-            <BarChart3 size={24} />
+            <div className="p-1">
+              <BarChart3 size={24} />
+            </div>
             <h1 className="text-xl font-bold">{t("reportsAnalytics")}</h1>
           </div>
           <LanguageSelector />
@@ -306,7 +308,7 @@ export default function ReportsPage() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         {/* User Avatar with First Letter */}
-                        <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm shadow-md">
+                        <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
                           {borrower.borrowerName.charAt(0).toUpperCase()}
                         </div>
                         <h3 className="font-semibold">{borrower.borrowerName}</h3>
@@ -373,7 +375,7 @@ export default function ReportsPage() {
                   <div key={loan.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <div className="flex items-center space-x-3">
                       {/* User Avatar with First Letter */}
-                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs shadow-md">
+                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs">
                         {loan.borrowerName.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -400,7 +402,7 @@ export default function ReportsPage() {
                     <div key={payment.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                       <div className="flex items-center space-x-3">
                         {/* User Avatar with First Letter */}
-                        <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold text-xs shadow-md">
+                        <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold text-xs">
                           {loan?.borrowerName?.charAt(0).toUpperCase() || "?"}
                         </div>
                         <div>

@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DatePicker } from "@/components/ui/date-picker"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Plus } from "lucide-react"
 import { storage, type Loan } from "@/lib/storage"
 import { useLanguage } from "@/components/language-provider"
 import { LanguageSelector } from "@/components/language-selector"
@@ -121,6 +121,9 @@ export default function AddLoanPage() {
                 <ArrowLeft size={20} />
               </Button>
             </Link>
+            <div className="p-1">
+              <Plus size={24} />
+            </div>
             <h1 className="text-xl font-bold">{t("addNewLoan")}</h1>
           </div>
           <LanguageSelector />

@@ -65,6 +65,9 @@ export default function PaymentsPage() {
                 <ArrowLeft size={20} />
               </Button>
             </Link>
+            <div className="p-1">
+              <IndianRupee size={24} />
+            </div>
             <h1 className="text-xl font-bold">{t("paymentTracking")}</h1>
           </div>
           <LanguageSelector />

@@ -229,8 +229,8 @@ export default function DashboardPage() {
                 <Link key={card.title} href={card.href}>
                   <Card className="cursor-pointer hover:shadow-md transition-shadow h-32">
                     <CardContent className="p-4 h-full flex flex-col">
-                      <div className={`w-12 h-12 rounded-xl ${card.color} flex items-center justify-center mb-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105`}>
-                        <Icon size={24} className="drop-shadow-sm" />
+                      <div className={`w-14 h-14 rounded-lg ${card.color} flex items-center justify-center mb-3 p-3`}>
+                        <Icon size={24} />
                       </div>
                       <CardTitle className="text-sm font-semibold mb-1 flex-shrink-0">{card.title}</CardTitle>
                       <CardDescription className="text-xs flex-1 line-clamp-2">{card.description}</CardDescription>

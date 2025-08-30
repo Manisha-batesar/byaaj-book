@@ -164,7 +164,9 @@ export default function CalculatorPage() {
                 <ArrowLeft size={20} />
               </Button>
             </Link>
-            <Calculator size={24} />
+            <div className="p-1">
+              <Calculator size={24} />
+            </div>
             <h1 className="text-xl font-bold">{t("interestCalculator")}</h1>
           </div>
           <LanguageSelector />
