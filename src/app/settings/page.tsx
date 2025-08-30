@@ -17,19 +17,23 @@ import { Lock, LogOut, Trash2, Download, Upload, Info, Shield, Bell } from "luci
 export default function SettingsPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showPinChange, setShowPinChange] = useState(false)
+  const [showPinSetup, setShowPinSetup] = useState(false)
   const [pinChangeStep, setPinChangeStep] = useState<"current" | "new" | "confirm">("current")
+  const [pinSetupStep, setPinSetupStep] = useState<"new" | "confirm">("new")
   const [tempPin, setTempPin] = useState("")
   const [showDataExport, setShowDataExport] = useState(false)
+  const [hasPin, setHasPin] = useState(false)
   const router = useRouter()
   const { t } = useLanguage()
 
   useEffect(() => {
-    if (!storage.isAuthenticated()) {
-      router.push("/")
-      return
-    }
+    // No longer redirect based on authentication since PIN is optional
     setIsAuthenticated(true)
-  }, [router])
+    
+    // Check if PIN exists
+    const existingPin = storage.getPin()
+    setHasPin(!!existingPin)
+  }, [])
 
   const handleLogout = () => {
     storage.setAuthenticated(false)
@@ -71,6 +75,37 @@ export default function SettingsPage() {
           setTempPin("")
         }
         break
+    }
+  }
+
+  const handlePinSetup = (pin: string) => {
+    switch (pinSetupStep) {
+      case "new":
+        setTempPin(pin)
+        setPinSetupStep("confirm")
+        break
+      case "confirm":
+        if (pin === tempPin) {
+          storage.setPin(pin)
+          alert(t("pinChangedSuccess"))
+          setShowPinSetup(false)
+          setPinSetupStep("new")
+          setTempPin("")
+          setHasPin(true)
+        } else {
+          alert(t("pinsDoNotMatch"))
+          setPinSetupStep("new")
+          setTempPin("")
+        }
+        break
+    }
+  }
+
+  const handleDeletePin = () => {
+    if (confirm(t("deletePINConfirm"))) {
+      storage.deletePin()
+      alert(t("pinDeletedSuccess"))
+      setHasPin(false)
     }
   }
 
@@ -136,7 +171,32 @@ export default function SettingsPage() {
     }
 
     return (
-      <PinInput onPinEnter={handlePinChange} title={titles[pinChangeStep]} description={descriptions[pinChangeStep]} />
+      <PinInput
+        key={`pin-change-${pinChangeStep}`}
+        onPinEnter={handlePinChange}
+        title={titles[pinChangeStep]}
+        description={descriptions[pinChangeStep]}
+      />
+    )
+  }
+
+  if (showPinSetup) {
+    const titles = {
+      new: t("enterNewPIN"),
+      confirm: t("confirmNewPIN"),
+    }
+    const descriptions = {
+      new: t("setPINDesc"),
+      confirm: t("confirmNewPINDesc"),
+    }
+
+    return (
+      <PinInput
+        key={`pin-setup-${pinSetupStep}`}
+        onPinEnter={handlePinSetup}
+        title={titles[pinSetupStep]}
+        description={descriptions[pinSetupStep]}
+      />
     )
   }
 
@@ -161,17 +221,40 @@ export default function SettingsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button
-              variant="outline"
-              className="w-full justify-start bg-transparent"
-              onClick={() => setShowPinChange(true)}
-            >
-              <Lock size={16} className="mr-2" />
-              {t("changePIN")}
-            </Button>
+            {!hasPin ? (
+              // Show "Set PIN" option when no PIN exists
+              <Button
+                variant="outline"
+                className="w-full justify-start bg-transparent"
+                onClick={() => setShowPinSetup(true)}
+              >
+                <Lock size={16} className="mr-2" />
+                {t("setPIN")}
+              </Button>
+            ) : (
+              // Show "Change PIN" and "Delete PIN" options when PIN exists
+              <>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start bg-transparent"
+                  onClick={() => setShowPinChange(true)}
+                >
+                  <Lock size={16} className="mr-2" />
+                  {t("changePIN")}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start bg-transparent text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={handleDeletePin}
+                >
+                  <Trash2 size={16} className="mr-2" />
+                  {t("deletePIN")}
+                </Button>
+              </>
+            )}
             <div className="bg-muted p-3 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                {t("pinProtection")}
+                {hasPin ? t("pinProtection") : t("setPINDesc")}
               </p>
             </div>
           </CardContent>

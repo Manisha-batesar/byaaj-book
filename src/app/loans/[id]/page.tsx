@@ -33,11 +33,7 @@ export default function LoanDetailsPage() {
   const loanId = params.id as string
 
   useEffect(() => {
-    if (!storage.isAuthenticated()) {
-      router.push("/")
-      return
-    }
-
+    // No longer require authentication since PIN is optional
     setIsAuthenticated(true)
 
     // Get loan details

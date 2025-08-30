@@ -235,6 +235,11 @@ export const storage = {
     localStorage.setItem(STORAGE_KEYS.PIN, pin)
   },
 
+  deletePin: () => {
+    if (typeof window === "undefined") return
+    localStorage.removeItem(STORAGE_KEYS.PIN)
+  },
+
   isAuthenticated: (): boolean => {
     if (typeof window === "undefined") return false
     return localStorage.getItem(STORAGE_KEYS.IS_AUTHENTICATED) === "true"

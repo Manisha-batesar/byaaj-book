@@ -29,17 +29,13 @@ export default function PaymentsPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!storage.isAuthenticated()) {
-      router.push("/")
-      return
-    }
-    
+    // No longer require authentication since PIN is optional
     // Sync loan completion status first
     storage.syncLoanCompletionStatus()
     
     const loans = storage.getLoans()
     setAllLoans(loans)
-  }, [router])
+  }, [])
 
   const calculateOutstanding = (loan: Loan) => {
     return storage.getOutstandingAmount(loan)

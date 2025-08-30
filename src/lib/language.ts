@@ -48,7 +48,12 @@ export const translations = {
     
     // Settings Page
     security: "Security",
+    setPIN: "Set PIN for this app",
     changePIN: "Change PIN",
+    deletePIN: "Delete PIN",
+    setPINDesc: "Create a 4-digit PIN to secure your app",
+    deletePINConfirm: "Are you sure you want to delete your PIN? Your app will no longer be protected.",
+    pinDeletedSuccess: "PIN deleted successfully",
     dataManagement: "Data Management",
     exportData: "Export Data (Backup)",
     importData: "Import Data (Restore)",
@@ -301,7 +306,12 @@ export const translations = {
     
     // Settings Page
     security: "सुरक्षा",
+    setPIN: "इस ऐप के लिए पिन सेट करें",
     changePIN: "पिन बदलें",
+    deletePIN: "पिन हटाएं",
+    setPINDesc: "अपने ऐप को सुरक्षित करने के लिए 4-अंकीय पिन बनाएं",
+    deletePINConfirm: "क्या आप वाकई अपना पिन हटाना चाहते हैं? आपका ऐप अब सुरक्षित नहीं रहेगा।",
+    pinDeletedSuccess: "पिन सफलतापूर्वक हटा दिया गया",
     dataManagement: "डेटा प्रबंधन",
     exportData: "डेटा निर्यात (बैकअप)",
     importData: "डेटा आयात (पुनर्स्थापना)",

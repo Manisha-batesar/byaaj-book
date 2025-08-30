@@ -36,11 +36,7 @@ export default function DashboardPage() {
   const { t } = useLanguage()
 
   useEffect(() => {
-    if (!storage.isAuthenticated()) {
-      router.push("/")
-      return
-    }
-
+    // PIN is optional — load dashboard data without requiring auth
     setIsAuthenticated(true)
 
     // Calculate summary stats
@@ -66,7 +62,7 @@ export default function DashboardPage() {
     // Store total payable in a new state variable
     setTotalPayable(totalPayableAmount)
     setPendingPayments(pendingAmount)
-  }, [router])
+  }, [])
 
   const handleDeleteLoan = async (loanId: string) => {
     setIsDeleting(loanId)

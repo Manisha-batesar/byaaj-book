@@ -40,11 +40,7 @@ export default function EditLoanPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!storage.isAuthenticated()) {
-      router.push("/")
-      return
-    }
-
+    // No longer require authentication since PIN is optional
     const loanId = params.id as string
     const loanData = storage.getLoanById(loanId)
     
