@@ -37,6 +37,7 @@ export default function AddLoanPage() {
     dateCreated: new Date() as Date,
     expectedReturnDate: null as Date | null,
     dueDate: null as Date | null,
+    isManualDueDate: false, // Track if user wants to manually set due date
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -65,7 +66,7 @@ export default function AddLoanPage() {
         setFormData(prev => ({
           ...prev,
           expectedReturnDate: endDate,
-          dueDate: endDate,
+          dueDate: prev.isManualDueDate ? prev.dueDate : endDate, // Only auto-update if not manually set
           years: formData.periodUnit === "years" ? formData.periodValue : 
                  formData.periodUnit === "months" ? (period / 12).toString() :
                  (period / 365).toString() // days to years
@@ -192,7 +193,7 @@ export default function AddLoanPage() {
     }
   }
 
-  const handleInputChange = (field: string, value: string | Date | null) => {
+  const handleInputChange = (field: string, value: string | Date | null | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
@@ -480,8 +481,44 @@ export default function AddLoanPage() {
               </div>
 
               <div>
-                <Label htmlFor="dueDate" className="mb-2 block">{t("dueDate")} {t("required")}</Label>
-                {formData.dueDate ? (
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="dueDate" className="block">{t("dueDate")} {t("required")}</Label>
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="manualDueDate" className="text-xs text-muted-foreground">
+                      {t("manualDate")}
+                    </Label>
+                    <input
+                      id="manualDueDate"
+                      type="checkbox"
+                      checked={formData.isManualDueDate}
+                      onChange={(e) => {
+                        const isManual = e.target.checked;
+                        handleInputChange("isManualDueDate", isManual);
+                        // If switching to auto, reset to calculated date
+                        if (!isManual && formData.expectedReturnDate) {
+                          handleInputChange("dueDate", formData.expectedReturnDate);
+                        }
+                      }}
+                      className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary"
+                    />
+                  </div>
+                </div>
+                
+                {formData.isManualDueDate ? (
+                  // Manual date picker
+                  <div className="space-y-2">
+                    <DatePicker
+                      value={formData.dueDate || undefined}
+                      onChange={(date) => handleInputChange("dueDate", date || null)}
+                      placeholder={t("selectDueDate")}
+                      className={errors.dueDate ? "border-destructive" : "border-border"}
+                    />
+                    <p className="text-xs text-blue-600">
+                      ℹ️ {t("manuallySettingDueDate")}
+                    </p>
+                  </div>
+                ) : formData.dueDate ? (
+                  // Auto-calculated date display
                   <div className="space-y-2">
                     <div className="p-3 bg-muted rounded-lg border">
                       <p className="font-medium text-sm">
@@ -498,13 +535,14 @@ export default function AddLoanPage() {
                     </p>
                   </div>
                 ) : (
-                  <DatePicker
-                    value={formData.dueDate || undefined}
-                    onChange={(date) => handleInputChange("dueDate", date || null)}
-                    placeholder={t("selectDueDate")}
-                    className={errors.dueDate ? "border-destructive" : "border-border"}
-                  />
+                  // No date calculated yet
+                  <div className="p-3 bg-muted rounded-lg border border-dashed">
+                    <p className="text-sm text-muted-foreground">
+                      {t("enterLoanPeriodForDueDate")}
+                    </p>
+                  </div>
                 )}
+                
                 {errors.dueDate && <p className="text-destructive text-sm mt-1">{errors.dueDate}</p>}
                 <p className="text-xs text-muted-foreground mt-1">
                   {t("dueDateDesc")}
@@ -601,16 +639,16 @@ export default function AddLoanPage() {
               <AlertDialogTitle>{t("missingRequiredInfo")}</AlertDialogTitle>
               <AlertDialogDescription>
                 {t("fillAllDetails")}:
-                <ul className="mt-2 space-y-1">
-                  {errors.borrowerName && <li className="text-red-600">• {t("borrowerNameRequired")}</li>}
-                  {errors.amount && <li className="text-red-600">• {t("validAmountRequired")}</li>}
-                  {errors.interestRate && <li className="text-red-600">• {t("validInterestRequired")}</li>}
-                  {errors.periodValue && <li className="text-red-600">• {t("validTimeRequired")}</li>}
-                  {errors.dueDate && <li className="text-red-600">• {t("dueDateRequired")}</li>}
-                  {errors.borrowerPhone && <li className="text-red-600">• {t("validPhoneRequired")}</li>}
-                </ul>
               </AlertDialogDescription>
             </AlertDialogHeader>
+            <div className="mt-2 space-y-1">
+              {errors.borrowerName && <div className="text-red-600 text-sm">• {t("borrowerNameRequired")}</div>}
+              {errors.amount && <div className="text-red-600 text-sm">• {t("validAmountRequired")}</div>}
+              {errors.interestRate && <div className="text-red-600 text-sm">• {t("validInterestRequired")}</div>}
+              {errors.periodValue && <div className="text-red-600 text-sm">• {t("validTimeRequired")}</div>}
+              {errors.dueDate && <div className="text-red-600 text-sm">• {t("dueDateRequired")}</div>}
+              {errors.borrowerPhone && <div className="text-red-600 text-sm">• {t("validPhoneRequired")}</div>}
+            </div>
             <AlertDialogFooter>
               <Button onClick={() => setShowValidationDialog(false)}>
                 {t("okFillDetails")}

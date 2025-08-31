@@ -213,6 +213,9 @@ export const translations = {
     dueDateDesc: "The date when the loan payment is due (required for reminders)",
     loanWillBeDueOn: "The loan will be due on",
     fromLoanDate: "from loan date",
+    manualDate: "Manual Date",
+    manuallySettingDueDate: "You are manually setting the due date",
+    enterLoanPeriodForDueDate: "Enter loan period above to auto-calculate due date",
     
     // Reports Page
     reportsAnalytics: "Reports & Analytics",
@@ -488,6 +491,9 @@ export const translations = {
     dueDateDesc: "वह तिथि जब ऋण भुगतान देय है (रिमाइंडर के लिए आवश्यक)",
     loanWillBeDueOn: "ऋण देय होगा",
     fromLoanDate: "ऋण तिथि से",
+    manualDate: "मैन्युअल तिथि",
+    manuallySettingDueDate: "आप मैन्युअल रूप से देय तिथि सेट कर रहे हैं",
+    enterLoanPeriodForDueDate: "देय तिथि की स्वचालित गणना के लिए ऊपर ऋण अवधि दर्ज करें",
     
     // Reports Page
     reportsAnalytics: "रिपोर्ट और विश्लेषण",
