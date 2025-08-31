@@ -203,6 +203,16 @@ export const translations = {
     missingRequiredInfo: "Missing Required Information",
     fillAllDetails: "Please fill in all required fields before adding the loan",
     okFillDetails: "OK, I'll fill the missing details",
+    dateInformation: "Date Information",
+    loanDate: "Loan Date",
+    expectedReturnDate: "Expected Return Date",
+    selectLoanDate: "Select loan date",
+    selectExpectedReturnDate: "Select expected return date",
+    loanDateDesc: "The date when the loan was given to the borrower",
+    expectedReturnDateDesc: "The expected date to receive the money back",
+    dueDateDesc: "The date when the loan payment is due (required for reminders)",
+    loanWillBeDueOn: "The loan will be due on",
+    fromLoanDate: "from loan date",
     
     // Reports Page
     reportsAnalytics: "Reports & Analytics",
@@ -468,6 +478,16 @@ export const translations = {
     missingRequiredInfo: "आवश्यक जानकारी गुम है",
     fillAllDetails: "ऋण जोड़ने से पहले सभी आवश्यक फ़ील्ड भरें",
     okFillDetails: "ठीक है, मैं गुम विवरण भर दूंगा",
+    dateInformation: "तिथि जानकारी",
+    loanDate: "ऋण तिथि",
+    expectedReturnDate: "अपेक्षित वापसी तिथि",
+    selectLoanDate: "ऋण तिथि चुनें",
+    selectExpectedReturnDate: "अपेक्षित वापसी तिथि चुनें",
+    loanDateDesc: "वह तिथि जब ऋण उधारकर्ता को दिया गया था",
+    expectedReturnDateDesc: "पैसे वापस प्राप्त करने की अपेक्षित तिथि",
+    dueDateDesc: "वह तिथि जब ऋण भुगतान देय है (रिमाइंडर के लिए आवश्यक)",
+    loanWillBeDueOn: "ऋण देय होगा",
+    fromLoanDate: "ऋण तिथि से",
     
     // Reports Page
     reportsAnalytics: "रिपोर्ट और विश्लेषण",

@@ -432,24 +432,24 @@ export default function AddLoanPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Date Information</CardTitle>
+              <CardTitle>{t("dateInformation")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="dateCreated" className="mb-2 block">Loan Date {t("required")}</Label>
+                <Label htmlFor="dateCreated" className="mb-2 block">{t("loanDate")} {t("required")}</Label>
                 <DatePicker
                   value={formData.dateCreated}
                   onChange={(date) => handleInputChange("dateCreated", date || new Date())}
-                  placeholder="Select loan date"
+                  placeholder={t("selectLoanDate")}
                   className="border-border"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  The date when the loan was given to the borrower
+                  {t("loanDateDesc")}
                 </p>
               </div>
 
               <div>
-                <Label htmlFor="expectedReturnDate" className="mb-2 block">Expected Return Date</Label>
+                <Label htmlFor="expectedReturnDate" className="mb-2 block">{t("expectedReturnDate")}</Label>
                 {formData.expectedReturnDate ? (
                   <div className="space-y-2">
                     <div className="p-3 bg-muted rounded-lg border">
@@ -470,17 +470,17 @@ export default function AddLoanPage() {
                   <DatePicker
                     value={formData.expectedReturnDate || undefined}
                     onChange={(date) => handleInputChange("expectedReturnDate", date || null)}
-                    placeholder="Select expected return date"
+                    placeholder={t("selectExpectedReturnDate")}
                     className="border-border"
                   />
                 )}
                 <p className="text-xs text-muted-foreground mt-1">
-                  The expected date to receive the money back
+                  {t("expectedReturnDateDesc")}
                 </p>
               </div>
 
               <div>
-                <Label htmlFor="dueDate" className="mb-2 block">Due Date {t("required")}</Label>
+                <Label htmlFor="dueDate" className="mb-2 block">{t("dueDate")} {t("required")}</Label>
                 {formData.dueDate ? (
                   <div className="space-y-2">
                     <div className="p-3 bg-muted rounded-lg border">
@@ -501,24 +501,24 @@ export default function AddLoanPage() {
                   <DatePicker
                     value={formData.dueDate || undefined}
                     onChange={(date) => handleInputChange("dueDate", date || null)}
-                    placeholder="Select due date"
+                    placeholder={t("selectDueDate")}
                     className={errors.dueDate ? "border-destructive" : "border-border"}
                   />
                 )}
                 {errors.dueDate && <p className="text-destructive text-sm mt-1">{errors.dueDate}</p>}
                 <p className="text-xs text-muted-foreground mt-1">
-                  The date when the loan payment is due (required for reminders)
+                  {t("dueDateDesc")}
                 </p>
               </div>
 
               {formData.periodValue && formData.expectedReturnDate && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <p className="text-sm text-blue-800">
-                    <strong>{t("loanSummary")}:</strong> The loan will be due on{" "}
+                    <strong>{t("loanSummary")}:</strong> {t("loanWillBeDueOn")}{" "}
                     <span className="font-semibold">
                       {formData.expectedReturnDate.toLocaleDateString('en-IN')}
                     </span>
-                    {" "}({formData.periodValue} {t(formData.periodUnit)} from loan date)
+                    {" "}({formData.periodValue} {t(formData.periodUnit)} {t("fromLoanDate")})
                   </p>
                 </div>
               )}
