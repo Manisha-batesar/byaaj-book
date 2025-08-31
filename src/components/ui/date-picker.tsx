@@ -37,7 +37,10 @@ export function DatePicker({
           data-slot="date-picker"
           variant="outline"
           className={cn(
-            "w-full justify-start text-left font-normal",
+            // Make the trigger visually match other inputs (transparent bg,
+            // left-aligned, full width). The caller can still add borders via
+            // `className` (e.g. "border-border").
+            "w-full justify-start text-left font-normal bg-transparent",
             !value && "text-muted-foreground",
             className
           )}
