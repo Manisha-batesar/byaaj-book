@@ -189,7 +189,7 @@ export default function EditLoanPage() {
                   value={formData.borrowerName}
                   onChange={(e) => handleInputChange("borrowerName", e.target.value)}
                   placeholder={t("borrowerNamePlaceholder")}
-                  className={errors.borrowerName ? "border-destructive" : ""}
+                  className={errors.borrowerName ? "border-destructive" : "border-border"}
                 />
                 {errors.borrowerName && <p className="text-destructive text-sm mt-1">{errors.borrowerName}</p>}
               </div>
@@ -201,7 +201,7 @@ export default function EditLoanPage() {
                   value={formData.borrowerPhone}
                   onChange={(e) => handleInputChange("borrowerPhone", e.target.value)}
                   placeholder={t("phonePlaceholder")}
-                  className={errors.borrowerPhone ? "border-destructive" : ""}
+                  className={errors.borrowerPhone ? "border-destructive" : "border-border"}
                 />
                 {errors.borrowerPhone && <p className="text-destructive text-sm mt-1">{errors.borrowerPhone}</p>}
               </div>
@@ -214,6 +214,7 @@ export default function EditLoanPage() {
                   onChange={(e) => handleInputChange("notes", e.target.value)}
                   placeholder={t("notesPlaceholder")}
                   rows={3}
+                  className="border-border"
                 />
               </div>
             </CardContent>
@@ -232,7 +233,7 @@ export default function EditLoanPage() {
                   value={formData.amount}
                   onChange={(e) => handleInputChange("amount", e.target.value)}
                   placeholder={t("amountPlaceholder")}
-                  className={errors.amount ? "border-destructive" : ""}
+                  className={errors.amount ? "border-destructive" : "border-border"}
                 />
                 {errors.amount && <p className="text-destructive text-sm mt-1">{errors.amount}</p>}
               </div>
@@ -243,7 +244,7 @@ export default function EditLoanPage() {
                   value={formData.interestMethod}
                   onValueChange={(value: "monthly" | "yearly" | "sankda") => handleInputChange("interestMethod", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-border">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -260,7 +261,7 @@ export default function EditLoanPage() {
                   value={formData.interestType}
                   onValueChange={(value: "simple" | "compound") => handleInputChange("interestType", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-border">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -290,7 +291,7 @@ export default function EditLoanPage() {
                     value={formData.interestRate}
                     onChange={(e) => handleInputChange("interestRate", e.target.value)}
                     placeholder={t("interestPlaceholder")}
-                    className={errors.interestRate ? "border-destructive" : ""}
+                    className={errors.interestRate ? "border-destructive" : "border-border"}
                   />
                   {errors.interestRate && <p className="text-destructive text-sm mt-1">{errors.interestRate}</p>}
                 </div>
@@ -305,7 +306,7 @@ export default function EditLoanPage() {
                   value={formData.years}
                   onChange={(e) => handleInputChange("years", e.target.value)}
                   placeholder={t("yearsPlaceholder")}
-                  className={errors.years ? "border-destructive" : ""}
+                  className={errors.years ? "border-destructive" : "border-border"}
                 />
                 {errors.years && <p className="text-destructive text-sm mt-1">{errors.years}</p>}
               </div>
@@ -331,6 +332,7 @@ export default function EditLoanPage() {
                   value={formData.dateCreated}
                   onChange={(date) => handleInputChange("dateCreated", date || new Date())}
                   placeholder="Select loan date"
+                  className="border-border"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   The date when the loan was given to the borrower
@@ -343,6 +345,7 @@ export default function EditLoanPage() {
                   value={formData.expectedReturnDate || undefined}
                   onChange={(date) => handleInputChange("expectedReturnDate", date || null)}
                   placeholder="Select expected return date"
+                  className="border-border"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   The expected date to receive the money back (optional)
@@ -355,7 +358,7 @@ export default function EditLoanPage() {
                   value={formData.dueDate || undefined}
                   onChange={(date) => handleInputChange("dueDate", date || null)}
                   placeholder="Select due date"
-                  className={errors.dueDate ? "border-destructive" : ""}
+                  className={errors.dueDate ? "border-destructive" : "border-border"}
                 />
                 {errors.dueDate && <p className="text-destructive text-sm mt-1">{errors.dueDate}</p>}
                 <p className="text-xs text-muted-foreground mt-1">
@@ -372,7 +375,7 @@ export default function EditLoanPage() {
           )}
 
           <div className="flex space-x-4">
-            <Button type="button" variant="outline" className="flex-1 bg-transparent" onClick={() => router.back()}>
+            <Button type="button" variant="outline" className="flex-1 bg-transparent border border-border text-foreground" onClick={() => router.back()}>
               {t("cancel")}
             </Button>
             <Button type="submit" className="flex-1" disabled={isSubmitting}>

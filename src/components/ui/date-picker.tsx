@@ -32,8 +32,9 @@ export function DatePicker({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+        <PopoverTrigger asChild>
         <Button
+          data-slot="date-picker"
           variant="outline"
           className={cn(
             "w-full justify-start text-left font-normal",
