@@ -119,7 +119,7 @@ export default function DashboardPage() {
       title: t("addLoan"),
       description: t("addLoanDesc"),
       icon: Plus,
-      href: "/loans/add",
+      href: "/loans/add?autofocus=borrowerName",
       color: "bg-primary text-primary-foreground",
     },
     {

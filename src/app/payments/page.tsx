@@ -78,7 +78,7 @@ export default function PaymentsPage() {
           <div className="text-center py-16">
             <User size={48} className="mx-auto mb-4 text-muted-foreground" />
             <p className="text-muted-foreground mb-4">{t("noLoansFound")}</p>
-            <Link href="/loans/add">
+            <Link href="/loans/add?autofocus=borrowerName">
               <Button>{t("addFirstLoan")}</Button>
             </Link>
           </div>

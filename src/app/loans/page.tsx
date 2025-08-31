@@ -110,12 +110,12 @@ export default function LoansPage() {
           </div>
           <div className="flex items-center space-x-3">
             <LanguageSelector />
-            <Link href="/loans/add">
-              <Button variant="secondary" size="sm">
-                <Plus size={16} className="mr-1" />
-                {t("add")}
-              </Button>
-            </Link>
+            <Link href="/loans/add?autofocus=borrowerName">
+                <Button variant="secondary" size="sm">
+                  <Plus size={16} className="mr-1" />
+                  {t("add")}
+                </Button>
+              </Link>
           </div>
         </div>
       </div>
@@ -155,7 +155,7 @@ export default function LoansPage() {
                  filter === "active" ? t("noActiveLoansFound") : 
                  t("noCompletedLoansFound")}
               </p>
-              <Link href="/loans/add">
+              <Link href="/loans/add?autofocus=borrowerName">
                 <Button>{t("addFirstLoan")}</Button>
               </Link>
             </CardContent>
