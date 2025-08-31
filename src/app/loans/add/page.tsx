@@ -31,12 +31,41 @@ export default function AddLoanPage() {
     interestMethod: "monthly" as "monthly" | "yearly" | "sankda",
     interestType: "simple" as "simple" | "compound",
     years: "",
+    periodValue: "",
+    periodUnit: "months" as "months" | "years",
     dateCreated: new Date() as Date,
     expectedReturnDate: null as Date | null,
     dueDate: null as Date | null,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Auto-calculate expected return date and due date based on period
+  useEffect(() => {
+    if (formData.periodValue && formData.dateCreated) {
+      const period = Number.parseFloat(formData.periodValue)
+      if (period > 0) {
+        const startDate = new Date(formData.dateCreated)
+        let endDate: Date
+
+        if (formData.periodUnit === "months") {
+          endDate = new Date(startDate)
+          endDate.setMonth(endDate.getMonth() + period)
+        } else {
+          // years
+          endDate = new Date(startDate)
+          endDate.setFullYear(endDate.getFullYear() + period)
+        }
+
+        setFormData(prev => ({
+          ...prev,
+          expectedReturnDate: endDate,
+          dueDate: endDate,
+          years: formData.periodUnit === "years" ? formData.periodValue : (period / 12).toString()
+        }))
+      }
+    }
+  }, [formData.periodValue, formData.periodUnit, formData.dateCreated])
 
   // Auto-focus the first input when component mounts. If navigation included
   // ?autofocus=borrowerName then focus and attempt a re-focus shortly after
@@ -101,8 +130,8 @@ export default function AddLoanPage() {
       newErrors.interestRate = t("validInterestRequired")
     }
 
-    if (!formData.years || Number.parseFloat(formData.years) <= 0) {
-      newErrors.years = t("validYearsRequired") || "Valid loan period is required"
+    if (!formData.periodValue || Number.parseFloat(formData.periodValue) <= 0) {
+      newErrors.periodValue = t("validTimeRequired") || "Valid loan period is required"
     }
 
     if (!formData.dueDate) {
@@ -333,17 +362,48 @@ export default function AddLoanPage() {
               )}
 
               <div>
-                <Label htmlFor="years" className="mb-2 block">{t("loanPeriod")} ({t("years")}) {t("required")}</Label>
-                <Input
-                  id="years"
-                  type="number"
-                  step="0.5"
-                  value={formData.years}
-                  onChange={(e) => handleInputChange("years", e.target.value)}
-                  placeholder={t("yearsPlaceholder")}
-                  className={errors.years ? "border-destructive" : "border-border"}
-                />
-                {errors.years && <p className="text-destructive text-sm mt-1">{errors.years}</p>}
+                <Label htmlFor="loanPeriod" className="mb-2 block">{t("loanPeriod")} {t("required")}</Label>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="periodValue" className="mb-1 block text-sm">{t("period")}</Label>
+                      <Input
+                        id="periodValue"
+                        type="number"
+                        step="1"
+                        min="1"
+                        value={formData.periodValue}
+                        onChange={(e) => handleInputChange("periodValue", e.target.value)}
+                        placeholder={t("enterPeriod")}
+                        className={errors.periodValue ? "border-destructive" : "border-border"}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="periodUnit" className="mb-1 block text-sm">{t("unit")}</Label>
+                      <Select
+                        value={formData.periodUnit}
+                        onValueChange={(value: "months" | "years") => handleInputChange("periodUnit", value)}
+                      >
+                        <SelectTrigger className="border-border">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="months">{t("months")}</SelectItem>
+                          <SelectItem value="years">{t("years")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {errors.periodValue && <p className="text-destructive text-sm">{errors.periodValue}</p>}
+                  {formData.periodValue && (
+                    <p className="text-xs text-muted-foreground">
+                      {t("loanPeriod")}: {formData.periodValue} {t(formData.periodUnit)}
+                      {formData.periodUnit === "months" && Number.parseFloat(formData.periodValue) > 12 && 
+                        ` (${(Number.parseFloat(formData.periodValue) / 12).toFixed(1)} ${t("years")})`
+                      }
+                    </p>
+                  )}
+                </div>
               </div>
 
               {formData.interestMethod === "sankda" && (
@@ -376,35 +436,83 @@ export default function AddLoanPage() {
 
               <div>
                 <Label htmlFor="expectedReturnDate" className="mb-2 block">Expected Return Date</Label>
-                <DatePicker
-                  value={formData.expectedReturnDate || undefined}
-                  onChange={(date) => handleInputChange("expectedReturnDate", date || null)}
-                  placeholder="Select expected return date"
-                  className="border-border"
-                />
+                {formData.expectedReturnDate ? (
+                  <div className="space-y-2">
+                    <div className="p-3 bg-muted rounded-lg border">
+                      <p className="font-medium text-sm">
+                        {formData.expectedReturnDate.toLocaleDateString('en-IN', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                    <p className="text-xs text-green-600">
+                      ✓ {t("autoCalculated")} ({formData.periodValue} {t(formData.periodUnit)})
+                    </p>
+                  </div>
+                ) : (
+                  <DatePicker
+                    value={formData.expectedReturnDate || undefined}
+                    onChange={(date) => handleInputChange("expectedReturnDate", date || null)}
+                    placeholder="Select expected return date"
+                    className="border-border"
+                  />
+                )}
                 <p className="text-xs text-muted-foreground mt-1">
-                  The expected date to receive the money back (optional)
+                  The expected date to receive the money back
                 </p>
               </div>
 
               <div>
                 <Label htmlFor="dueDate" className="mb-2 block">Due Date {t("required")}</Label>
-                <DatePicker
-                  value={formData.dueDate || undefined}
-                  onChange={(date) => handleInputChange("dueDate", date || null)}
-                  placeholder="Select due date"
-                  className={errors.dueDate ? "border-destructive" : "border-border"}
-                />
+                {formData.dueDate ? (
+                  <div className="space-y-2">
+                    <div className="p-3 bg-muted rounded-lg border">
+                      <p className="font-medium text-sm">
+                        {formData.dueDate.toLocaleDateString('en-IN', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                    <p className="text-xs text-green-600">
+                      ✓ {t("autoCalculated")} ({formData.periodValue} {t(formData.periodUnit)})
+                    </p>
+                  </div>
+                ) : (
+                  <DatePicker
+                    value={formData.dueDate || undefined}
+                    onChange={(date) => handleInputChange("dueDate", date || null)}
+                    placeholder="Select due date"
+                    className={errors.dueDate ? "border-destructive" : "border-border"}
+                  />
+                )}
                 {errors.dueDate && <p className="text-destructive text-sm mt-1">{errors.dueDate}</p>}
                 <p className="text-xs text-muted-foreground mt-1">
                   The date when the loan payment is due (required for reminders)
                 </p>
               </div>
+
+              {formData.periodValue && formData.expectedReturnDate && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>{t("loanSummary")}:</strong> The loan will be due on{" "}
+                    <span className="font-semibold">
+                      {formData.expectedReturnDate.toLocaleDateString('en-IN')}
+                    </span>
+                    {" "}({formData.periodValue} {t(formData.periodUnit)} from loan date)
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Calculation Preview */}
-          {formData.amount && formData.years && (formData.interestRate || formData.interestMethod === "sankda") && (
+          {formData.amount && formData.periodValue && (formData.interestRate || formData.interestMethod === "sankda") && (
             <Card>
               <CardHeader>
                 <CardTitle>{t("calculationPreview")}</CardTitle>
@@ -412,10 +520,11 @@ export default function AddLoanPage() {
               <CardContent className="space-y-4">
                 {(() => {
                   const amount = Number.parseFloat(formData.amount)
-                  const years = Number.parseFloat(formData.years)
+                  const periodValue = Number.parseFloat(formData.periodValue)
+                  const years = formData.periodUnit === "years" ? periodValue : periodValue / 12
                   const rate = formData.interestMethod === "sankda" ? 12 : Number.parseFloat(formData.interestRate)
                   
-                  if (amount > 0 && years > 0 && rate >= 0) {
+                  if (amount > 0 && periodValue > 0 && rate >= 0) {
                     let finalAmount = 0
                     let interestAmount = 0
 
@@ -446,7 +555,7 @@ export default function AddLoanPage() {
                         <div className="text-xs text-muted-foreground text-center">
                           {t("interestType")}: {t(formData.interestType === "simple" ? "simpleInterest" : "compoundInterest")} | 
                           {t("interestMethod")}: {t(formData.interestMethod === "monthly" ? "monthlyInterest" : formData.interestMethod === "yearly" ? "yearlyInterest" : "sankdaFixed")} | 
-                          {t("loanPeriod")}: {years} {t("years")}
+                          {t("loanPeriod")}: {periodValue} {t(formData.periodUnit)} {formData.periodUnit === "months" && ` (${years.toFixed(1)} ${t("years")})`}
                         </div>
                       </div>
                     )

@@ -196,6 +196,10 @@ export const translations = {
     enterTime: "Enter time",
     validPrincipalRequired: "Valid principal amount is required",
     validTimeRequired: "Valid time period is required",
+    period: "Period",
+    enterPeriod: "Enter period",
+    loanSummary: "Loan Summary",
+    autoCalculated: "Auto-calculated based on loan period",
     
     // Reports Page
     reportsAnalytics: "Reports & Analytics",
@@ -454,6 +458,10 @@ export const translations = {
     enterTime: "समय दर्ज करें",
     validPrincipalRequired: "वैध मूल राशि आवश्यक है",
     validTimeRequired: "वैध समय अवधि आवश्यक है",
+    period: "अवधि",
+    enterPeriod: "अवधि दर्ज करें",
+    loanSummary: "ऋण सारांश",
+    autoCalculated: "ऋण अवधि के आधार पर स्वचालित गणना",
     
     // Reports Page
     reportsAnalytics: "रिपोर्ट और विश्लेषण",
