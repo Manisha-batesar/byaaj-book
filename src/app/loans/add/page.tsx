@@ -43,31 +43,46 @@ export default function AddLoanPage() {
   // to trigger the on-screen keyboard on mobile devices.
   useEffect(() => {
     const autofocusTarget = searchParams?.get("autofocus")
-    const shouldAutofocus = autofocusTarget === "borrowerName"
+    // If the query explicitly requests the borrowerName OR there's no
+    // autofocus param at all, we attempt to autofocus the input.
+    const shouldAutofocus = autofocusTarget === "borrowerName" || !searchParams?.get("autofocus")
 
-    if (shouldAutofocus && borrowerNameRef.current) {
-      // Initial focus (synchronous)
-      borrowerNameRef.current.focus()
+    if (!shouldAutofocus) return
+    const el = borrowerNameRef.current
+    if (!el) return
 
-      // Some mobile browsers only open the keyboard if focus happens after a
-      // short delay or inside a user gesture. Re-focus after a tiny timeout to
-      // improve reliability.
-      const tId = window.setTimeout(() => {
-        borrowerNameRef.current?.focus()
-        // Move cursor to end
-        const el = borrowerNameRef.current
-        if (el) {
-          const len = el.value?.length || 0
-          el.setSelectionRange(len, len)
-        }
-      }, 150)
-
-      return () => window.clearTimeout(tId)
+    // Helper to focus and move cursor to end
+    const focusAndMoveCursor = () => {
+      try {
+        el.focus()
+        const len = el.value?.length || 0
+        el.setSelectionRange(len, len)
+      } catch (err) {
+        // ignore focus errors
+      }
     }
 
-    // Default auto-focus when no explicit param present
-    if (!searchParams?.get("autofocus") && borrowerNameRef.current) {
-      borrowerNameRef.current.focus()
+    // Multiple attempts increase reliability on mobile browsers which may
+    // require focus inside a user gesture or after rendering settles.
+    focusAndMoveCursor() // immediate
+
+    const rafId = window.requestAnimationFrame(() => focusAndMoveCursor())
+    const t1 = window.setTimeout(() => focusAndMoveCursor(), 120)
+    const t2 = window.setTimeout(() => focusAndMoveCursor(), 350)
+
+    // As a fallback, listen for the first touchstart (user gesture) and
+    // re-focus once. This listener is removed after it's invoked.
+    const onFirstTouch = () => {
+      focusAndMoveCursor()
+      window.removeEventListener("touchstart", onFirstTouch)
+    }
+    window.addEventListener("touchstart", onFirstTouch, { once: true })
+
+    return () => {
+      window.cancelAnimationFrame(rafId)
+      window.clearTimeout(t1)
+      window.clearTimeout(t2)
+      window.removeEventListener("touchstart", onFirstTouch)
     }
   }, [searchParams])
 
