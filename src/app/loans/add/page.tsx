@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DatePicker } from "@/components/ui/date-picker"
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { ArrowLeft, Plus } from "lucide-react"
 import { storage, type Loan } from "@/lib/storage"
 import { useLanguage } from "@/components/language-provider"
@@ -32,13 +33,14 @@ export default function AddLoanPage() {
     interestType: "simple" as "simple" | "compound",
     years: "",
     periodValue: "",
-    periodUnit: "months" as "months" | "years",
+    periodUnit: "months" as "months" | "years" | "days",
     dateCreated: new Date() as Date,
     expectedReturnDate: null as Date | null,
     dueDate: null as Date | null,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showValidationDialog, setShowValidationDialog] = useState(false)
 
   // Auto-calculate expected return date and due date based on period
   useEffect(() => {
@@ -51,17 +53,22 @@ export default function AddLoanPage() {
         if (formData.periodUnit === "months") {
           endDate = new Date(startDate)
           endDate.setMonth(endDate.getMonth() + period)
-        } else {
-          // years
+        } else if (formData.periodUnit === "years") {
           endDate = new Date(startDate)
           endDate.setFullYear(endDate.getFullYear() + period)
+        } else {
+          // days
+          endDate = new Date(startDate)
+          endDate.setDate(endDate.getDate() + period)
         }
 
         setFormData(prev => ({
           ...prev,
           expectedReturnDate: endDate,
           dueDate: endDate,
-          years: formData.periodUnit === "years" ? formData.periodValue : (period / 12).toString()
+          years: formData.periodUnit === "years" ? formData.periodValue : 
+                 formData.periodUnit === "months" ? (period / 12).toString() :
+                 (period / 365).toString() // days to years
         }))
       }
     }
@@ -149,7 +156,10 @@ export default function AddLoanPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validateForm()) return
+    if (!validateForm()) {
+      setShowValidationDialog(true)
+      return
+    }
 
     setIsSubmitting(true)
 
@@ -382,12 +392,13 @@ export default function AddLoanPage() {
                       <Label htmlFor="periodUnit" className="mb-1 block text-sm">{t("unit")}</Label>
                       <Select
                         value={formData.periodUnit}
-                        onValueChange={(value: "months" | "years") => handleInputChange("periodUnit", value)}
+                        onValueChange={(value: "months" | "years" | "days") => handleInputChange("periodUnit", value)}
                       >
                         <SelectTrigger className="border-border">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="days">{t("days")}</SelectItem>
                           <SelectItem value="months">{t("months")}</SelectItem>
                           <SelectItem value="years">{t("years")}</SelectItem>
                         </SelectContent>
@@ -400,6 +411,9 @@ export default function AddLoanPage() {
                       {t("loanPeriod")}: {formData.periodValue} {t(formData.periodUnit)}
                       {formData.periodUnit === "months" && Number.parseFloat(formData.periodValue) > 12 && 
                         ` (${(Number.parseFloat(formData.periodValue) / 12).toFixed(1)} ${t("years")})`
+                      }
+                      {formData.periodUnit === "days" && Number.parseFloat(formData.periodValue) > 30 && 
+                        ` (${(Number.parseFloat(formData.periodValue) / 30).toFixed(1)} ${t("months")})`
                       }
                     </p>
                   )}
@@ -521,7 +535,9 @@ export default function AddLoanPage() {
                 {(() => {
                   const amount = Number.parseFloat(formData.amount)
                   const periodValue = Number.parseFloat(formData.periodValue)
-                  const years = formData.periodUnit === "years" ? periodValue : periodValue / 12
+                  const years = formData.periodUnit === "years" ? periodValue : 
+                               formData.periodUnit === "months" ? periodValue / 12 :
+                               periodValue / 365 // days to years
                   const rate = formData.interestMethod === "sankda" ? 12 : Number.parseFloat(formData.interestRate)
                   
                   if (amount > 0 && periodValue > 0 && rate >= 0) {
@@ -555,7 +571,9 @@ export default function AddLoanPage() {
                         <div className="text-xs text-muted-foreground text-center">
                           {t("interestType")}: {t(formData.interestType === "simple" ? "simpleInterest" : "compoundInterest")} | 
                           {t("interestMethod")}: {t(formData.interestMethod === "monthly" ? "monthlyInterest" : formData.interestMethod === "yearly" ? "yearlyInterest" : "sankdaFixed")} | 
-                          {t("loanPeriod")}: {periodValue} {t(formData.periodUnit)} {formData.periodUnit === "months" && ` (${years.toFixed(1)} ${t("years")})`}
+                          {t("loanPeriod")}: {periodValue} {t(formData.periodUnit)} 
+                          {formData.periodUnit === "months" && ` (${years.toFixed(1)} ${t("years")})`}
+                          {formData.periodUnit === "days" && ` (${(years * 12).toFixed(1)} ${t("months")})`}
                         </div>
                       </div>
                     )
@@ -575,6 +593,31 @@ export default function AddLoanPage() {
             </Button>
           </div>
         </form>
+
+        {/* Validation Dialog */}
+        <AlertDialog open={showValidationDialog} onOpenChange={setShowValidationDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("missingRequiredInfo")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("fillAllDetails")}:
+                <ul className="mt-2 space-y-1">
+                  {errors.borrowerName && <li className="text-red-600">• {t("borrowerNameRequired")}</li>}
+                  {errors.amount && <li className="text-red-600">• {t("validAmountRequired")}</li>}
+                  {errors.interestRate && <li className="text-red-600">• {t("validInterestRequired")}</li>}
+                  {errors.periodValue && <li className="text-red-600">• {t("validTimeRequired")}</li>}
+                  {errors.dueDate && <li className="text-red-600">• {t("dueDateRequired")}</li>}
+                  {errors.borrowerPhone && <li className="text-red-600">• {t("validPhoneRequired")}</li>}
+                </ul>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <Button onClick={() => setShowValidationDialog(false)}>
+                {t("okFillDetails")}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   )

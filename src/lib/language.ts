@@ -200,6 +200,9 @@ export const translations = {
     enterPeriod: "Enter period",
     loanSummary: "Loan Summary",
     autoCalculated: "Auto-calculated based on loan period",
+    missingRequiredInfo: "Missing Required Information",
+    fillAllDetails: "Please fill in all required fields before adding the loan",
+    okFillDetails: "OK, I'll fill the missing details",
     
     // Reports Page
     reportsAnalytics: "Reports & Analytics",
@@ -462,6 +465,9 @@ export const translations = {
     enterPeriod: "अवधि दर्ज करें",
     loanSummary: "ऋण सारांश",
     autoCalculated: "ऋण अवधि के आधार पर स्वचालित गणना",
+    missingRequiredInfo: "आवश्यक जानकारी गुम है",
+    fillAllDetails: "ऋण जोड़ने से पहले सभी आवश्यक फ़ील्ड भरें",
+    okFillDetails: "ठीक है, मैं गुम विवरण भर दूंगा",
     
     // Reports Page
     reportsAnalytics: "रिपोर्ट और विश्लेषण",
