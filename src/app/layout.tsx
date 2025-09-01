@@ -5,6 +5,8 @@ import { GeistMono } from "geist/font/mono"
 import { LanguageProvider } from "@/components/language-provider"
 import "./globals.css"
 
+export const metadataBase = new URL('https://byaaj-book.vercel.app/')
+
 export const metadata: Metadata = {
   title: "ByajBook - Loan Management",
   description: "Simple offline-first app to manage personal money lending and interest tracking",
@@ -16,6 +18,25 @@ export const metadata: Metadata = {
     shortcut: '/favicon.png',
     apple: '/favicon.png',
   },
+  openGraph: {
+    title: "ByajBook - Loan Management",
+    description: "Simple offline-first app to manage personal money lending and interest tracking",
+    url: '/',
+    siteName: 'ByajBook',
+    images: [
+      {
+        url: '/preview.jpg',
+        alt: 'ByajBook preview',
+      }
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ByajBook - Loan Management',
+    description: 'Simple offline-first app to manage personal money lending and interest tracking',
+    images: ['/preview.jpg'],
+  },
 }
 
 export default function RootLayout({
@@ -26,6 +47,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+  <link rel="canonical" href={metadataBase.href} />
         <link rel="icon" href="/favicon.png" />
         <link rel="shortcut icon" href="/favicon.png" />
         <link rel="apple-touch-icon" href="/favicon.png" />
