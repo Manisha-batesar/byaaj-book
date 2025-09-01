@@ -35,6 +35,16 @@ export default function PaymentsPage() {
     
     const loans = storage.getLoans()
     setAllLoans(loans)
+    // If navigated with ?loanId=..., open the payment modal for that loan immediately
+    let loanIdFromQuery: string | null = null
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      loanIdFromQuery = params.get("loanId")
+    }
+    if (loanIdFromQuery) {
+      const loanToSelect = loans.find(l => l.id === loanIdFromQuery)
+      if (loanToSelect) setSelectedLoan(loanToSelect)
+    }
   }, [])
 
   const calculateOutstanding = (loan: Loan) => {
@@ -223,12 +233,18 @@ export default function PaymentsPage() {
       {selectedLoan && (
         <PaymentModal
           loan={selectedLoan}
-          onClose={() => setSelectedLoan(null)}
+          onClose={() => {
+            setSelectedLoan(null)
+            // Remove loanId query param from URL
+            try { router.replace('/payments') } catch (e) { /* noop */ }
+          }}
           onPaymentRecorded={() => {
             // Refresh data
             const loans = storage.getLoans()
             setAllLoans(loans)
             setSelectedLoan(null)
+            // Clear loanId from query after recording
+            try { router.replace('/payments') } catch (e) { /* noop */ }
           }}
         />
       )}
