@@ -10,6 +10,7 @@ import { BottomNav } from "@/components/bottom-nav"
 import { LanguageSelector } from "@/components/language-selector"
 import { PinInput } from "@/components/pin-input"
 import { ReminderSettingsCard } from "@/components/reminder-settings"
+import AISetup from "@/components/ai-setup"
 import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
 import { Lock, LogOut, Trash2, Download, Upload, Info, Shield, Bell } from "lucide-react"
@@ -206,7 +207,10 @@ export default function SettingsPage() {
       <div className="sticky top-0 z-50 bg-primary text-primary-foreground p-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t("settings")}</h1>
-          <LanguageSelector />
+          <div className="flex items-center gap-2">
+            <AISetup />
+            <LanguageSelector />
+          </div>
         </div>
       </div>
 

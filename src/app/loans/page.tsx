@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,15 +16,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { ArrowLeft, Plus, Phone, Calendar, IndianRupee, Edit3, Trash2 } from "lucide-react"
+import { ArrowLeft, Plus, Phone, Calendar, IndianRupee, Edit3, Trash2, Search } from "lucide-react"
 import { storage, type Loan } from "@/lib/storage"
 import { useLanguage } from "@/components/language-provider"
 import { LanguageSelector } from "@/components/language-selector"
+import { VoiceEnabledSearch } from "@/components/voice-enabled-search"
 import Link from "next/link"
 
 export default function LoansPage() {
   const [loans, setLoans] = useState<Loan[]>([])
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all")
+  const [searchQuery, setSearchQuery] = useState("")
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const { t } = useLanguage()
 
@@ -56,9 +59,25 @@ export default function LoansPage() {
     }
   }, [])
 
+  // Enhanced filtering with search
   const filteredLoans = loans.filter((loan) => {
-    if (filter === "active") return loan.isActive
-    if (filter === "completed") return !loan.isActive
+    // Apply status filter
+    if (filter === "active" && !loan.isActive) return false
+    if (filter === "completed" && loan.isActive) return false
+    
+    // Apply search filter if search query exists
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      return (
+        loan.borrowerName.toLowerCase().includes(query) ||
+        loan.borrowerPhone?.includes(query) ||
+        loan.amount.toString().includes(query) ||
+        loan.interestRate.toString().includes(query) ||
+        new Date(loan.dateCreated).toLocaleDateString().includes(query) ||
+        (loan.notes && loan.notes.toLowerCase().includes(query))
+      )
+    }
+    
     return true
   })
 
@@ -110,6 +129,7 @@ export default function LoansPage() {
           </div>
           <div className="flex items-center space-x-3">
             <LanguageSelector />
+            <VoiceEnabledSearch />
             <Link href="/loans/add?autofocus=borrowerName">
                 <Button variant="secondary" size="sm">
                   <Plus size={16} className="mr-1" />
@@ -120,8 +140,8 @@ export default function LoansPage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="p-6 pb-0">
+      {/* Filter Tabs and Search */}
+      <div className="p-6 pb-0 space-y-4">
         <div className="flex space-x-2">
           {[
             { key: "all", label: t("all") },
@@ -142,6 +162,17 @@ export default function LoansPage() {
               {tab.label}
             </Button>
           ))}
+        </div>
+        
+        {/* Quick Search Bar */}
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search loans by name, amount, phone..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
         </div>
       </div>
 

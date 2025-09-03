@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,8 +18,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { BottomNav } from "@/components/bottom-nav"
 import { LanguageSelector } from "@/components/language-selector"
-import { SearchClientButton } from "@/components/search-client-button"
 import { DueReminders } from "@/components/due-reminders"
+import { AIExperience } from "@/components/ai-experience"
 import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
 import { Plus, Calculator, TrendingUp, FileText, IndianRupee, Edit3, Trash2, ChevronRight } from "lucide-react"
@@ -157,12 +158,12 @@ export default function DashboardPage() {
       {/* Sticky Header - Only top part with logo, name, search, language */}
       <div className="sticky top-0 z-50 bg-primary text-primary-foreground p-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <img src="/bb-logo.png" alt="ByajBook" className="h-16 w-16 rounded-full" />
-            <h1 className="text-2xl font-bold">{t("appName")}</h1>
+          <div className="flex items-center space-x-3 min-w-0 flex-1">
+            <img src="/bb-logo.png" alt="ByajBook" className="h-12 w-12 sm:h-16 sm:w-16 rounded-full flex-shrink-0" />
+            <h1 className="text-xl sm:text-2xl font-bold truncate">{t("appName")}</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <SearchClientButton />
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            <AIExperience className="flex items-center gap-2" />
             <LanguageSelector />
           </div>
         </div>

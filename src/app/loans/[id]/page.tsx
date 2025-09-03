@@ -20,6 +20,8 @@ import { ArrowLeft, Phone, Calendar, IndianRupee, Edit3, Trash2, Clock, FileText
 import { storage, type Loan, type Payment } from "@/lib/storage"
 import { useLanguage } from "@/components/language-provider"
 import { LanguageSelector } from "@/components/language-selector"
+import { AIAssistant } from "@/components/ai-assistant"
+import { VoiceInputButton } from "@/components/voice-input-button"
 import Link from "next/link"
 
 export default function LoanDetailsPage() {
@@ -93,7 +95,11 @@ export default function LoanDetailsPage() {
             </button>
             <h1 className="text-xl font-bold">{t("viewDetails")}</h1>
           </div>
-          <LanguageSelector />
+          <div className="flex items-center space-x-2">
+            <VoiceInputButton currentLoanId={loanId} />
+            <AIAssistant currentLoanId={loanId} />
+            <LanguageSelector />
+          </div>
         </div>
       </div>
 

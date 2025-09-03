@@ -279,6 +279,25 @@ export const translations = {
     noReminders: "No reminders at this time",
     reminderFor: "Reminder for",
     loanDueReminder: "Loan Due Reminder",
+    
+    // AI Assistant
+    aiAssistant: "AI Assistant",
+    aiSetup: "AI Setup",
+    aiSetupRequired: "AI Setup Required",
+    aiNotAvailable: "AI Assistant not available",
+    aiConfigureFirst: "Configure Gemini API key to use the AI Assistant",
+    getApiKey: "Get API Key",
+    restartApp: "Restart App",
+    aiInstructions: "Ask questions about loan management and interest calculations",
+    voiceEnabled: "Voice Enabled",
+    listening: "Listening...",
+    speakNow: "Speak now",
+    thinking: "Thinking...",
+    chat: "Chat",
+    typeQuestion: "Type your question...",
+    startListening: "Tap and hold to speak",
+    suggestedQuestions: "Suggested Questions",
+    aiWelcomeMessage: "Hello! I'm here to help you with loan and interest calculations.",
   },
   hi: {
     // App name
@@ -557,6 +576,25 @@ export const translations = {
     noReminders: "इस समय कोई रिमाइंडर नहीं",
     reminderFor: "के लिए रिमाइंडर",
     loanDueReminder: "ऋण देय रिमाइंडर",
+    
+    // AI Assistant
+    aiAssistant: "AI सहायक",
+    aiSetup: "AI सेटअप",
+    aiSetupRequired: "AI सेटअप आवश्यक",
+    aiNotAvailable: "AI सहायक उपलब्ध नहीं है",
+    aiConfigureFirst: "AI सहायक का उपयोग करने के लिए Gemini API key कॉन्फ़िगर करें",
+    getApiKey: "API Key प्राप्त करें",
+    restartApp: "ऐप रीस्टार्ट करें",
+    aiInstructions: "ऋण प्रबंधन और ब्याज गणना के बारे में प्रश्न पूछें",
+    voiceEnabled: "वॉइस सक्षम",
+    listening: "सुन रहे हैं...",
+    speakNow: "अब बोलें",
+    thinking: "सोच रहा हूँ...",
+    chat: "चैट",
+    typeQuestion: "अपना प्रश्न टाइप करें...",
+    startListening: "बोलने के लिए दबाकर रखें",
+    suggestedQuestions: "सुझावित प्रश्न",
+    aiWelcomeMessage: "नमस्ते! मैं आपकी ब्याज और ऋण संबंधी मदद के लिए यहाँ हूँ।",
   },
 } as const
 

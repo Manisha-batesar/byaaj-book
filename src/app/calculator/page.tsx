@@ -10,6 +10,7 @@ import { BottomNav } from "@/components/bottom-nav"
 import { ArrowLeft, Calculator, IndianRupee } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
 import { LanguageSelector } from "@/components/language-selector"
+import { VoiceInputButton } from "@/components/voice-input-button"
 import Link from "next/link"
 
 interface CalculationResult {
@@ -170,7 +171,10 @@ export default function CalculatorPage() {
             </div>
             <h1 className="text-xl font-bold">{t("interestCalculator")}</h1>
           </div>
-          <LanguageSelector />
+          <div className="flex items-center space-x-2">
+            <VoiceInputButton />
+            <LanguageSelector />
+          </div>
         </div>
       </div>
 
