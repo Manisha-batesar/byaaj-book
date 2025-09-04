@@ -10,10 +10,9 @@ import { BottomNav } from "@/components/bottom-nav"
 import { LanguageSelector } from "@/components/language-selector"
 import { PinInput } from "@/components/pin-input"
 import { ReminderSettingsCard } from "@/components/reminder-settings"
-import AISetup from "@/components/ai-setup"
 import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
-import { Lock, LogOut, Trash2, Download, Upload, Info, Shield, Bell } from "lucide-react"
+import { Lock, LogOut, Trash2, Download, Upload, Info, Shield, Bell, Bot, Sparkles } from "lucide-react"
 
 export default function SettingsPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -25,7 +24,7 @@ export default function SettingsPage() {
   const [showDataExport, setShowDataExport] = useState(false)
   const [hasPin, setHasPin] = useState(false)
   const router = useRouter()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   useEffect(() => {
     // No longer redirect based on authentication since PIN is optional
@@ -208,7 +207,6 @@ export default function SettingsPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t("settings")}</h1>
           <div className="flex items-center gap-2">
-            <AISetup />
             <LanguageSelector />
           </div>
         </div>
@@ -216,6 +214,49 @@ export default function SettingsPage() {
 
       {/* Settings Options */}
       <div className="p-6 space-y-4">
+        {/* AI Features Info */}
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-purple-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Bot size={20} className="text-primary" />
+              <span>{language === 'hi' ? 'AI सुविधाएं' : 'AI Features'}</span>
+              <Sparkles size={16} className="text-yellow-500" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {language === 'hi' 
+                  ? 'AI सुविधाएं डैशबोर्ड से उपलब्ध हैं - कोई सेटअप की आवश्यकता नहीं!'
+                  : 'AI features are available from the dashboard - no setup required!'
+                }
+              </p>
+              <div className="bg-white/80 p-3 rounded-lg border border-primary/20">
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Bot size={14} className="text-primary" />
+                    <span>{language === 'hi' ? '🤖 AI असिस्टेंट चैट' : '🤖 AI Assistant Chat'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3.5 h-3.5 bg-blue-500 rounded-full"></span>
+                    <span>{language === 'hi' ? '🔍 स्मार्ट खोज' : '🔍 Smart Search'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3.5 h-3.5 bg-green-500 rounded-full"></span>
+                    <span>{language === 'hi' ? '🎤 वॉइस कमांड' : '🎤 Voice Commands'}</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {language === 'hi' 
+                  ? 'डैशबोर्ड के हेडर में AI बटन देखें'
+                  : 'Look for the AI buttons in the dashboard header'
+                }
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Security Settings */}
         <Card>
           <CardHeader>

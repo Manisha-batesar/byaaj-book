@@ -19,7 +19,7 @@ import {
 import { BottomNav } from "@/components/bottom-nav"
 import { LanguageSelector } from "@/components/language-selector"
 import { DueReminders } from "@/components/due-reminders"
-import { AIExperience } from "@/components/ai-experience"
+import AIExperience from "@/components/ai-experience"
 import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
 import { Plus, Calculator, TrendingUp, FileText, IndianRupee, Edit3, Trash2, ChevronRight } from "lucide-react"
