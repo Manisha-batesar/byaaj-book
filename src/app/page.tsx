@@ -12,11 +12,13 @@ export default function HomePage() {
     // If user hasn't seen onboarding, route them there first
     if (!storage.getOnboardingSeen()) {
       router.push('/onboarding/welcome')
+      setIsLoading(false)
       return
     }
 
     // Otherwise go to dashboard (auth handled in settings)
     router.push('/dashboard')
+    setIsLoading(false)
   }, [router])
 
   if (isLoading) {
