@@ -95,22 +95,37 @@ export class VoiceRecognition {
     if (!this.recognition) return
 
     this.recognition.onresult = (event: any) => {
-      let transcript = ''
+      let finalTranscript = ''
+      let interimTranscript = ''
       let confidence = 0
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i]
+        const transcript = result[0].transcript
+
         if (result.isFinal) {
-          transcript += result[0].transcript
+          finalTranscript += transcript
           confidence = result[0].confidence
+        } else {
+          interimTranscript += transcript
         }
       }
 
-      if (this.onResult && transcript.trim()) {
+      // Send interim results while listening
+      if (interimTranscript.trim() && this.onResult) {
         this.onResult({
-          transcript: transcript.trim(),
-          confidence,
+          transcript: interimTranscript.trim(),
+          confidence: 0,
           isListening: true
+        })
+      }
+
+      // Send final result
+      if (finalTranscript.trim() && this.onResult) {
+        this.onResult({
+          transcript: finalTranscript.trim(),
+          confidence,
+          isListening: true // Still listening at this point
         })
       }
     }
@@ -123,11 +138,23 @@ export class VoiceRecognition {
     }
 
     this.recognition.onend = () => {
+      // Recognition session ended
       if (this.onResult) {
         this.onResult({
           transcript: '',
           confidence: 0,
           isListening: false
+        })
+      }
+    }
+
+    this.recognition.onstart = () => {
+      // Recognition started - notify that we're listening
+      if (this.onResult) {
+        this.onResult({
+          transcript: '',
+          confidence: 0,
+          isListening: true
         })
       }
     }
@@ -194,7 +221,17 @@ export class VoiceRecognition {
   }
 
   public static isSupported(): boolean {
-    return !!(window.SpeechRecognition || window.webkitSpeechRecognition)
+    if (typeof window === 'undefined') {
+      console.log('VoiceRecognition.isSupported: window is undefined (SSR)')
+      return false
+    }
+    
+    const hasRecognition = !!(window.SpeechRecognition || window.webkitSpeechRecognition)
+    console.log('VoiceRecognition.isSupported check:')
+    console.log('- window.SpeechRecognition:', typeof window.SpeechRecognition)
+    console.log('- window.webkitSpeechRecognition:', typeof window.webkitSpeechRecognition)
+    console.log('- final result:', hasRecognition)
+    return hasRecognition
   }
 
   public updateLanguage(language: Language) {
@@ -327,7 +364,16 @@ export class TextToSpeech {
   }
 
   public static isSupported(): boolean {
-    return !!window.speechSynthesis
+    if (typeof window === 'undefined') {
+      console.log('TextToSpeech.isSupported: window is undefined (SSR)')
+      return false
+    }
+    
+    const hasSynthesis = !!window.speechSynthesis
+    console.log('TextToSpeech.isSupported check:')
+    console.log('- window.speechSynthesis:', typeof window.speechSynthesis)
+    console.log('- final result:', hasSynthesis)
+    return hasSynthesis
   }
 
   public updateConfig(config: Partial<SpeechSynthesisConfig>) {
@@ -350,8 +396,8 @@ export class VoiceManager {
     
     this.recognition = new VoiceRecognition({
       language,
-      continuous: false,
-      interimResults: true
+      continuous: false, // Changed to false for better single-command recognition
+      interimResults: true // Keep true for real-time feedback
     })
 
     this.synthesis = new TextToSpeech({

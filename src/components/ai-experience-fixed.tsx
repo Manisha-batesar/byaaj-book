@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -52,6 +53,7 @@ interface Message {
 
 export default function AIExperience({ className = "" }: { className?: string }) {
   const { language } = useLanguage()
+  const router = useRouter()
   
   // Dialog states
   const [showAI, setShowAI] = useState(false)
@@ -72,6 +74,14 @@ export default function AIExperience({ className = "" }: { className?: string })
     synthesis: false
   })
   
+  // Debug: Check if browser supports Web Speech API
+  useEffect(() => {
+    console.log('Browser Web Speech API support check:')
+    console.log('window.SpeechRecognition:', typeof window.SpeechRecognition)
+    console.log('window.webkitSpeechRecognition:', typeof window.webkitSpeechRecognition)
+    console.log('window.speechSynthesis:', typeof window.speechSynthesis)
+  }, [])
+  
   // Refs for chat scrolling
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -85,15 +95,36 @@ export default function AIExperience({ className = "" }: { className?: string })
   // Connection state
   const [isOnline, setIsOnline] = useState(true)
 
+  // Navigation function
+  const navigateToLoan = (loanId: string) => {
+    setShowSearch(false) // Close search dialog
+    router.push(`/loans/${loanId}`)
+  }
+
     // Initialize voice support detection and VoiceManager
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      console.log('=== VOICE SUPPORT INITIALIZATION ===')
+      console.log('Window object available:', typeof window)
+      console.log('SpeechRecognition:', typeof window.SpeechRecognition)
+      console.log('webkitSpeechRecognition:', typeof window.webkitSpeechRecognition) 
+      console.log('speechSynthesis:', typeof window.speechSynthesis)
+      
       const support = VoiceManager.isVoiceSupported()
+      console.log('VoiceManager.isVoiceSupported() result:', support)
       setVoiceSupport(support)
       
-      // Initialize VoiceManager
-      const manager = new VoiceManager(language)
-      setVoiceManager(manager)
+      // Initialize VoiceManager regardless of support for debugging
+      try {
+        const manager = new VoiceManager(language)
+        console.log('VoiceManager instance created:', manager)
+        console.log('VoiceManager methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(manager)))
+        setVoiceManager(manager)
+      } catch (error) {
+        console.error('Failed to create VoiceManager:', error)
+      }
+    } else {
+      console.log('Window is undefined - SSR context')
     }
   }, [language])
 
@@ -123,19 +154,44 @@ export default function AIExperience({ className = "" }: { className?: string })
 
   // Voice Recognition Handlers
   const startVoiceRecording = async () => {
-    if (!voiceManager) return
+    if (!voiceManager) {
+      console.log('VoiceManager not available') // Debug log
+      return
+    }
+    
+    console.log('Starting voice recording, showAI:', showAI, 'showSearch:', showSearch) // Debug log
     
     try {
       setIsListening(true)
       const success = voiceManager.startListening(
         (result: VoiceRecognitionResult) => {
-          if (result.transcript && !result.isListening) {
-            // Voice recognition completed
+          console.log('Voice result:', result) // Debug log
+          
+          // Handle interim results (while still listening)
+          if (result.isListening && result.transcript) {
+            console.log('Interim result:', result.transcript) // Debug log
+            // Show interim results in input for real-time feedback
             if (showAI) {
               setInputMessage(result.transcript)
             } else if (showSearch) {
               setSearchQuery(result.transcript)
+              // Also search immediately on interim results for better UX
               performSearch(result.transcript)
+            }
+          }
+          
+          // Handle final result (when recognition ends)
+          if (!result.isListening) {
+            console.log('Recognition ended, final transcript:', result.transcript) // Debug log
+            if (result.transcript) {
+              // Voice recognition completed with final transcript
+              if (showAI) {
+                setInputMessage(result.transcript)
+              } else if (showSearch) {
+                setSearchQuery(result.transcript)
+                console.log('Calling performSearch with final transcript:', result.transcript) // Debug log
+                performSearch(result.transcript)
+              }
             }
             setIsListening(false)
           }
@@ -143,11 +199,16 @@ export default function AIExperience({ className = "" }: { className?: string })
         (error: string) => {
           console.error('Voice recognition error:', error)
           setIsListening(false)
+          // Optionally show error message to user
+          // You could add a toast notification here
         }
       )
       
       if (!success) {
         setIsListening(false)
+        console.warn('Failed to start voice recognition')
+      } else {
+        console.log('Voice recognition started successfully') // Debug log
       }
     } catch (error) {
       console.error('Voice recording error:', error)
@@ -363,7 +424,10 @@ User Query: ${message.trim()}`
 
   // Search Functions
   const performSearch = async (query: string) => {
+    console.log('performSearch called with query:', query) // Debug log
+    
     if (!query.trim()) {
+      console.log('Empty query, clearing results') // Debug log
       setSearchResults([])
       return
     }
@@ -372,22 +436,63 @@ User Query: ${message.trim()}`
     
     try {
       const loans = storage.getLoans()
-      const searchTerms = query.toLowerCase().split(' ')
+      console.log('Total loans in storage:', loans.length) // Debug log
+      console.log('All loans:', loans.map(l => ({ id: l.id, name: l.borrowerName, amount: l.amount }))) // Debug log
+      
+      const searchQuery = query.toLowerCase().trim()
+      console.log('Processed search query:', searchQuery) // Debug log
       
       const results = loans.filter(loan => {
-        const searchableText = [
+        // Create a comprehensive searchable text including all loan fields
+        const searchableFields = [
           loan.borrowerName.toLowerCase(),
           loan.amount.toString(),
           loan.interestRate.toString(),
           loan.interestMethod.toLowerCase(),
           loan.borrowerPhone || '',
           loan.notes || '',
-          new Date(loan.dateCreated).toLocaleDateString().toLowerCase()
-        ].join(' ')
+          new Date(loan.dateCreated).toLocaleDateString().toLowerCase(),
+          // Add variations for better matching
+          loan.borrowerName.toLowerCase().replace(/\s+/g, ''), // Remove spaces
+          loan.borrowerName.toLowerCase().split(' ').join(''), // Join without spaces
+        ]
         
-        return searchTerms.some(term => searchableText.includes(term))
+        console.log(`Checking loan ${loan.borrowerName}, searchable fields:`, searchableFields) // Debug log
+        
+        // Check if query matches any field using partial matching
+        const matches = searchableFields.some(field => {
+          if (!field) return false
+          // Direct includes check
+          if (field.includes(searchQuery)) {
+            console.log(`Match found: "${field}" includes "${searchQuery}"`) // Debug log
+            return true
+          }
+          // Check if query words match
+          const queryWords = searchQuery.split(' ').filter(word => word.length > 0)
+          const wordMatch = queryWords.every(word => field.includes(word))
+          if (wordMatch) {
+            console.log(`Word match found: "${field}" matches words ${queryWords}`) // Debug log
+          }
+          return wordMatch
+        })
+        
+        // Also check if any word in borrower name starts with query
+        const startsWithMatch = loan.borrowerName.toLowerCase().split(' ').some(word => 
+          word.startsWith(searchQuery)
+        )
+        
+        if (startsWithMatch) {
+          console.log(`StartsWith match found: borrower name "${loan.borrowerName}" has word starting with "${searchQuery}"`) // Debug log
+        }
+        
+        const finalMatch = matches || startsWithMatch
+        console.log(`Final match result for ${loan.borrowerName}:`, finalMatch) // Debug log
+        
+        return finalMatch
       })
 
+      console.log('Search results found:', results.length) // Debug log
+      console.log('Search results:', results.map(r => ({ id: r.id, name: r.borrowerName }))) // Debug log
       setSearchResults(results)
     } catch (error) {
       console.error('Search error:', error)
@@ -651,22 +756,57 @@ User Query: ${message.trim()}`
                   disabled={isAIThinking}
                 />
                 
-                {/* Voice Button */}
-                {voiceSupport.recognition && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`absolute right-1 top-1 h-8 w-8 rounded-full transition-colors ${
-                      isListening 
-                        ? 'text-red-500 bg-red-50 hover:bg-red-100' 
-                        : 'text-gray-500 hover:bg-gray-100'
-                    }`}
-                    onClick={isListening ? stopVoiceRecording : startVoiceRecording}
-                    disabled={isAIThinking}
-                  >
-                    {isListening ? <MicOff size={16} /> : <Mic size={16} />}
-                  </Button>
-                )}
+                {/* Voice Button - Always show for debugging */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`absolute right-1 top-1 h-8 w-8 rounded-full transition-all duration-200 ${
+                    isListening 
+                      ? 'text-red-500 bg-red-50 hover:bg-red-100 animate-pulse' 
+                      : voiceSupport.recognition 
+                        ? 'text-gray-500 hover:bg-gray-100'
+                        : 'text-red-400 bg-red-50 hover:bg-red-100'
+                  }`}
+                  onClick={() => {
+                    console.log('=== AI CHAT VOICE BUTTON CLICKED ===')
+                    console.log('Current state - isListening:', isListening)
+                    console.log('Voice support detection:', voiceSupport)
+                    console.log('VoiceManager instance:', voiceManager)
+                    console.log('Window.SpeechRecognition:', typeof window.SpeechRecognition)
+                    console.log('Window.webkitSpeechRecognition:', typeof window.webkitSpeechRecognition)
+                    
+                    if (!voiceSupport.recognition) {
+                      console.warn('Voice recognition not supported - but attempting anyway')
+                      alert('Voice not supported in your browser. Please try Chrome/Edge.')
+                      return
+                    }
+                    
+                    if (isListening) {
+                      console.log('Stopping voice recording')
+                      stopVoiceRecording()
+                    } else {
+                      console.log('Starting voice recording')
+                      startVoiceRecording()
+                    }
+                  }}
+                  disabled={isAIThinking}
+                  title={
+                    !voiceSupport.recognition 
+                      ? 'Voice not supported'
+                      : isListening 
+                        ? (language === 'hi' ? 'रिकॉर्डिंग बंद करें' : 'Stop recording')
+                        : (language === 'hi' ? 'वॉइस से बोलें' : 'Speak with voice')
+                  }
+                >
+                  {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+                  
+                  {/* Debug indicator */}
+                  {!voiceSupport.recognition && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-white text-[8px] flex items-center justify-center">
+                      !
+                    </div>
+                  )}
+                </Button>
               </div>
 
               {/* Send Button */}
@@ -703,7 +843,7 @@ User Query: ${message.trim()}`
             {/* Status Text */}
             {(isListening || isSpeaking) && (
               <div className="mt-2 text-center">
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 animate-pulse">
                   {isListening && (language === 'hi' ? '🎤 सुन रहा हूं...' : '🎤 Listening...')}
                   {isSpeaking && (language === 'hi' ? '🔊 बोल रहा हूं...' : '🔊 Speaking...')}
                 </p>
@@ -769,12 +909,16 @@ User Query: ${message.trim()}`
                       <Button
                         variant="ghost"
                         size="icon"
-                        className={`absolute right-1 top-1 h-10 w-10 rounded-lg ${
+                        className={`absolute right-1 top-1 h-10 w-10 rounded-lg transition-all duration-200 ${
                           isListening 
-                            ? 'text-red-500 animate-pulse bg-red-50' 
+                            ? 'text-red-500 animate-pulse bg-red-50 hover:bg-red-100' 
                             : 'text-emerald-600 hover:bg-emerald-50'
                         }`}
                         onClick={isListening ? stopVoiceRecording : startVoiceRecording}
+                        title={isListening 
+                          ? (language === 'hi' ? 'रिकॉर्डिंग बंद करें' : 'Stop recording')
+                          : (language === 'hi' ? 'वॉइस से खोजें' : 'Search with voice')
+                        }
                       >
                         {isListening ? <MicOff size={18} /> : <Mic size={18} />}
                       </Button>
@@ -839,10 +983,11 @@ User Query: ${message.trim()}`
                       return (
                         <div
                           key={loan.id}
-                          className="bg-white rounded-xl p-4 border border-emerald-100 shadow-sm hover:shadow-md transition-shadow"
+                          onClick={() => navigateToLoan(loan.id)}
+                          className="bg-white rounded-xl p-4 border border-emerald-100 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer group"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-gray-800">{loan.borrowerName}</h3>
+                            <h3 className="font-semibold text-gray-800 group-hover:text-emerald-700 transition-colors">{loan.borrowerName}</h3>
                             <Badge 
                               variant={loan.isActive ? "default" : "secondary"}
                               className={loan.isActive 
@@ -892,6 +1037,13 @@ User Query: ${message.trim()}`
                               <span className="font-medium">{loan.borrowerPhone}</span>
                             </div>
                           )}
+                          
+                          {/* Click indicator */}
+                          <div className="mt-3 pt-2 border-t border-emerald-100 text-center">
+                            <p className="text-xs text-gray-400 group-hover:text-emerald-500 transition-colors">
+                              {language === 'hi' ? 'विवरण देखने के लिए क्लिक करें' : 'Click to view details'}
+                            </p>
+                          </div>
                         </div>
                       )
                     })}
