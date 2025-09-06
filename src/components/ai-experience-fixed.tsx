@@ -51,6 +51,21 @@ interface Message {
   timestamp: Date
 }
 
+interface ConversationState {
+  isCreatingLoan: boolean
+  isInConversation: boolean  // New flag to track if AI is in conversation mode
+  loanData: {
+    borrowerName?: string
+    amount?: number
+    interestRate?: number
+    interestMethod?: 'monthly' | 'yearly' | 'sankda'
+    years?: number
+    borrowerPhone?: string
+    notes?: string
+  }
+  currentStep: 'name' | 'amount' | 'rate' | 'method' | 'duration' | 'phone' | 'notes' | 'confirm' | 'complete'
+}
+
 export default function AIExperience({ className = "" }: { className?: string }) {
   const { language } = useLanguage()
   const router = useRouter()
@@ -64,6 +79,12 @@ export default function AIExperience({ className = "" }: { className?: string })
   const [inputMessage, setInputMessage] = useState('')
   const [isAIThinking, setIsAIThinking] = useState(false)
   const [aiController, setAiController] = useState<AbortController | null>(null)
+  const [conversationState, setConversationState] = useState<ConversationState>({
+    isCreatingLoan: false,
+    isInConversation: false,
+    loanData: {},
+    currentStep: 'name'
+  })
   
   // Voice states
   const [isListening, setIsListening] = useState(false)
@@ -94,6 +115,337 @@ export default function AIExperience({ className = "" }: { className?: string })
   
   // Connection state
   const [isOnline, setIsOnline] = useState(true)
+
+  // Helper functions for conversational AI
+  const detectLoanIntent = (message: string): boolean => {
+    const lowerMessage = message.toLowerCase().trim()
+    
+    // Direct loan keywords
+    const loanKeywords = [
+      'loan', 'add loan', 'create loan', 'new loan', 'make loan', 'give loan',
+      'lend', 'lending', 'loan create', 'loan add', 'loan dena', 'loan banana',
+      'udhar', 'karj', 'udhaar', 'rin', 'paisa dena', 'naya loan', 'loan banao', 
+      'loan karna'
+    ]
+    
+    // Check for direct keywords
+    const hasDirectKeyword = loanKeywords.some(keyword => 
+      lowerMessage.includes(keyword.toLowerCase())
+    )
+    
+    // Pattern matching for sentences like "manisha ko loan dena hai" or "give loan to john"
+    const loanPatterns = [
+      /.*\s+(ko|for|ke liye)\s+(loan|udhar|paisa|money)/,      // "manisha ko loan"
+      /(loan|udhar|paisa|money)\s+.+\s+(ko|for|ke liye)/,      // "loan manisha ko"  
+      /(.*)\s+(loan|udhar|paisa)\s+(dena|give|add|create)/,    // "manisha loan dena"
+      /^(.*)\s*(loan|udhar)$/,                                  // "manisha loan"
+      /(dena|give|add|make)\s+.*\s*(loan|udhar)/,              // "dena hai loan"
+    ]
+    
+    const hasLoanPattern = loanPatterns.some(pattern => pattern.test(lowerMessage))
+    
+    // Simple trigger words but only if they seem intentional
+    const simpleTriggers = ['add', 'create', 'new', 'make']
+    const hasSimpleTrigger = simpleTriggers.some(trigger => 
+      lowerMessage === trigger || lowerMessage.startsWith(trigger + ' ')
+    )
+    
+    return hasDirectKeyword || hasLoanPattern || hasSimpleTrigger
+  }
+
+  const extractAmountFromText = (text: string): number | null => {
+    // Match various amount formats: ₹50000, 50000, 50,000, fifty thousand, etc.
+    const amountPatterns = [
+      /₹?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/g, // ₹50,000 or 50,000
+      /₹?\s*(\d+)/g, // Simple numbers
+    ]
+    
+    for (const pattern of amountPatterns) {
+      const matches = text.match(pattern)
+      if (matches) {
+        const numberStr = matches[0].replace(/[₹,\s]/g, '')
+        const amount = parseFloat(numberStr)
+        if (!isNaN(amount) && amount > 0) {
+          return amount
+        }
+      }
+    }
+    return null
+  }
+
+  const extractInterestRate = (text: string): { rate: number, method: 'monthly' | 'yearly' | 'sankda' } | null => {
+    const lowerText = text.toLowerCase()
+    
+    // Check for sankda first
+    if (lowerText.includes('sankda') || lowerText.includes('सांकडा')) {
+      return { rate: 12, method: 'sankda' }
+    }
+    
+    // Extract percentage number
+    const rateMatch = text.match(/(\d+(?:\.\d+)?)\s*%/)
+    if (rateMatch) {
+      const rate = parseFloat(rateMatch[1])
+      
+      // Determine method
+      const isMonthly = lowerText.includes('month') || lowerText.includes('mahina') || 
+                       lowerText.includes('monthly') || lowerText.includes('माहिना')
+      const isYearly = lowerText.includes('year') || lowerText.includes('yearly') || 
+                      lowerText.includes('sal') || lowerText.includes('साल') ||
+                      lowerText.includes('varsh') || lowerText.includes('वर्ष')
+      
+      if (isMonthly) return { rate, method: 'monthly' }
+      if (isYearly) return { rate, method: 'yearly' }
+      
+      // Default to yearly if no specific method mentioned
+      return { rate, method: 'yearly' }
+    }
+    
+    return null
+  }
+
+  const extractDuration = (text: string): number | null => {
+    const durationPatterns = [
+      /(\d+)\s*(?:year|years|sal|साल|varsh|वर्ष)/i,
+      /(\d+)\s*(?:month|months|mahina|माहिना)/i
+    ]
+    
+    for (const pattern of durationPatterns) {
+      const match = text.match(pattern)
+      if (match) {
+        const duration = parseFloat(match[1])
+        // Convert months to years if needed
+        if (text.toLowerCase().includes('month') || text.toLowerCase().includes('mahina')) {
+          return Math.max(0.1, duration / 12) // Minimum 0.1 years
+        }
+        return Math.max(0.1, duration) // Minimum 0.1 years
+      }
+    }
+    return null
+  }
+
+  const generateConversationalResponse = (userMessage: string): string => {
+    const { isCreatingLoan, loanData, currentStep } = conversationState
+    const lowerMessage = userMessage.toLowerCase().trim()
+    
+    if (!isCreatingLoan) {
+      // Handle general greetings and responses - MUCH more flexible pattern matching
+      const greetingPatterns = [
+        /^h+[iy]+$/i,           // hi, hii, hiiii, hy, hyy, hyyy
+        /^h+[ae]+[ly]+[oy]*$/i, // hello, helo, hellooo, hally, hey, heyy
+        /^h+[eya]+y*$/i,        // hey, heyy, heyyy, hay, hyy
+        /^namaste+$/i,          // namaste, namasteee
+        /^good\s*(morning|afternoon|evening|night)$/i, // good morning, etc
+        /^sup+$/i,              // sup, supp
+        /^yo+$/i,               // yo, yoo
+        /^what'?s\s*up$/i,      // whats up, what's up
+      ]
+      
+      const isGreeting = greetingPatterns.some(pattern => pattern.test(lowerMessage.trim())) ||
+                        lowerMessage.length <= 6 && /^[hiy]+$/i.test(lowerMessage) // catch variations like hyyyy
+      
+      if (isGreeting) {
+        return language === 'hi' 
+          ? 'Hii there! 😊 Main aapka AI assistant hun. Kya help chahiye? Loan banane ke liye "add loan" boliye 💰'
+          : 'Hii there! 😊 I\'m your AI assistant. How can I help you? Say "add loan" to create a loan 💰'
+      }
+      
+      // Check if user wants to create a loan
+      if (detectLoanIntent(userMessage)) {
+        setConversationState({
+          isCreatingLoan: true,
+          isInConversation: true,
+          loanData: {},
+          currentStep: 'name'
+        })
+        
+        return language === 'hi' 
+          ? '🙂 Great! Loan banane ke liye pehle mujhe borrower ka naam batao?'
+          : '🙂 Great! To create a loan, first tell me the borrower\'s name?'
+      }
+      
+      // Handle other general queries
+      if (lowerMessage.includes('help') || lowerMessage.includes('madad')) {
+        return language === 'hi'
+          ? 'Main aapki help kar sakta hun! 📋\n\n✅ Loan create karne ke liye: "add loan" boliye\n✅ Calculator use karne ke liye: "calculate interest"\n✅ Loans dekhne ke liye: "show my loans"\n\nKya karna chahte hain? 😊'
+          : 'I can help you! 📋\n\n✅ To create a loan: say "add loan"\n✅ To calculate interest: say "calculate interest"\n✅ To view loans: say "show my loans"\n\nWhat would you like to do? 😊'
+      }
+      
+      return '' // Let Gemini AI handle other complex queries
+    }
+    
+    // Handle loan creation flow step by step
+    switch (currentStep) {
+      case 'name':
+        if (lowerMessage.length > 0 && !lowerMessage.match(/(cancel|stop|exit)/i)) {
+          const borrowerName = userMessage.trim()
+          const updatedData = { ...loanData, borrowerName }
+          setConversationState({
+            isCreatingLoan: true,
+            isInConversation: true,
+            loanData: updatedData,
+            currentStep: 'amount'
+          })
+          
+          return language === 'hi'
+            ? `Perfect! � "${borrowerName}" ka naam save kar liya. Ab loan amount batao (jaise ₹50,000)`
+            : `Perfect! � Saved "${borrowerName}" as borrower. Now tell me the loan amount (like ₹50,000)`
+        }
+        break
+        
+      case 'amount':
+        const amount = extractAmountFromText(userMessage)
+        if (amount) {
+          const updatedData = { ...loanData, amount }
+          setConversationState({
+            isCreatingLoan: true,
+            isInConversation: true,
+            loanData: updatedData,
+            currentStep: 'rate'
+          })
+          
+          return language === 'hi'
+            ? `Great! ₹${amount.toLocaleString()} amount noted ✅\n\nAb interest rate batao:\n- Monthly ke liye: "2% monthly"\n- Yearly ke liye: "12% yearly"\n- Sankda ke liye: "sankda"`
+            : `Great! ₹${amount.toLocaleString()} amount noted ✅\n\nNow tell me the interest rate:\n- For monthly: "2% monthly"\n- For yearly: "12% yearly"\n- For sankda: "sankda"`
+        } else {
+          return language === 'hi'
+            ? 'Amount clear nahi hai 😅 Please number me batao jaise:\n- "50000"\n- "₹1,00,000"\n- "fifty thousand"'
+            : 'Amount not clear 😅 Please specify in numbers like:\n- "50000"\n- "₹1,00,000"\n- "fifty thousand"'
+        }
+        
+      case 'rate':
+        const interestInfo = extractInterestRate(userMessage)
+        if (interestInfo) {
+          const updatedData = { 
+            ...loanData, 
+            interestRate: interestInfo.rate,
+            interestMethod: interestInfo.method 
+          }
+          setConversationState({
+            isCreatingLoan: true,
+            isInConversation: true,
+            loanData: updatedData,
+            currentStep: 'duration'
+          })
+          
+          return language === 'hi'
+            ? `Excellent! ${interestInfo.rate}% ${interestInfo.method} method save kar liya ✅\n\nAb duration batao (jaise "2 years" ya "1 year")`
+            : `Excellent! ${interestInfo.rate}% ${interestInfo.method} method saved ✅\n\nNow tell me the duration (like "2 years" or "1 year")`
+        } else {
+          return language === 'hi'
+            ? 'Interest rate samajh nahi aaya 😅 Examples:\n- "12% yearly"\n- "2% monthly"\n- "sankda" (12% yearly fixed)'
+            : 'Interest rate not clear 😅 Examples:\n- "12% yearly"\n- "2% monthly"\n- "sankda" (12% yearly fixed)'
+        }
+        
+      case 'duration':
+        const duration = extractDuration(userMessage) || parseFloat(lowerMessage)
+        if (duration && duration > 0) {
+          const updatedData = { ...loanData, years: duration }
+          
+          // Calculate preview
+          const mockLoan = {
+            amount: updatedData.amount || 0,
+            interestRate: updatedData.interestRate || 0,
+            interestMethod: updatedData.interestMethod || 'yearly',
+            years: duration
+          }
+          
+          let finalAmount = mockLoan.amount
+          if (mockLoan.interestMethod === 'monthly') {
+            finalAmount = mockLoan.amount + (mockLoan.amount * mockLoan.interestRate * duration * 12) / 100
+          } else if (mockLoan.interestMethod === 'sankda') {
+            finalAmount = mockLoan.amount + (mockLoan.amount * 12 * duration) / 100
+          } else {
+            finalAmount = mockLoan.amount + (mockLoan.amount * mockLoan.interestRate * duration) / 100
+          }
+          
+          setConversationState({
+            isCreatingLoan: true,
+            isInConversation: true,
+            loanData: updatedData,
+            currentStep: 'confirm'
+          })
+          
+          return language === 'hi'
+            ? `Perfect! 🎉 Loan details ready hai:\n\n📋 **Final Details:**\n👤 Borrower: ${updatedData.borrowerName}\n💰 Amount: ₹${(updatedData.amount || 0).toLocaleString()}\n📈 Interest: ${updatedData.interestRate}% ${updatedData.interestMethod}\n⏰ Duration: ${duration} years\n💵 **Total Payable: ₹${Math.round(finalAmount).toLocaleString()}**\n\n✅ Confirm करके loan create करूं? (yes/no)`
+            : `Perfect! 🎉 Loan details are ready:\n\n📋 **Final Details:**\n👤 Borrower: ${updatedData.borrowerName}\n💰 Amount: ₹${(updatedData.amount || 0).toLocaleString()}\n📈 Interest: ${updatedData.interestRate}% ${updatedData.interestMethod}\n⏰ Duration: ${duration} years\n💵 **Total Payable: ₹${Math.round(finalAmount).toLocaleString()}**\n\n✅ Should I confirm and create the loan? (yes/no)`
+        } else {
+          return language === 'hi'
+            ? 'Duration clear nahi hai 😅 Examples:\n- "2 years"\n- "1 year"\n- "6 months"'
+            : 'Duration not clear 😅 Examples:\n- "2 years"\n- "1 year"\n- "6 months"'
+        }
+        
+      case 'confirm':
+        if (lowerMessage.match(/(yes|haan|ha|ok|confirm|create|बनाओ|ठीक)/i)) {
+          
+          // Create the actual loan
+          try {
+            const newLoan: Loan = {
+              id: Date.now().toString(),
+              borrowerName: loanData.borrowerName || '',
+              borrowerPhone: '',
+              notes: '',
+              amount: loanData.amount || 0,
+              interestRate: loanData.interestMethod === 'sankda' ? 12 : (loanData.interestRate || 0),
+              interestMethod: loanData.interestMethod || 'yearly',
+              interestType: 'simple',
+              years: loanData.years || 1,
+              dateCreated: new Date().toISOString(),
+              expectedReturnDate: undefined,
+              dueDate: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000 * (loanData.years || 1))).toISOString(),
+              totalPaid: 0,
+              isActive: true,
+            }
+
+            const existingLoans = storage.getLoans()
+            storage.saveLoans([...existingLoans, newLoan])
+            
+            // Reset conversation state
+            setConversationState({
+              isCreatingLoan: false,
+              isInConversation: false,
+              loanData: {},
+              currentStep: 'name'
+            })
+            
+            return language === 'hi'
+              ? `🎉 **Loan Successfully Created!**\n\n✅ ${newLoan.borrowerName} ka loan active ho gaya\n💰 Amount: ₹${newLoan.amount.toLocaleString()}\n📈 Interest: ${newLoan.interestRate}% ${newLoan.interestMethod}\n⏰ Duration: ${newLoan.years} years\n🆔 Loan ID: ${newLoan.id}\n\n📱 Aap ise "Active Loans" section me dekh sakte hain!\n\nKoi aur loan banani hai? �`
+              : `🎉 **Loan Successfully Created!**\n\n✅ ${newLoan.borrowerName}'s loan is now active\n💰 Amount: ₹${newLoan.amount.toLocaleString()}\n📈 Interest: ${newLoan.interestRate}% ${newLoan.interestMethod}\n⏰ Duration: ${newLoan.years} years\n🆔 Loan ID: ${newLoan.id}\n\n📱 You can view it in "Active Loans" section!\n\nWant to create another loan? �`
+              
+          } catch (error) {
+            setConversationState({
+              isCreatingLoan: false,
+              isInConversation: false,
+              loanData: {},
+              currentStep: 'name'
+            })
+            
+            return language === 'hi'
+              ? '❌ Error aaya loan create karne me. Please try again!'
+              : '❌ Error creating loan. Please try again!'
+          }
+        } else if (lowerMessage.match(/(no|nahi|cancel|stop|exit)/i)) {
+          setConversationState({
+            isCreatingLoan: false,
+            isInConversation: false,
+            loanData: {},
+            currentStep: 'name'
+          })
+          
+          return language === 'hi'
+            ? '❌ Loan creation cancel kar diya. Koi aur help chahiye? 😊'
+            : '❌ Loan creation cancelled. Need any other help? 😊'
+        } else {
+          return language === 'hi'
+            ? 'Please "yes" ya "no" me jawab do 😊'
+            : 'Please answer with "yes" or "no" 😊'
+        }
+        
+      default:
+        return ''
+    }
+    
+    return ''
+  }
 
   // Navigation function
   const navigateToLoan = (loanId: string) => {
@@ -262,111 +614,70 @@ export default function AIExperience({ className = "" }: { className?: string })
     // Scroll to bottom after adding user message
     setTimeout(scrollToBottom, 100)
 
-    // Create abort controller for this request
-    const controller = new AbortController()
-    setAiController(controller)
-
     try {
-      // Get comprehensive context for AI
-      const loans = storage.getLoans()
-      const payments = storage.getPayments()
-      const totalLent = loans.reduce((sum, loan) => sum + loan.amount, 0)
-      const activeLoans = loans.filter(loan => loan.isActive)
-      const completedLoans = loans.filter(loan => !loan.isActive)
-      const totalReceived = loans.reduce((sum, loan) => sum + loan.totalPaid, 0)
-      const totalOutstanding = loans.reduce((sum, loan) => sum + storage.calculateOutstandingAmount(loan), 0)
+      // First, try conversational AI for loan creation
+      const conversationalResponse = generateConversationalResponse(message.trim())
+      
+      let aiResponseText = ''
+      
+      if (conversationalResponse) {
+        // Use the conversational response
+        aiResponseText = conversationalResponse
+      } else {
+        // Fall back to Gemini AI for complex queries
+        
+        // Create abort controller for this request
+        const controller = new AbortController()
+        setAiController(controller)
 
-      const enhancedPrompt = `${message.trim()}
+        // Get comprehensive context for AI
+        const loans = storage.getLoans()
+        const payments = storage.getPayments()
+        const totalLent = loans.reduce((sum, loan) => sum + loan.amount, 0)
+        const activeLoans = loans.filter(loan => loan.isActive)
+        const completedLoans = loans.filter(loan => !loan.isActive)
+        const totalReceived = loans.reduce((sum, loan) => sum + loan.totalPaid, 0)
+        const totalOutstanding = loans.reduce((sum, loan) => sum + storage.calculateOutstandingAmount(loan), 0)
+
+        const enhancedPrompt = `${message.trim()}
 
 CONTEXT: User has ${loans.length} total loans (${activeLoans.length} active, ${completedLoans.length} completed). Total lent: ₹${totalLent.toLocaleString()}, Total received: ₹${totalReceived.toLocaleString()}, Outstanding: ₹${totalOutstanding.toLocaleString()}.
 
 INSTRUCTIONS: 
-1. If user wants to create a loan (mentions "add loan", "new loan", "create loan", etc.), help them step by step and when you have all required info, format response as JSON with loanData object.
-2. For calculations, provide exact numbers with proper formatting.
-3. For search queries, help them find relevant loans based on their request.
-4. Be concise but informative, like a professional financial assistant.
-5. Always respond in ${language === 'hi' ? 'Hindi' : 'English'} as requested.
-6. If you detect a loan creation request, gather: borrowerName, amount (number), interestRate (number), interestMethod (monthly/yearly/sankda), years (optional, default 1), borrowerPhone (optional), notes (optional).
+1. Be conversational and friendly, use emojis appropriately
+2. If user wants loan calculations, provide exact numbers with proper formatting
+3. For search queries, help them find relevant loans
+4. Always respond in ${language === 'hi' ? 'Hindi with some English words (Hinglish)' : 'English'} as requested
+5. Keep responses concise but informative, like a helpful friend
+6. Use casual language and be encouraging
 
 User Query: ${message.trim()}`
 
-      const context = {
-        loans,
-        payments,
-        hasLoans: loans.length > 0,
-        hasActiveLoans: activeLoans.length > 0,
-        totalLent,
-        totalReceived,
-        totalOutstanding,
-        activeCount: activeLoans.length,
-        completedCount: completedLoans.length
-      }
-
-      const response = await GeminiAI.generateResponse({
-        prompt: enhancedPrompt,
-        language,
-        context
-      })
-
-      // Check if request was aborted
-      if (controller.signal.aborted) {
-        return
-      }
-
-      let aiResponseText = response.text
-
-      // Check if response contains loan creation data
-      try {
-        const loanDataMatch = response.text.match(/\{[\s\S]*"loanData"[\s\S]*\}/)
-        if (loanDataMatch) {
-          const jsonData = JSON.parse(loanDataMatch[0])
-          if (jsonData.loanData && jsonData.response) {
-            // Process loan creation
-            const loanData = jsonData.loanData
-            
-            // Validate required fields
-            if (loanData.borrowerName && loanData.amount && loanData.interestRate && loanData.interestMethod) {
-              try {
-                // Create the loan
-                const newLoan: Loan = {
-                  id: Date.now().toString(),
-                  borrowerName: loanData.borrowerName.trim(),
-                  borrowerPhone: loanData.borrowerPhone?.trim() || '',
-                  notes: loanData.notes?.trim() || '',
-                  amount: Number(loanData.amount),
-                  interestRate: loanData.interestMethod === "sankda" ? 12 : Number(loanData.interestRate),
-                  interestMethod: loanData.interestMethod,
-                  interestType: 'simple', // Default to simple interest
-                  years: Number(loanData.years) || 1,
-                  dateCreated: new Date().toISOString(),
-                  expectedReturnDate: undefined,
-                  dueDate: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000 * (Number(loanData.years) || 1))).toISOString(), // Due in 1 year by default
-                  totalPaid: 0,
-                  isActive: true,
-                }
-
-                const existingLoans = storage.getLoans()
-                storage.saveLoans([...existingLoans, newLoan])
-                
-                const finalAmount = storage.calculateFinalAmount(newLoan)
-                
-                aiResponseText = language === 'hi' 
-                  ? `✅ लोन सफलतापूर्वक बनाया गया!\n\n📋 **लोन विवरण:**\n👤 उधारकर्ता: ${newLoan.borrowerName}\n💰 राशि: ₹${newLoan.amount.toLocaleString()}\n📈 ब्याज दर: ${newLoan.interestRate}% (${newLoan.interestMethod})\n⏰ अवधि: ${newLoan.years} वर्ष\n💵 कुल देय राशि: ₹${finalAmount.toLocaleString()}\n📅 देय तिथि: ${new Date(newLoan.dueDate).toLocaleDateString('hi-IN')}\n\nलोन ID: ${newLoan.id}`
-                  : `✅ Loan created successfully!\n\n📋 **Loan Details:**\n👤 Borrower: ${newLoan.borrowerName}\n💰 Amount: ₹${newLoan.amount.toLocaleString()}\n📈 Interest Rate: ${newLoan.interestRate}% (${newLoan.interestMethod})\n⏰ Duration: ${newLoan.years} year(s)\n💵 Total Payable: ₹${finalAmount.toLocaleString()}\n📅 Due Date: ${new Date(newLoan.dueDate).toLocaleDateString()}\n\nLoan ID: ${newLoan.id}`
-                
-              } catch (error) {
-                aiResponseText = language === 'hi'
-                  ? `❌ लोन बनाने में त्रुटि हुई: ${error instanceof Error ? error.message : 'अज्ञात त्रुटि'}`
-                  : `❌ Error creating loan: ${error instanceof Error ? error.message : 'Unknown error'}`
-              }
-            } else {
-              aiResponseText = jsonData.response || response.text
-            }
-          }
+        const context = {
+          loans,
+          payments,
+          hasLoans: loans.length > 0,
+          hasActiveLoans: activeLoans.length > 0,
+          totalLent,
+          totalReceived,
+          totalOutstanding,
+          activeCount: activeLoans.length,
+          completedCount: completedLoans.length
         }
-      } catch (jsonError) {
-        // If JSON parsing fails, use the original response
+
+        const response = await GeminiAI.generateResponse({
+          prompt: enhancedPrompt,
+          language,
+          context
+        })
+
+        // Check if request was aborted
+        if (controller.signal.aborted) {
+          return
+        }
+
         aiResponseText = response.text
+        setAiController(null)
       }
 
       const aiMessage: Message = {
@@ -398,8 +709,8 @@ User Query: ${message.trim()}`
         id: (Date.now() + 1).toString(),
         type: 'ai',
         content: language === 'hi' 
-          ? 'माफ करें, मुझे आपके प्रश्न का उत्तर देने में समस्या हुई है। कृपया दोबारा कोशिश करें।'
-          : 'Sorry, I encountered an issue answering your question. Please try again.',
+          ? 'Sorry, mujhe samajh nahi aaya. Kripya dobara try karo 🙂'
+          : 'Sorry, I couldn\'t understand. Please try again 🙂',
         timestamp: new Date()
       }
       
@@ -592,6 +903,11 @@ User Query: ${message.trim()}`
                 <div className="flex-1">
                   <DialogTitle className="text-lg font-semibold text-primary-foreground">
                     {language === 'hi' ? 'AI सहायक' : 'AI Assistant'}
+                    {conversationState.isCreatingLoan && (
+                      <span className="ml-2 text-sm bg-primary-foreground/20 px-2 py-1 rounded-full">
+                        {language === 'hi' ? '📝 Loan बना रहे हैं' : '📝 Creating Loan'}
+                      </span>
+                    )}
                   </DialogTitle>
                   <DialogDescription className="text-primary-foreground/80 text-sm">
                     {isOnline ? (
@@ -637,14 +953,14 @@ User Query: ${message.trim()}`
                     </div>
                     <p className="text-gray-700 font-medium text-sm mb-2">
                       {language === 'hi' 
-                        ? 'नमस्ते! मैं आपका AI सहायक हूं।'
-                        : 'Hello! Im your AI assistant.'
+                        ? 'Namaste! मैं आपका AI दोस्त हूं 🙂'
+                        : 'Hello! I\'m your AI friend 🙂'
                       }
                     </p>
                     <p className="text-xs text-gray-500">
                       {language === 'hi' 
-                        ? 'लोन, ब्याज, या अन्य कुछ भी पूछें।'
-                        : 'Ask about loans, interest, or anything else.'
+                        ? 'Loan banane ke liye बस बोलिए "Manisha को loan देना है" 💰'
+                        : 'To create a loan, just say "Add loan for John" 💰'
                       }
                     </p>
                   </div>

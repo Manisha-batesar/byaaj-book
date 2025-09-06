@@ -19,7 +19,7 @@ import {
 import { BottomNav } from "@/components/bottom-nav"
 import { LanguageSelector } from "@/components/language-selector"
 import { DueReminders } from "@/components/due-reminders"
-import AIExperience from "@/components/ai-experience"
+import SuperSmartAIExperience from "@/components/super-smart-ai"
 import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
 import { Plus, Calculator, TrendingUp, FileText, IndianRupee, Edit3, Trash2, ChevronRight } from "lucide-react"
@@ -33,8 +33,15 @@ export default function DashboardPage() {
   const [pendingPayments, setPendingPayments] = useState(0)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const [loans, setLoans] = useState<any[]>([])
+  const [refreshTrigger, setRefreshTrigger] = useState(0) // Add refresh trigger
   const router = useRouter()
   const { t } = useLanguage()
+
+  // Function to refresh dashboard data
+  const refreshDashboard = () => {
+    console.log('📊 Dashboard refresh triggered')
+    setRefreshTrigger(prev => prev + 1)
+  }
 
   useEffect(() => {
     // No longer require authentication since PIN is optional
@@ -64,7 +71,7 @@ export default function DashboardPage() {
     setActiveLoans(activeLoanCount)
     setTotalPayable(totalPayableAmount)
     setPendingPayments(pendingAmount)
-  }, [])
+  }, [refreshTrigger]) // Add refreshTrigger as dependency
 
   const handleDeleteLoan = async (loanId: string) => {
     setIsDeleting(loanId)
@@ -163,7 +170,10 @@ export default function DashboardPage() {
             <h1 className="text-xl sm:text-2xl font-bold truncate">{t("appName")}</h1>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            <AIExperience className="flex items-center gap-2" />
+            <SuperSmartAIExperience 
+              className="flex items-center gap-2" 
+              onLoanCreated={refreshDashboard}
+            />
             <LanguageSelector />
           </div>
         </div>
@@ -246,7 +256,7 @@ export default function DashboardPage() {
         {/* Recent Loans Section */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">{t("recentLoans")}</h2>
+            <h2 className="text-lg font-semibold">{t("recentLoans")} ({loans.length} total)</h2>
             <Link href="/loans" className="text-primary text-sm font-medium underline flex items-center gap-1">
               {t("viewAll")} <ChevronRight size={16} />
             </Link>
@@ -262,7 +272,6 @@ export default function DashboardPage() {
               {/* Active Loans */}
               {loans
                 .filter(loan => loan.isActive)
-                .slice(0, 2)
                 .map((loan) => {
                   const isOverdue = overdueLoans.some(overdueLoan => overdueLoan.id === loan.id)
                   const outstanding = storage.calculateOutstandingAmount(loan)
@@ -367,9 +376,9 @@ export default function DashboardPage() {
                 })}
               
               {/* Completed Loans */}
+              {/* Completed Loans */}
               {loans
                 .filter(loan => !loan.isActive)
-                .slice(0, 1)
                 .map((loan) => (
                   <Card 
                     key={loan.id} 

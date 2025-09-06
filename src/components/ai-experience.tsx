@@ -1,10 +1,9 @@
 "use client"
 
-// Re-export the stable default AIExperience implementation.
-// `ai-experience-fixed.tsx` contains the full `AIExperience` default export
-// used across the app. Older/empty files caused the import to resolve to
-// an object instead of a React component which triggered the runtime error
-// "Element type is invalid" in `DashboardPage`.
+// Re-export the enhanced smart conversational AI implementation.
+// `ai-experience-smart.tsx` contains the full enhanced smart AI assistant
+// with intelligent loan creation flow, flexible greeting recognition,
+// auto-close functionality, and context-aware responses
 
-export { default } from "./ai-experience-fixed"
+export { AIExperienceSmart as default } from "./ai-experience-smart"
 
