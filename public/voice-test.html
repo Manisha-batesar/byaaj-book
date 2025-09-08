@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Test - ByajBook</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .emergency-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            width: 100%;
+        }
+        .emergency-btn:hover {
+            background: #b91c1c;
+        }
+        .test-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            width: 48%;
+        }
+        .test-btn:hover {
+            background: #1d4ed8;
+        }
+        .log {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+        }
+        .status.success { background: #d1fae5; color: #065f46; }
+        .status.error { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔊 Voice Test - ByajBook</h1>
+        <p><strong>If you can't hear voice in the app, follow these steps:</strong></p>
+        
+        <div id="status" class="status"></div>
+        
+        <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #f59e0b;">
+            <h3>📋 Before Testing - Check These:</h3>
+            <ol style="margin: 10px 0; padding-left: 20px;">
+                <li><strong>Device Volume:</strong> Turn up your device volume</li>
+                <li><strong>Silent Mode:</strong> Turn OFF silent/vibrate mode</li>
+                <li><strong>Browser:</strong> Try Chrome or Safari (not Firefox)</li>
+                <li><strong>Headphones:</strong> If using headphones, check they're connected properly</li>
+                <li><strong>macOS:</strong> System Preferences → Sound → Output → Check your speakers</li>
+            </ol>
+        </div>
+        
+        <button class="emergency-btn" onclick="emergencyTest()">
+            🚨 STEP 1: EMERGENCY VOICE TEST - CLICK HERE FIRST!
+        </button>
+        
+        <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 15px 0;">
+            <p><strong>What should happen:</strong> You should hear "Hello. This is an emergency voice test. Can you hear me?"</p>
+            <p><strong>If you don't hear anything:</strong> Check the log below for error messages.</p>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin: 20px 0;">
+            <button class="test-btn" onclick="basicTest()">Basic Test</button>
+            <button class="test-btn" onclick="hindiTest()">Hindi Test</button>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin: 10px 0;">
+            <button class="test-btn" onclick="systemTest()">System Info</button>
+            <button class="test-btn" onclick="stopAll()">Stop All</button>
+        </div>
+        
+        <div style="background: #e5e7eb; padding: 15px; border-radius: 6px; margin: 15px 0;">
+            <h3>🔧 Manual Browser Console Test</h3>
+            <p>If the button doesn't work, try this in browser console (F12 → Console):</p>
+            <code style="display: block; background: #1f2937; color: #10b981; padding: 10px; border-radius: 4px; font-size: 12px; margin: 5px 0;">
+window.speechSynthesis.speak(new SpeechSynthesisUtterance('Hello test'))
+            </code>
+            <p><small>Copy and paste this line in your browser's developer console and press Enter.</small></p>
+        </div>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        let synth = window.speechSynthesis;
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEl = document.getElementById('log');
+            logEl.innerHTML = `[${timestamp}] ${message}\n` + logEl.innerHTML;
+        }
+        
+        function setStatus(message, type = 'success') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+        
+        function emergencyTest() {
+            log('🚨 EMERGENCY TEST STARTED');
+            setStatus('Testing emergency voice...', 'success');
+            
+            // Check basic support first
+            if (!window.speechSynthesis) {
+                log('❌ window.speechSynthesis not found');
+                setStatus('Speech synthesis not supported in this browser!', 'error');
+                return;
+            }
+            
+            if (typeof SpeechSynthesisUtterance === 'undefined') {
+                log('❌ SpeechSynthesisUtterance not found');
+                setStatus('SpeechSynthesisUtterance not supported!', 'error');
+                return;
+            }
+            
+            log('✅ Basic speech support detected');
+            
+            // Cancel everything first
+            try {
+                synth.cancel();
+                log('✅ Previous speech canceled');
+            } catch (e) {
+                log(`⚠️ Cancel error: ${e.message}`);
+            }
+            
+            // Wait a moment, then try the most basic approach
+            setTimeout(() => {
+                try {
+                    log('🚨 Creating utterance...');
+                    const utterance = new SpeechSynthesisUtterance('Test');
+                    
+                    log('🚨 Setting utterance properties...');
+                    utterance.volume = 1;
+                    utterance.rate = 1;
+                    utterance.pitch = 1;
+                    utterance.text = 'Hello. This is an emergency voice test. Can you hear me?';
+                    
+                    log('🚨 Setting event handlers...');
+                    utterance.onstart = function() {
+                        log('✅ EMERGENCY SPEECH STARTED - SUCCESS!');
+                        setStatus('🎉 VOICE IS WORKING! You should hear sound now.', 'success');
+                    };
+                    
+                    utterance.onend = function() {
+                        log('✅ EMERGENCY SPEECH ENDED - COMPLETE!');
+                        setStatus('🎉 Voice test completed successfully!', 'success');
+                    };
+                    
+                    utterance.onerror = function(event) {
+                        log(`❌ EMERGENCY ERROR: ${event.error}`);
+                        log(`❌ Error details: ${JSON.stringify(event)}`);
+                        
+                        if (event.error === 'not-allowed') {
+                            setStatus('❌ Browser blocked speech. Allow audio permissions!', 'error');
+                        } else if (event.error === 'canceled') {
+                            setStatus('⚠️ Speech was canceled (common Safari issue). Trying again...', 'error');
+                            log('🔄 Canceled error - attempting retry in 2 seconds...');
+                            setTimeout(() => {
+                                basicRetry();
+                            }, 2000);
+                        } else if (event.error === 'audio-hardware') {
+                            setStatus('❌ Audio hardware issue. Check speakers/headphones!', 'error');
+                        } else if (event.error === 'network') {
+                            setStatus('❌ Network error. Check internet connection!', 'error');
+                        } else {
+                            setStatus(`❌ Speech failed: ${event.error}`, 'error');
+                        }
+                    };
+                    
+                    utterance.onpause = function() {
+                        log('⏸️ Speech paused - trying to resume...');
+                        setTimeout(() => {
+                            try {
+                                synth.resume();
+                                log('▶️ Resume attempted');
+                            } catch (e) {
+                                log(`❌ Resume failed: ${e.message}`);
+                            }
+                        }, 100);
+                    };
+                    
+                    // Check system state before speaking
+                    log(`🚨 System state: speaking=${synth.speaking}, pending=${synth.pending}, paused=${synth.paused}`);
+                    
+                    // Try to speak
+                    log('🚨 Calling synth.speak()...');
+                    synth.speak(utterance);
+                    log('🚨 synth.speak() called successfully');
+                    
+                    // Check state after speaking
+                    setTimeout(() => {
+                        log(`🚨 After speak: speaking=${synth.speaking}, pending=${synth.pending}, paused=${synth.paused}`);
+                        
+                        // If paused, try to resume
+                        if (synth.paused) {
+                            log('🔄 Speech is paused, forcing resume...');
+                            try {
+                                synth.resume();
+                                log('✅ Force resume executed');
+                            } catch (e) {
+                                log(`❌ Force resume failed: ${e.message}`);
+                            }
+                        }
+                        
+                        // If nothing is happening, try one more time
+                        if (!synth.speaking && !synth.pending) {
+                            log('⚠️ Nothing happening, trying once more...');
+                            try {
+                                const retry = new SpeechSynthesisUtterance('Retry test');
+                                retry.onstart = () => log('✅ RETRY SUCCESS!');
+                                retry.onerror = (e) => log(`❌ RETRY FAILED: ${e.error}`);
+                                synth.speak(retry);
+                            } catch (e) {
+                                log(`❌ Retry error: ${e.message}`);
+                            }
+                        }
+                    }, 500);
+                    
+                } catch (error) {
+                    log(`❌ Emergency test exception: ${error.message}`);
+                    log(`❌ Stack: ${error.stack}`);
+                    setStatus(`Emergency test failed: ${error.message}`, 'error');
+                }
+            }, 300);
+        }
+        
+        function basicTest() {
+            log('🧪 Basic test started');
+            
+            if (!synth) {
+                log('❌ No speech synthesis');
+                return;
+            }
+            
+            synth.cancel();
+            
+            setTimeout(() => {
+                const msg = new SpeechSynthesisUtterance('Basic voice test. Hello from ByajBook!');
+                msg.onstart = () => log('✅ Basic test started');
+                msg.onend = () => log('✅ Basic test ended');
+                msg.onerror = (e) => log(`❌ Basic test error: ${e.error}`);
+                
+                synth.speak(msg);
+            }, 100);
+        }
+        
+        function hindiTest() {
+            log('🇮🇳 Hindi test started');
+            
+            if (!synth) {
+                log('❌ No speech synthesis');
+                return;
+            }
+            
+            synth.cancel();
+            
+            setTimeout(() => {
+                const msg = new SpeechSynthesisUtterance('नमस्ते, यह हिंदी आवाज़ का टेस्ट है।');
+                msg.lang = 'hi-IN';
+                msg.onstart = () => log('✅ Hindi test started');
+                msg.onend = () => log('✅ Hindi test ended');
+                msg.onerror = (e) => log(`❌ Hindi test error: ${e.error}`);
+                
+                synth.speak(msg);
+            }, 100);
+        }
+        
+        function systemTest() {
+            log('ℹ️ System information:');
+            log(`Browser: ${navigator.userAgent.split(' ')[0]}`);
+            log(`Speech synthesis supported: ${!!synth}`);
+            
+            if (synth) {
+                const voices = synth.getVoices();
+                log(`Available voices: ${voices.length}`);
+                log(`Currently speaking: ${synth.speaking}`);
+                log(`Currently pending: ${synth.pending}`);
+                log(`Currently paused: ${synth.paused}`);
+                
+                if (voices.length > 0) {
+                    log('First few voices:');
+                    voices.slice(0, 3).forEach((voice, i) => {
+                        log(`  ${i}: ${voice.name} (${voice.lang})`);
+                    });
+                }
+            }
+        }
+        
+        function stopAll() {
+            log('🛑 Stopping all speech');
+            if (synth) {
+                synth.cancel();
+            }
+            setStatus('All speech stopped', 'success');
+        }
+        
+        // Initialize
+        window.onload = function() {
+            log('🚀 Voice test page loaded');
+            systemTest();
+            
+            if (synth && synth.onvoiceschanged !== undefined) {
+                synth.onvoiceschanged = () => {
+                    log('🔄 Voices changed - reloading system info');
+                    systemTest();
+                };
+            }
+        };
+    </script>
+</body>
+</html>

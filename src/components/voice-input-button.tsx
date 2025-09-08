@@ -31,6 +31,7 @@ import { GeminiAI, type GeminiRequest } from "@/lib/gemini"
 import { VoiceManager, voiceUtils, type VoiceRecognitionResult } from "@/lib/voice"
 import { simpleVoiceManager } from "@/lib/simple-voice"
 import { simpleVoiceRecognition } from "@/lib/simple-voice-recognition"
+import { emergencyVoiceManager } from "@/lib/emergency-voice"
 
 interface VoiceInputButtonProps {
   className?: string
@@ -41,7 +42,6 @@ export function VoiceInputButton({ className, currentLoanId }: VoiceInputButtonP
   const { language, t } = useLanguage()
   const [isListening, setIsListening] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [isSpeaking, setIsSpeaking] = useState(false)
   const [showResponse, setShowResponse] = useState(false)
   const [transcript, setTranscript] = useState('')
   const [response, setResponse] = useState('')
@@ -336,31 +336,10 @@ Would you like to know anything else?`
         
         setResponse(response)
         
-        // Speak the response using simple voice manager
+        // Automatically speak the response
         if (response.trim()) {
-          console.log('🔊 ATTEMPTING TO SPEAK RESPONSE:', response.substring(0, 100))
-          setIsSpeaking(true)
-          
-          const isHindi = detectedLanguage === 'hi'
-          console.log('🔊 Language detected for speech:', isHindi ? 'Hindi' : 'English')
-          
-          const success = simpleVoiceManager.speak(response, isHindi)
-          console.log('🔊 Speech function returned:', success)
-          
-          if (success) {
-            // Estimate speech duration and stop speaking state
-            const estimatedTime = Math.max(3000, response.length * 60)
-            console.log('🔊 Estimated speech duration:', estimatedTime + 'ms')
-            setTimeout(() => {
-              setIsSpeaking(false)
-              console.log('🔊 Speech timeout completed')
-            }, estimatedTime)
-          } else {
-            console.error('❌ Speech function failed')
-            setIsSpeaking(false)
-          }
-        } else {
-          console.warn('⚠️ Empty response, not speaking')
+          console.log('🔊 Auto speaking response:', response.substring(0, 100))
+          emergencyVoiceManager.autoSpeak(response)
         }
         
       } else {
@@ -377,22 +356,10 @@ Would you like to know anything else?`
         if (aiResponse.success) {
           setResponse(aiResponse.text)
           
-          // Speak the response using simple voice manager
+          // Automatically speak the response
           if (aiResponse.text.trim()) {
-            console.log('🔊 Speaking AI response...')
-            setIsSpeaking(true)
-            
-            const isHindi = detectedLanguage === 'hi'
-            const success = simpleVoiceManager.speak(aiResponse.text, isHindi)
-            
-            if (success) {
-              const estimatedTime = Math.max(3000, aiResponse.text.length * 60)
-              setTimeout(() => {
-                setIsSpeaking(false)
-              }, estimatedTime)
-            } else {
-              setIsSpeaking(false)
-            }
+            console.log('🔊 Auto speaking AI response:', aiResponse.text.substring(0, 100))
+            emergencyVoiceManager.autoSpeak(aiResponse.text)
           }
         } else {
           console.error('🤖 AI Response error:', aiResponse.text)
@@ -412,20 +379,13 @@ Would you like to know anything else?`
     }
   }
 
-  const stopSpeaking = () => {
-    simpleVoiceManager.stop()
-    setIsSpeaking(false)
-  }
-
   const closeDialog = () => {
     setShowResponse(false)
     setTranscript('')
     setResponse('')
     setError('')
     setConversationContext('') // Clear conversation memory when closing
-    if (isSpeaking) {
-      stopSpeaking()
-    }
+    speechSynthesis.cancel() // Stop any ongoing speech
   }
 
   // Always show the button, with different states based on capabilities
@@ -524,43 +484,42 @@ Would you like to know anything else?`
                   </span>
                 </div>
                 
-                {/* Speaking controls */}
+                {/* Simple speech controls */}
                 {voiceSupport.synthesis && response && (
                   <div className="flex items-center gap-2">
-                    {/* Test Speech Button */}
+                    {/* Stop Voice Button */}
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => {
-                        console.log('🧪 Testing DIRECT speech...')
-                        simpleVoiceManager.directSpeak("Hello from ByajBook app, testing speech synthesis")
+                        console.log('� Stopping voice...')
+                        speechSynthesis.cancel()
                       }}
-                      className="text-blue-600 hover:text-blue-700"
+                      className="text-red-600 hover:text-red-700"
                     >
-                      <Volume2 size={14} />
-                      <span className="ml-1 text-xs">Test</span>
+                      <VolumeX size={16} />
+                      <span className="ml-1 text-xs">
+                        {language === 'hi' ? 'रोकें' : 'Stop'}
+                      </span>
                     </Button>
                     
-                    {isSpeaking ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={stopSpeaking}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <VolumeX size={16} />
-                        <span className="ml-1 text-xs">
-                          {language === 'hi' ? 'रोकें' : 'Stop'}
-                        </span>
-                      </Button>
-                    ) : (
-                      <div className="flex items-center gap-1 text-green-600">
-                        <Volume2 size={16} />
-                        <span className="text-xs">
-                          {language === 'hi' ? 'बोल रहा है' : 'Speaking'}
-                        </span>
-                      </div>
-                    )}
+                    {/* Start Voice Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        console.log('🔊 Starting voice...')
+                        if (response.trim()) {
+                          emergencyVoiceManager.autoSpeak(response)
+                        }
+                      }}
+                      className="text-green-600 hover:text-green-700"
+                    >
+                      <Volume2 size={16} />
+                      <span className="ml-1 text-xs">
+                        {language === 'hi' ? 'शुरू करें' : 'Start'}
+                      </span>
+                    </Button>
                   </div>
                 )}
               </div>

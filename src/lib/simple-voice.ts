@@ -21,6 +21,7 @@ export class SimpleVoiceManager {
 
     const loadVoices = () => {
       const voices = this.synth!.getVoices()
+      console.log('🔊 Available voices:', voices.map(v => `${v.name} (${v.lang})`))
       if (voices.length > 0) {
         console.log('🔊 Voices loaded:', voices.length)
         this.isReady = true
@@ -33,11 +34,16 @@ export class SimpleVoiceManager {
     loadVoices()
 
     // Also listen for voices changed event (important for Safari)
-    this.synth.onvoiceschanged = () => {
-      console.log('🔊 Voices changed event fired')
-      loadVoices()
+    if (this.synth.onvoiceschanged !== undefined) {
+      this.synth.onvoiceschanged = () => {
+        console.log('🔊 Voices changed event fired')
+        loadVoices()
+      }
     }
 
+    // Force ready state for macOS Safari
+    this.isReady = true
+    
     // Give it a moment to initialize
     setTimeout(() => {
       if (!this.isReady) {
@@ -54,21 +60,18 @@ export class SimpleVoiceManager {
       return false
     }
 
-    if (!this.isReady) {
-      console.log('🔊 Voices not ready yet, waiting...')
-      setTimeout(() => this.speak(text, isHindi), 500)
-      return true
-    }
-
     console.log('🔊 ATTEMPTING TO SPEAK:', text.substring(0, 50) + '...')
+
+    // For immediate user interaction, force ready state
+    this.isReady = true
 
     // Aggressive cleanup for macOS/Safari
     this.synth.cancel()
     
-    // Wait for cancel to complete
+    // Wait for cancel to complete, then speak
     setTimeout(() => {
       this.actuallySpeak(text, isHindi)
-    }, 200)
+    }, 100)
     
     return true
   }
@@ -88,10 +91,36 @@ export class SimpleVoiceManager {
 
       this.currentUtterance = new SpeechSynthesisUtterance(cleanText)
       
-      // Very basic settings - no complex voice selection
+      // Get appropriate voice for the language
+      const voices = this.synth.getVoices()
+      console.log('🔊 Available voices:', voices.length)
+      
+      let selectedVoice = null
+      if (isHindi) {
+        // Find Hindi voice
+        selectedVoice = voices.find(voice => 
+          voice.lang.includes('hi') || voice.lang.includes('IN')
+        ) || voices.find(voice => 
+          voice.name.toLowerCase().includes('hindi')
+        )
+      } else {
+        // Find English voice
+        selectedVoice = voices.find(voice => 
+          voice.lang.includes('en-US') || voice.lang.includes('en')
+        ) || voices[0] // Fallback to first available voice
+      }
+      
+      if (selectedVoice) {
+        this.currentUtterance.voice = selectedVoice
+        console.log('🔊 Selected voice:', selectedVoice.name, selectedVoice.lang)
+      } else {
+        console.log('🔊 No specific voice found, using default')
+      }
+      
+      // Speech settings with better compatibility
       this.currentUtterance.volume = 1.0
-      this.currentUtterance.rate = 0.9
-      this.currentUtterance.pitch = 1.2
+      this.currentUtterance.rate = 0.8  // Slower rate for better clarity
+      this.currentUtterance.pitch = 1.0  // Normal pitch
       this.currentUtterance.lang = isHindi ? 'hi-IN' : 'en-US'
 
       // Event handlers for debugging
@@ -107,15 +136,12 @@ export class SimpleVoiceManager {
         console.error('❌ SPEECH ERROR:', event.error)
         console.error('❌ Full error event:', event)
         
-        // If canceled error, try again after a delay
-        if (event.error === 'canceled') {
-          console.log('🔄 Retrying speech after canceled error...')
+        // Try with a different approach on error
+        if (event.error === 'canceled' || event.error === 'interrupted') {
+          console.log('🔄 Retrying speech after error...')
           setTimeout(() => {
-            if (this.synth && !this.synth.speaking) {
-              console.log('🔄 Retry attempt...')
-              this.synth.speak(this.currentUtterance!)
-            }
-          }, 500)
+            this.simpleFallbackSpeak(cleanText)
+          }, 1000)
         }
       }
 
@@ -127,24 +153,72 @@ export class SimpleVoiceManager {
         console.log('▶️ SPEECH RESUMED')
       }
 
-      // Check if already speaking
+      // Check synthesis state
+      console.log('🔊 Before speaking - speaking:', this.synth.speaking, 'pending:', this.synth.pending)
+      
+      // Force stop any existing speech
       if (this.synth.speaking || this.synth.pending) {
-        console.warn('⚠️ Speech synthesis is busy, canceling first...')
+        console.log('⚠️ Canceling existing speech...')
         this.synth.cancel()
-        setTimeout(() => {
-          this.synth!.speak(this.currentUtterance!)
-        }, 200)
-      } else {
-        // Try to speak immediately
-        console.log('🔊 CALLING synth.speak()...')
-        this.synth.speak(this.currentUtterance)
         
-        console.log('🔊 synth.speak() called successfully')
-        console.log('🔊 Speech synthesis speaking?', this.synth.speaking)
-        console.log('🔊 Speech synthesis pending?', this.synth.pending)
+        // Wait for cancellation to complete
+        setTimeout(() => {
+          this.performSpeak()
+        }, 300)
+      } else {
+        this.performSpeak()
       }
+      
     } catch (error) {
       console.error('❌ ERROR in actuallySpeak:', error)
+      // Try simple fallback
+      this.simpleFallbackSpeak(text)
+    }
+  }
+
+  private performSpeak() {
+    if (!this.synth || !this.currentUtterance) return
+    
+    try {
+      console.log('🔊 CALLING synth.speak()...')
+      this.synth.speak(this.currentUtterance)
+      
+      console.log('🔊 synth.speak() called successfully')
+      console.log('🔊 After speak - speaking:', this.synth.speaking, 'pending:', this.synth.pending)
+      
+      // Safari/macOS fix: Resume if paused
+      setTimeout(() => {
+        if (this.synth && this.synth.paused) {
+          console.log('🔊 Resuming paused speech...')
+          this.synth.resume()
+        }
+      }, 100)
+      
+    } catch (error) {
+      console.error('❌ Error in performSpeak:', error)
+      this.simpleFallbackSpeak(this.currentUtterance.text)
+    }
+  }
+
+  private simpleFallbackSpeak(text: string) {
+    console.log('🆘 Using fallback speech method...')
+    
+    if (!this.synth) return
+    
+    // Most basic approach possible
+    const utterance = new SpeechSynthesisUtterance(text.substring(0, 200)) // Limit text length
+    utterance.volume = 1.0
+    utterance.rate = 1.0
+    utterance.pitch = 1.0
+    
+    utterance.onstart = () => console.log('🆘 FALLBACK SPEECH STARTED')
+    utterance.onend = () => console.log('🆘 FALLBACK SPEECH ENDED')
+    utterance.onerror = (e) => console.error('🆘 FALLBACK ERROR:', e.error)
+    
+    try {
+      this.synth.speak(utterance)
+    } catch (error) {
+      console.error('🆘 Fallback also failed:', error)
     }
   }
 
@@ -219,16 +293,95 @@ export class SimpleVoiceManager {
       console.log('🎯 Creating simple utterance...')
       const msg = new SpeechSynthesisUtterance(text)
       msg.volume = 1.0
-      msg.rate = 1.0
+      msg.rate = 0.9
       msg.pitch = 1.0
+      
+      // Try to get a working voice
+      const voices = this.synth.getVoices()
+      if (voices.length > 0) {
+        // Prefer English voice for test
+        const englishVoice = voices.find(voice => 
+          voice.lang.includes('en') || voice.lang.includes('US')
+        ) || voices[0]
+        msg.voice = englishVoice
+        console.log('🎯 Using voice:', englishVoice.name)
+      }
       
       msg.onstart = () => console.log('🎯 DIRECT SPEECH STARTED!')
       msg.onend = () => console.log('🎯 DIRECT SPEECH ENDED!')
-      msg.onerror = (e) => console.error('🎯 DIRECT SPEECH ERROR:', e.error)
+      msg.onerror = (e) => {
+        console.error('🎯 DIRECT SPEECH ERROR:', e.error)
+        
+        // Ultimate fallback - try with system default
+        if (e.error !== 'synthesis-unavailable') {
+          setTimeout(() => {
+            if (!this.synth) return
+            const fallback = new SpeechSynthesisUtterance("Test")
+            fallback.volume = 1.0
+            fallback.rate = 1.0
+            fallback.pitch = 1.0
+            console.log('🎯 Ultimate fallback attempt...')
+            this.synth.speak(fallback)
+          }, 500)
+        }
+      }
       
       console.log('🎯 Speaking directly...')
       this.synth.speak(msg)
+      
+      // Force resume if needed (Safari fix)
+      setTimeout(() => {
+        if (this.synth && this.synth.paused) {
+          console.log('🎯 Resuming direct speech...')
+          this.synth.resume()
+        }
+      }, 100)
+      
     }, 300)
+  }
+
+  // Test specific functionality
+  public testSystemVoice(): void {
+    console.log('🔧 TESTING SYSTEM VOICE CAPABILITIES')
+    
+    if (!this.synth) {
+      console.error('❌ Speech synthesis not supported')
+      return
+    }
+    
+    // Check basic support
+    console.log('🔧 speechSynthesis object:', !!window.speechSynthesis)
+    console.log('🔧 getVoices method:', !!this.synth.getVoices)
+    console.log('🔧 speak method:', !!this.synth.speak)
+    console.log('🔧 Current speaking:', this.synth.speaking)
+    console.log('🔧 Current pending:', this.synth.pending)
+    console.log('🔧 Current paused:', this.synth.paused)
+    
+    const voices = this.synth.getVoices()
+    console.log('🔧 Total voices available:', voices.length)
+    
+    if (voices.length > 0) {
+      console.log('🔧 First few voices:')
+      voices.slice(0, 5).forEach((voice, i) => {
+        console.log(`🔧   ${i}: ${voice.name} (${voice.lang}) - Default: ${voice.default}`)
+      })
+      
+      // Try speaking with first available voice
+      const testUtterance = new SpeechSynthesisUtterance("Voice test successful")
+      testUtterance.voice = voices[0]
+      testUtterance.volume = 1.0
+      testUtterance.rate = 1.0
+      testUtterance.pitch = 1.0
+      
+      testUtterance.onstart = () => console.log('🔧 System voice test STARTED')
+      testUtterance.onend = () => console.log('🔧 System voice test COMPLETED')
+      testUtterance.onerror = (e) => console.error('🔧 System voice test ERROR:', e.error)
+      
+      console.log('🔧 Starting system voice test...')
+      this.synth.speak(testUtterance)
+    } else {
+      console.warn('🔧 No voices available for testing')
+    }
   }
 }
 
