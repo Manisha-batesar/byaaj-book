@@ -512,6 +512,34 @@ function SuperSmartAIExperience({
   }
 
   const extractAmountFromText = (text: string): number | null => {
+    const lowerText = text.toLowerCase()
+    let foundAmounts: number[] = []
+    
+    // Enhanced Indian number word patterns
+    const indianNumberPatterns = [
+      // Lakh variations: 2 lakh, 2 lac, 2 lack, 2 लाख
+      { pattern: /(\d+(?:\.\d+)?)\s*(?:lakh|lac|lack|लाख)/gi, multiplier: 100000 },
+      // Thousand variations: 5 thousand, 5 hajar, 5 हजार
+      { pattern: /(\d+(?:\.\d+)?)\s*(?:thousand|hajar|hazar|हजार|k)/gi, multiplier: 1000 },
+      // Crore variations: 1 crore, 1 करोड़
+      { pattern: /(\d+(?:\.\d+)?)\s*(?:crore|करोड़)/gi, multiplier: 10000000 },
+    ]
+    
+    // Check for Indian number words first
+    for (const { pattern, multiplier } of indianNumberPatterns) {
+      let match
+      while ((match = pattern.exec(text)) !== null) {
+        const baseNumber = parseFloat(match[1])
+        if (!isNaN(baseNumber) && baseNumber > 0) {
+          const amount = baseNumber * multiplier
+          if (amount >= 100) {
+            foundAmounts.push(amount)
+          }
+        }
+      }
+    }
+    
+    // Regular amount patterns
     const amountPatterns = [
       // Match amounts like ₹200000, 200000, 2,00,000, etc.
       /₹?\s*(\d{1,10}(?:,\d{3})*(?:\.\d{2})?)/g,
@@ -520,8 +548,6 @@ function SuperSmartAIExperience({
       // Match specific amount keywords
       /(\d+)\s*(?:rs|rupees|rupaiya|₹)/gi,
     ]
-    
-    let foundAmounts: number[] = []
     
     for (const pattern of amountPatterns) {
       let match
@@ -586,6 +612,142 @@ function SuperSmartAIExperience({
   const generateSmartResponse = (userMessage: string): string => {
     const { mode, loanData, currentStep } = conversationState
     const lowerMessage = userMessage.toLowerCase().trim()
+    
+    // PRIORITY: Handle loan flow states FIRST before conversational responses
+    if (mode === 'loan_creation' && currentStep === 'confirm') {
+      // Enhanced confirmation detection
+      const confirmationWords = ['yes', 'haan', 'ha', 'han', 'haa', 'ok', 'okay', 'confirm', 'create', 'बनाओ', 'ठीक', 'kar do', 'kardo', 'go ahead', 'proceed', 'bilkul', 'sure', 'theek hai', 'theek', 'done']
+      const isConfirmation = confirmationWords.some(word => lowerMessage.includes(word))
+      
+      if (isConfirmation) {
+        try {
+          const newLoan: Loan = {
+            id: Date.now().toString(),
+            borrowerName: loanData.borrowerName || '',
+            borrowerPhone: '',
+            notes: '',
+            amount: loanData.amount || 0,
+            interestRate: loanData.interestMethod === 'sankda' ? 12 : (loanData.interestRate || 0),
+            interestMethod: loanData.interestMethod || 'yearly',
+            interestType: 'simple',
+            years: loanData.years || 1,
+            dateCreated: new Date().toISOString(),
+            expectedReturnDate: undefined,
+            dueDate: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000 * (loanData.years || 1))).toISOString(),
+            totalPaid: 0,
+            isActive: true,
+          }
+
+          const existingLoans = storage.getLoans()
+          storage.saveLoans([...existingLoans, newLoan])
+          
+          // Trigger dashboard refresh if callback provided
+          if (onLoanCreated) {
+            console.log('🔄 Triggering dashboard refresh from conversational flow')
+            onLoanCreated()
+            // Force refresh after small delay to ensure state updates
+            setTimeout(() => {
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('loanCreated', { detail: { loan: newLoan } }))
+              }
+            }, 100)
+          }
+          
+          // Reset to general mode
+          setConversationState({
+            mode: 'general',
+            loanData: {},
+            currentStep: 'name'
+          })
+          
+          return language === 'hi'
+            ? `🎉 **LOAN CREATED SUCCESSFULLY!** 🎊\n\n✅ ${newLoan.borrowerName} ka loan active ho gaya!\n💰 Amount: ₹${newLoan.amount.toLocaleString()}\n📈 Interest: ${newLoan.interestRate}% ${newLoan.interestMethod}\n⏰ Duration: ${newLoan.years} years\n🆔 Loan ID: ${newLoan.id}\n\n📱 **Active Loans** section me dekh sakte hain!\n\n😊 Koi aur loan banani hai ya kuch aur help chahiye?`
+            : `🎉 **LOAN CREATED SUCCESSFULLY!** 🎊\n\n✅ ${newLoan.borrowerName}'s loan is now active!\n💰 Amount: ₹${newLoan.amount.toLocaleString()}\n📈 Interest: ${newLoan.interestRate}% ${newLoan.interestMethod}\n⏰ Duration: ${newLoan.years} years\n🆔 Loan ID: ${newLoan.id}\n\n📱 You can view it in **Active Loans** section!\n\n😊 Want to create another loan or need other help?`
+            
+        } catch (error) {
+          setConversationState({
+            mode: 'general',
+            loanData: {},
+            currentStep: 'name'
+          })
+          
+          return language === 'hi'
+            ? '❌ Error aaya loan create karne me. Please try again!'
+            : '❌ Error creating loan. Please try again!'
+        }
+      } else if (lowerMessage.match(/(no|nahi|cancel|stop)/i)) {
+        setConversationState({
+          mode: 'general',
+          loanData: {},
+          currentStep: 'name'
+        })
+        
+        return language === 'hi'
+          ? '❌ Loan creation cancel kar diya.\n\n😊 Koi aur help chahiye?'
+          : '❌ Loan creation cancelled.\n\n😊 Need any other help?'
+      } else {
+        return language === 'hi'
+          ? '🤔 Please answer with "yes" or "no":\n\n✅ "yes" - Loan create karo\n❌ "no" - Cancel karo'
+          : '🤔 Please answer with "yes" or "no":\n\n✅ "yes" - Create the loan\n❌ "no" - Cancel'
+      }
+    }
+    
+    // Handle conversational responses (thank you, sorry, yes, no, wow, etc.) - ONLY if not in loan confirmation
+    const conversationalPatterns = [
+      {
+        patterns: ['thank you', 'thanks', 'thanku', 'dhanyawad', 'dhanyabad', 'shukriya', 'thanks a lot', 'thank u'],
+        responses: {
+          hi: ['😊 Welcome hai! Aur koi help chahiye?', '🙏 Koi baat nahi! Khushi mili help karne mein.', '😄 Bas karte raho! Kuch aur chahiye?'],
+          en: ['😊 You\'re welcome! Need any other help?', '🙏 No problem! Happy to help.', '😄 Just doing my job! Anything else?']
+        }
+      },
+      {
+        patterns: ['sorry', 'maaf', 'maaf karo', 'excuse me', 'galti se'],
+        responses: {
+          hi: ['😊 Koi baat nahi! Galti sab se hoti hai.', '🤗 Are nahi re! Chalta hai.', '😄 Don\'t worry! Kya help chahiye?'],
+          en: ['😊 No worries! Everyone makes mistakes.', '🤗 It\'s totally fine!', '😄 Don\'t worry about it! How can I help?']
+        }
+      },
+      {
+        patterns: ['yes', 'haan', 'ha', 'han', 'haa', 'bilkul', 'sure', 'ok', 'okay', 'theek hai', 'theek', 'right', 'correct'],
+        responses: {
+          hi: ['👍 Great! Aage batao kya karna hai?', '😊 Perfect! Kya help chahiye?', '✅ Samjha! Aur kuch?', '👌 Theek hai! Kya kaam hai?'],
+          en: ['👍 Great! What would you like to do next?', '😊 Perfect! How can I help?', '✅ Got it! What else?', '👌 Alright! What do you need?']
+        }
+      },
+      {
+        patterns: ['no', 'nahi', 'na', 'nope', 'nahin', 'mat karo'],
+        responses: {
+          hi: ['😊 Koi problem nahi! Kuch aur try karte hain?', '👌 Theek hai! Kya chahiye batao?', '🤔 Samjha! Aur koi help?'],
+          en: ['😊 No problem! Want to try something else?', '👌 That\'s fine! What do you need?', '🤔 Understood! Any other help?']
+        }
+      },
+      {
+        patterns: ['wow', 'amazing', 'great', 'awesome', 'fantastic', 'badhiya', 'mast', 'zabardast', 'kamaal'],
+        responses: {
+          hi: ['😄 Hehe! Main smart hun na! Aur kya karna hai?', '🤩 Thanks! Aur help chahiye?', '😎 I know right! Kya aur help kar sakta hun?'],
+          en: ['😄 Hehe! I try my best! What else can I do?', '🤩 Thanks! Need any other help?', '😎 I know right! How else can I help?']
+        }
+      },
+      {
+        patterns: ['help', 'madad', 'sahayata', 'guide karo', 'batao'],
+        responses: {
+          hi: ['🤝 Bilkul! Main ye kar sakta hun:\n\n✅ "add loan" - Loan banane ke liye\n✅ "2 lakh loan" - Direct amount bol ke loan banao\n✅ "calculate" - Interest calculate karne ke liye\n\nKya karna hai? 🤔'],
+          en: ['🤝 Sure! Here\'s what I can do:\n\n✅ "add loan" - To create a loan\n✅ "2 lakh loan" - Create loan by saying amount directly\n✅ "calculate" - To calculate interest\n\nWhat would you like to do? 🤔']
+        }
+      }
+    ]
+    
+    // Check for conversational patterns ONLY if not in loan flow
+    if (!(mode === 'loan_creation')) {
+      for (const pattern of conversationalPatterns) {
+        if (pattern.patterns.some(p => lowerMessage.includes(p))) {
+          const responses = pattern.responses[language === 'hi' ? 'hi' : 'en']
+          const randomResponse = responses[Math.floor(Math.random() * responses.length)]
+          return randomResponse
+        }
+      }
+    }
     
     // Handle close dialog requests
     if (handleCloseDialog(userMessage)) {
@@ -951,80 +1113,6 @@ function SuperSmartAIExperience({
           return language === 'hi'
             ? '🤔 Duration clear nahi hai. Examples:\n• "2 years"\n• "1 year"\n• "6 months"\n\nFir se batao?'
             : '🤔 Duration not clear. Examples:\n• "2 years"\n• "1 year"\n• "6 months"\n\nTry again?'
-        }
-        
-      case 'confirm':
-        if (lowerMessage.match(/(yes|haan|ha|ok|confirm|create|बनाओ|ठीक|kar do)/i)) {
-          
-          try {
-            const newLoan: Loan = {
-              id: Date.now().toString(),
-              borrowerName: loanData.borrowerName || '',
-              borrowerPhone: '',
-              notes: '',
-              amount: loanData.amount || 0,
-              interestRate: loanData.interestMethod === 'sankda' ? 12 : (loanData.interestRate || 0),
-              interestMethod: loanData.interestMethod || 'yearly',
-              interestType: 'simple',
-              years: loanData.years || 1,
-              dateCreated: new Date().toISOString(),
-              expectedReturnDate: undefined,
-              dueDate: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000 * (loanData.years || 1))).toISOString(),
-              totalPaid: 0,
-              isActive: true,
-            }
-
-            const existingLoans = storage.getLoans()
-            storage.saveLoans([...existingLoans, newLoan])
-            
-            // Trigger dashboard refresh if callback provided
-            if (onLoanCreated) {
-              console.log('🔄 Triggering dashboard refresh from conversational flow')
-              onLoanCreated()
-              // Force refresh after small delay to ensure state updates
-              setTimeout(() => {
-                if (typeof window !== 'undefined') {
-                  window.dispatchEvent(new CustomEvent('loanCreated', { detail: { loan: newLoan } }))
-                }
-              }, 100)
-            }
-            
-            // Reset to general mode
-            setConversationState({
-              mode: 'general',
-              loanData: {},
-              currentStep: 'name'
-            })
-            
-            return language === 'hi'
-              ? `🎉 **LOAN CREATED SUCCESSFULLY!** 🎊\n\n✅ ${newLoan.borrowerName} ka loan active ho gaya!\n💰 Amount: ₹${newLoan.amount.toLocaleString()}\n📈 Interest: ${newLoan.interestRate}% ${newLoan.interestMethod}\n⏰ Duration: ${newLoan.years} years\n🆔 Loan ID: ${newLoan.id}\n\n📱 **Active Loans** section me dekh sakte hain!\n\n😊 Koi aur loan banani hai ya kuch aur help chahiye?`
-              : `🎉 **LOAN CREATED SUCCESSFULLY!** 🎊\n\n✅ ${newLoan.borrowerName}'s loan is now active!\n💰 Amount: ₹${newLoan.amount.toLocaleString()}\n📈 Interest: ${newLoan.interestRate}% ${newLoan.interestMethod}\n⏰ Duration: ${newLoan.years} years\n🆔 Loan ID: ${newLoan.id}\n\n📱 You can view it in **Active Loans** section!\n\n😊 Want to create another loan or need other help?`
-              
-          } catch (error) {
-            setConversationState({
-              mode: 'general',
-              loanData: {},
-              currentStep: 'name'
-            })
-            
-            return language === 'hi'
-              ? '❌ Error aaya loan create karne me. Please try again!'
-              : '❌ Error creating loan. Please try again!'
-          }
-        } else if (lowerMessage.match(/(no|nahi|cancel|stop)/i)) {
-          setConversationState({
-            mode: 'general',
-            loanData: {},
-            currentStep: 'name'
-          })
-          
-          return language === 'hi'
-            ? '❌ Loan creation cancel kar diya.\n\n😊 Koi aur help chahiye?'
-            : '❌ Loan creation cancelled.\n\n😊 Need any other help?'
-        } else {
-          return language === 'hi'
-            ? '🤔 Please "yes" ya "no" me jawab do:'
-            : '🤔 Please answer with "yes" or "no":'
         }
         
       default:
