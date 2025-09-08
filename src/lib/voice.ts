@@ -77,10 +77,11 @@ export class VoiceRecognition {
     this.recognition = new SpeechRecognition()
     
     if (this.recognition) {
-      // Configure recognition
-      this.recognition.continuous = this.config.continuous
-      this.recognition.interimResults = this.config.interimResults
+      // Configure recognition for better speech detection
+      this.recognition.continuous = false // Set to false for better single phrase detection
+      this.recognition.interimResults = true // Keep true for real-time feedback
       this.recognition.lang = this.getLanguageCode(this.config.language)
+      this.recognition.maxAlternatives = 1 // Only get the best result
 
       // Set up event handlers
       this.setupEventHandlers()
@@ -94,7 +95,11 @@ export class VoiceRecognition {
   private setupEventHandlers() {
     if (!this.recognition) return
 
+    let lastTranscript = ''
+    let speechTimeout: any = null
+
     this.recognition.onresult = (event: any) => {
+      console.log('🎤 Recognition result event:', event.results)
       let finalTranscript = ''
       let interimTranscript = ''
       let confidence = 0
@@ -106,31 +111,62 @@ export class VoiceRecognition {
         if (result.isFinal) {
           finalTranscript += transcript
           confidence = result[0].confidence
+          console.log('🎤 Final transcript:', finalTranscript, 'Confidence:', confidence)
         } else {
           interimTranscript += transcript
+          console.log('🎤 Interim transcript:', interimTranscript)
         }
       }
 
-      // Send interim results while listening
+      // Clear any existing timeout
+      if (speechTimeout) {
+        clearTimeout(speechTimeout)
+        speechTimeout = null
+      }
+
+      // Send interim results for UI feedback
       if (interimTranscript.trim() && this.onResult) {
+        lastTranscript = interimTranscript.trim()
         this.onResult({
-          transcript: interimTranscript.trim(),
+          transcript: lastTranscript,
           confidence: 0,
           isListening: true
         })
+
+        // Set timeout to finalize interim result if no more speech comes
+        speechTimeout = setTimeout(() => {
+          if (lastTranscript && this.onResult) {
+            console.log('🎤 Finalizing interim result due to silence:', lastTranscript)
+            this.onResult({
+              transcript: lastTranscript,
+              confidence: 0.8,
+              isListening: false
+            })
+          }
+        }, 2000) // Wait 2 seconds of silence
       }
 
-      // Send final result
+      // Send final result immediately
       if (finalTranscript.trim() && this.onResult) {
+        console.log('🎤 Sending final result:', finalTranscript.trim())
+        if (speechTimeout) {
+          clearTimeout(speechTimeout)
+          speechTimeout = null
+        }
         this.onResult({
           transcript: finalTranscript.trim(),
           confidence,
-          isListening: true // Still listening at this point
+          isListening: false
         })
       }
     }
 
     this.recognition.onerror = (event: any) => {
+      console.error('🎤 Recognition error:', event.error)
+      if (speechTimeout) {
+        clearTimeout(speechTimeout)
+        speechTimeout = null
+      }
       const errorMessage = this.getErrorMessage(event.error, this.config.language)
       if (this.onError) {
         this.onError(errorMessage)
@@ -138,8 +174,21 @@ export class VoiceRecognition {
     }
 
     this.recognition.onend = () => {
-      // Recognition session ended
-      if (this.onResult) {
+      console.log('🎤 Recognition ended')
+      if (speechTimeout) {
+        clearTimeout(speechTimeout)
+        speechTimeout = null
+      }
+      // If we have some transcript but recognition ended, send it
+      if (lastTranscript && this.onResult) {
+        console.log('🎤 Sending last transcript on end:', lastTranscript)
+        this.onResult({
+          transcript: lastTranscript,
+          confidence: 0.7,
+          isListening: false
+        })
+        lastTranscript = ''
+      } else if (this.onResult) {
         this.onResult({
           transcript: '',
           confidence: 0,
@@ -149,7 +198,12 @@ export class VoiceRecognition {
     }
 
     this.recognition.onstart = () => {
-      // Recognition started - notify that we're listening
+      console.log('🎤 Recognition started')
+      lastTranscript = ''
+      if (speechTimeout) {
+        clearTimeout(speechTimeout)
+        speechTimeout = null
+      }
       if (this.onResult) {
         this.onResult({
           transcript: '',
@@ -157,6 +211,22 @@ export class VoiceRecognition {
           isListening: true
         })
       }
+    }
+
+    this.recognition.onspeechstart = () => {
+      console.log('🎤 Speech detected - user started speaking')
+    }
+
+    this.recognition.onspeechend = () => {
+      console.log('🎤 Speech ended - user stopped speaking')
+    }
+
+    this.recognition.onsoundstart = () => {
+      console.log('🎤 Sound detected')
+    }
+
+    this.recognition.onsoundend = () => {
+      console.log('🎤 Sound ended')
     }
   }
 
@@ -274,65 +344,180 @@ export class TextToSpeech {
     if (this.voices.length === 0) {
       this.synth.onvoiceschanged = () => {
         this.voices = this.synth!.getVoices()
+        console.log('🎤 Available voices loaded:', this.voices.length)
+        console.log('🎤 Available Hindi voices:', this.voices.filter(v => v.lang.startsWith('hi')).map(v => `${v.name} (${v.lang})`))
+        console.log('🎤 Available English voices:', this.voices.filter(v => v.lang.startsWith('en')).map(v => `${v.name} (${v.lang})`))
       }
+    } else {
+      console.log('🎤 Available voices loaded immediately:', this.voices.length)
+      console.log('🎤 Available Hindi voices:', this.voices.filter(v => v.lang.startsWith('hi')).map(v => `${v.name} (${v.lang})`))
+      console.log('🎤 Available English voices:', this.voices.filter(v => v.lang.startsWith('en')).map(v => `${v.name} (${v.lang})`))
     }
   }
 
   private getBestVoice(language: Language): SpeechSynthesisVoice | null {
-    if (this.voices.length === 0) return null
+    if (!this.synth) return null
 
-    const langCode = language === 'hi' ? 'hi' : 'en'
-    
-    // Try to find a voice that matches the language
-    const matchingVoices = this.voices.filter(voice => 
-      voice.lang.toLowerCase().startsWith(langCode)
-    )
+    const voices = this.synth.getVoices()
+    console.log('🎤 Looking for voice for language:', language)
+    console.log('🎤 Available voices count:', voices.length)
 
-    if (matchingVoices.length > 0) {
-      // Prefer local voices over remote ones
-      const localVoice = matchingVoices.find(voice => voice.localService)
-      return localVoice || matchingVoices[0]
+    // Print all voice names for debugging
+    voices.forEach(v => console.log(`🎤 Voice: ${v.name} (${v.lang})`))
+
+    // For Hindi, prefer any Hindi voice
+    if (language === 'hi') {
+      const hindiVoices = voices.filter(v => 
+        v.lang.includes('hi') || 
+        v.lang.includes('HI') ||
+        v.name.toLowerCase().includes('hindi')
+      )
+      console.log('🎤 Hindi voices found:', hindiVoices.length)
+      
+      if (hindiVoices.length > 0) {
+        const selectedVoice = hindiVoices[0]
+        console.log('🎤 Selected Hindi voice:', selectedVoice.name)
+        return selectedVoice
+      }
     }
 
-    // Fallback to default voice
-    return this.voices[0] || null
+    // For English, prefer female-sounding voices by name
+    const femaleNames = [
+      'samantha', 'susan', 'karen', 'zira', 'kavya', 'sara', 'alice', 
+      'emma', 'anna', 'sarah', 'lisa', 'maria', 'female'
+    ]
+    
+    const femaleVoices = voices.filter(v => 
+      femaleNames.some(name => v.name.toLowerCase().includes(name)) &&
+      (v.lang.includes('en') || v.lang.includes('EN'))
+    )
+
+    if (femaleVoices.length > 0) {
+      console.log('🎤 Selected female voice:', femaleVoices[0].name)
+      return femaleVoices[0]
+    }
+
+    // Fallback: any English voice that doesn't contain 'male'
+    const englishVoices = voices.filter(v => 
+      (v.lang.includes('en') || v.lang.includes('EN')) &&
+      !v.name.toLowerCase().includes('male')
+    )
+
+    if (englishVoices.length > 0) {
+      console.log('🎤 Selected English voice:', englishVoices[0].name)
+      return englishVoices[0]
+    }
+
+    // Last resort: first available voice
+    console.log('🎤 Using first available voice:', voices[0]?.name || 'none')
+    return voices.length > 0 ? voices[0] : null
   }
 
   public speak(text: string, language?: Language): boolean {
     if (!this.isSupported || !this.synth || !text.trim()) {
+      console.log('🔊 Speech not supported or empty text')
       return false
     }
 
-    // Stop any ongoing speech
-    this.stop()
+    // Stop any ongoing speech first
+    this.synth.cancel()
 
     try {
-      const utterance = new SpeechSynthesisUtterance(text)
       const targetLanguage = language || this.config.language
+      console.log('🔊 Target language:', targetLanguage)
       
-      // Configure utterance
-      utterance.rate = this.config.rate
-      utterance.pitch = this.config.pitch
-      utterance.volume = this.config.volume
+      // Simple text cleaning - don't over-process
+      let cleanText = text
+        .replace(/₹/g, 'rupees ')
+        .replace(/\n/g, '. ')
+        .replace(/\*/g, '')
+        .trim()
+
+      console.log('🔊 Clean text preview:', cleanText.substring(0, 100))
+
+      // Create utterance
+      const utterance = new SpeechSynthesisUtterance(cleanText)
       
-      const voice = this.getBestVoice(targetLanguage)
-      if (voice) {
-        utterance.voice = voice
+      // Force female voice settings
+      if (targetLanguage === 'hi') {
+        utterance.lang = 'hi-IN'
+        utterance.rate = 0.8
+        utterance.pitch = 1.4  // Higher pitch for female voice
+        utterance.volume = 1.0
+      } else {
+        utterance.lang = 'en-US'
+        utterance.rate = 0.85
+        utterance.pitch = 1.35 // Higher pitch for female voice
+        utterance.volume = 1.0
       }
 
-      // Set language
-      utterance.lang = targetLanguage === 'hi' ? 'hi-IN' : 'en-US'
+      // Get all available voices and log them
+      const voices = this.synth.getVoices()
+      console.log('🎤 All system voices:', voices.map(v => `${v.name} (${v.lang})`))
+      
+      // Simple female voice selection - try different approaches
+      let selectedVoice = null
+      
+      // Method 1: Look for explicit female voices
+      const femaleVoices = voices.filter(v => 
+        v.name.toLowerCase().includes('female') ||
+        v.name.toLowerCase().includes('woman') ||
+        v.name.toLowerCase().includes('samantha') ||
+        v.name.toLowerCase().includes('susan') ||
+        v.name.toLowerCase().includes('karen') ||
+        v.name.toLowerCase().includes('zira') ||
+        v.name.toLowerCase().includes('kavya')
+      )
+      
+      if (femaleVoices.length > 0) {
+        selectedVoice = femaleVoices[0]
+        console.log('🎤 Method 1 - Selected explicit female voice:', selectedVoice.name)
+      } else {
+        // Method 2: Get first voice that doesn't contain 'male' for target language
+        const langVoices = voices.filter(v => v.lang.startsWith(targetLanguage === 'hi' ? 'hi' : 'en'))
+        const nonMaleVoices = langVoices.filter(v => !v.name.toLowerCase().includes('male'))
+        
+        if (nonMaleVoices.length > 0) {
+          selectedVoice = nonMaleVoices[0]
+          console.log('🎤 Method 2 - Selected non-male voice:', selectedVoice.name)
+        } else if (langVoices.length > 0) {
+          selectedVoice = langVoices[0]
+          console.log('🎤 Method 3 - Selected any language voice:', selectedVoice.name)
+        } else {
+          // Method 3: Just use first available voice
+          selectedVoice = voices[0]
+          console.log('🎤 Method 4 - Using first available voice:', selectedVoice?.name || 'none')
+        }
+      }
 
-      // Error handling
+      if (selectedVoice) {
+        utterance.voice = selectedVoice
+        console.log('🎤 Final selected voice:', selectedVoice.name, selectedVoice.lang)
+      }
+
+      // Add event listeners for debugging
+      utterance.onstart = () => {
+        console.log('🔊 Speech started with:', utterance.voice?.name || 'default voice')
+        console.log('🔊 Language:', utterance.lang)
+        console.log('🔊 Rate:', utterance.rate, 'Pitch:', utterance.pitch)
+      }
+
+      utterance.onend = () => {
+        console.log('🔊 Speech completed')
+      }
+
       utterance.onerror = (event) => {
-        console.error('Speech synthesis error:', event.error)
+        console.error('🔊 Speech error:', event.error)
       }
 
+      // Speak immediately
+      console.log('🔊 Starting speech synthesis...')
       this.synth.speak(utterance)
+      
       return true
 
     } catch (error) {
-      console.error('Failed to speak text:', error)
+      console.error('❌ Speech synthesis failed:', error)
       return false
     }
   }
@@ -396,13 +581,13 @@ export class VoiceManager {
     
     this.recognition = new VoiceRecognition({
       language,
-      continuous: false, // Changed to false for better single-command recognition
+      continuous: false, // Single command recognition for better reliability
       interimResults: true // Keep true for real-time feedback
     })
 
     this.synthesis = new TextToSpeech({
       language,
-      rate: 1.0,
+      rate: 0.9, // Slightly slower for better clarity
       pitch: 1.0,
       volume: 1.0
     })

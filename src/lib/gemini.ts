@@ -56,6 +56,43 @@ const initializeGemini = (): boolean => {
 const getOfflineResponse = (prompt: string, language: Language, context?: any): GeminiResponse => {
   const lowerPrompt = prompt.toLowerCase()
   
+  console.log('🤖 Processing offline prompt:', lowerPrompt)
+  console.log('🤖 Context received:', context)
+  
+  // Current loan specific questions
+  if (context?.currentLoan) {
+    const loan = context.currentLoan
+    const finalAmount = storage.calculateFinalAmount(loan)
+    const outstanding = storage.calculateOutstandingAmount(loan)
+    
+    // Outstanding amount questions
+    if (lowerPrompt.includes('outstanding') || lowerPrompt.includes('pending') || lowerPrompt.includes('remaining') ||
+        lowerPrompt.includes('बकाया') || lowerPrompt.includes('बचा') || lowerPrompt.includes('शेष')) {
+      
+      return {
+        text: language === 'hi'
+          ? `${loan.borrowerName} के लोन की जानकारी:\n\n💰 **मूल राशि**: ₹${loan.amount.toLocaleString()}\n💳 **कुल देय राशि**: ₹${finalAmount.toLocaleString()}\n✅ **भुगतान हुआ**: ₹${loan.totalPaid.toLocaleString()}\n⏳ **बकाया राशि**: ₹${outstanding.toLocaleString()}\n📊 **स्थिति**: ${loan.isActive ? 'सक्रिय' : 'पूर्ण'}\n\n${outstanding > 0 ? '⚠️ भुगतान का फॉलो-अप करें।' : '🎉 लोन पूर्ण हो गया है!'}`
+          : `Loan information for ${loan.borrowerName}:\n\n💰 **Principal Amount**: ₹${loan.amount.toLocaleString()}\n💳 **Total Payable**: ₹${finalAmount.toLocaleString()}\n✅ **Amount Paid**: ₹${loan.totalPaid.toLocaleString()}\n⏳ **Outstanding Amount**: ₹${outstanding.toLocaleString()}\n📊 **Status**: ${loan.isActive ? 'Active' : 'Completed'}\n\n${outstanding > 0 ? '⚠️ Follow up on payment required.' : '🎉 Loan is fully paid!'}`,
+        success: true
+      }
+    }
+    
+    // Interest related questions
+    if (lowerPrompt.includes('interest') || lowerPrompt.includes('rate') || lowerPrompt.includes('method') ||
+        lowerPrompt.includes('ब्याज') || lowerPrompt.includes('दर') || lowerPrompt.includes('विधि')) {
+      
+      const interestAmount = finalAmount - loan.amount
+      const monthlyInterest = loan.interestMethod === 'monthly' ? (loan.amount * loan.interestRate) / 100 : 0
+      
+      return {
+        text: language === 'hi'
+          ? `${loan.borrowerName} के लोन की ब्याज जानकारी:\n\n📈 **ब्याज दर**: ${loan.interestRate}% (${loan.interestMethod === 'monthly' ? 'मासिक' : loan.interestMethod === 'yearly' ? 'वार्षिक' : 'संकड़ा'})\n💵 **कुल ब्याज**: ₹${interestAmount.toLocaleString()}\n${monthlyInterest > 0 ? `📅 **मासिक ब्याज**: ₹${monthlyInterest.toLocaleString()}\n` : ''}⏰ **अवधि**: ${loan.years || 1} वर्ष\n\n${loan.interestMethod === 'sankda' ? '📝 संकड़ा विधि: प्रति रुपया 1 पैसा प्रति महीना' : ''}`
+          : `Interest details for ${loan.borrowerName}'s loan:\n\n📈 **Interest Rate**: ${loan.interestRate}% (${loan.interestMethod})\n💵 **Total Interest**: ₹${interestAmount.toLocaleString()}\n${monthlyInterest > 0 ? `📅 **Monthly Interest**: ₹${monthlyInterest.toLocaleString()}\n` : ''}⏰ **Duration**: ${loan.years || 1} year(s)\n\n${loan.interestMethod === 'sankda' ? '📝 Sankda method: 1 paisa per rupee per month' : ''}`,
+        success: true
+      }
+    }
+  }
+  
   // Loan creation detection
   if (lowerPrompt.includes('add loan') || lowerPrompt.includes('create loan') || lowerPrompt.includes('new loan') ||
       lowerPrompt.includes('लोन जोड़') || lowerPrompt.includes('नया लोन')) {
