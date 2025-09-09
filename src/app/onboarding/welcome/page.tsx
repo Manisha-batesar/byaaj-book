@@ -26,32 +26,63 @@ export default function WelcomePage() {
         <div className="mt-4 bg-card p-4 rounded-lg border border-primary/20">
           <div className="flex items-center space-x-2 mb-3">
             <span className="text-xl">🤖</span>
-            <h3 className="font-semibold text-primary">AI-Powered Features</h3>
+            <div className="text-left">
+              <h3 className="font-semibold text-primary">AI-Powered Features</h3>
+              <p className="text-xs text-muted-foreground">AI से भरपूर सुविधाएं</p>
+            </div>
           </div>
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center space-x-2">
+          
+          <div className="space-y-2 text-sm text-left">
+            <div className="flex items-start space-x-2">
               <span>🎤</span>
-              <span>Voice Commands in Hindi & English</span>
+              <div>
+                <p className="font-medium">Voice Commands in Hindi & English</p>
+                <p className="text-xs text-muted-foreground">हिंदी और अंग्रेजी में आवाज़ कमांड</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
+            
+            <div className="flex items-start space-x-2">
               <span>💬</span>
-              <span>Smart AI Assistant for Loan Management</span>
+              <div>
+                <p className="font-medium">Smart AI Assistant</p>
+                <p className="text-xs text-muted-foreground">स्मार्ट AI सहायक लोन मैनेजमेंट के लिए</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
+            
+            <div className="flex items-start space-x-2">
               <span>🔍</span>
-              <span>Voice-Enabled Search & Navigation</span>
+              <div>
+                <p className="font-medium">Voice Search & Navigation</p>
+                <p className="text-xs text-muted-foreground">आवाज़ से खोजें और नेविगेट करें</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
+            
+            <div className="flex items-start space-x-2">
               <span>📊</span>
-              <span>Automated Portfolio Analysis</span>
+              <div>
+                <p className="font-medium">Portfolio Analysis</p>
+                <p className="text-xs text-muted-foreground">अपने पोर्टफोलियो का विश्लेषण</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
+            
+            <div className="flex items-start space-x-2">
               <span>🏠</span>
-              <span>Works Completely Offline</span>
+              <div>
+                <p className="font-medium">Works Completely Offline</p>
+                <p className="text-xs text-muted-foreground">बिना इंटरनेट के भी पूरी तरह काम करता है</p>
+              </div>
             </div>
           </div>
-          <div className="mt-3 p-2 bg-primary/10 rounded text-xs text-muted-foreground">
-            <strong>Try saying:</strong> "Add new loan", "Show my portfolio", "नया लोन जोड़ें"
+          
+          <div className="mt-3 p-3 bg-primary/10 rounded">
+            <div className="text-xs font-semibold text-primary mb-1">
+              Try saying / कहकर देखें:
+            </div>
+            <div className="grid grid-cols-1 gap-1 text-xs text-muted-foreground">
+              <div>💬 "Add new loan" / "नया लोन जोड़ें"</div>
+              <div>📊 "Show my portfolio" / "पोर्टफोलियो दिखाओ"</div>
+              <div>🔍 "Find Raj's loan" / "राज के लोन खोजें"</div>
+            </div>
           </div>
         </div>
       </div>

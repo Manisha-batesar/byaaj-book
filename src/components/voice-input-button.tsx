@@ -43,6 +43,7 @@ export function VoiceInputButton({ className, currentLoanId }: VoiceInputButtonP
   const [isListening, setIsListening] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [showResponse, setShowResponse] = useState(false)
+  const [showInstructions, setShowInstructions] = useState(false)
   const [transcript, setTranscript] = useState('')
   const [response, setResponse] = useState('')
   const [error, setError] = useState('')
@@ -85,6 +86,93 @@ export function VoiceInputButton({ className, currentLoanId }: VoiceInputButtonP
   }
 
   const startVoiceRecording = async () => {
+    // If on loan detail page, show instructions first
+    if (currentLoanId) {
+      setShowInstructions(true)
+      return
+    }
+
+    if (!voiceSupport.recognition) {
+      setShowResponse(true)
+      setTranscript("Voice not supported")
+      setResponse(language === 'hi' 
+        ? "वॉइस सुविधा उपलब्ध नहीं है। कृपया अपना सवाल टाइप करें।" 
+        : "Voice feature not available. Please type your question.")
+      return
+    }
+
+    // Initialize voices for mobile/cross-browser compatibility
+    await emergencyVoiceManager.initializeVoices()
+
+    console.log('🎤 Starting simple voice recording...')
+    setIsListening(true)
+    setError('')
+    setTranscript('')
+    setResponse('')
+    setShowResponse(true)
+    
+    // Set language for recognition
+    simpleVoiceRecognition.setLanguage(language === 'hi')
+    
+    let finalResult = ''
+    
+    // Start listening with simple voice recognition
+    const success = simpleVoiceRecognition.startListening(
+      (text: string, isFinal: boolean) => {
+        console.log('🎤 Voice result:', text, 'Final:', isFinal)
+        
+        if (text.trim()) {
+          setTranscript(text.trim())
+          
+          if (isFinal) {
+            finalResult = text.trim()
+            console.log('🎤 Final result received:', finalResult)
+            
+            // Stop listening and process the result
+            setTimeout(() => {
+              setIsListening(false)
+              if (finalResult.length > 2) {
+                handleVoiceInput(finalResult)
+              } else {
+                setError(language === 'hi' 
+                  ? 'बहुत कम शब्द मिले। कृपया पूरा वाक्य बोलें।' 
+                  : 'Too few words detected. Please speak a complete sentence.')
+              }
+            }, 500)
+          }
+        }
+      },
+      (error: string) => {
+        console.error('🎤 Voice error:', error)
+        setIsListening(false)
+        setError(error)
+      }
+    )
+
+    if (!success) {
+      console.error('🎤 Failed to start simple voice recognition')
+      setIsListening(false)
+      setError(language === 'hi' 
+        ? 'वॉइस पहचान शुरू नहीं हो सका।' 
+        : 'Could not start voice recognition.')
+    } else {
+      // Auto-stop after 10 seconds
+      setTimeout(() => {
+        if (simpleVoiceRecognition.getCurrentListeningState()) {
+          console.log('🕐 Auto-stopping voice recognition after timeout')
+          stopVoiceRecording()
+          if (finalResult.trim()) {
+            handleVoiceInput(finalResult)
+          }
+        }
+      }, 10000)
+    }
+  }
+
+  const startActualVoiceRecording = async () => {
+    // Close instructions dialog
+    setShowInstructions(false)
+
     if (!voiceSupport.recognition) {
       setShowResponse(true)
       setTranscript("Voice not supported")
@@ -545,14 +633,165 @@ Would you like to know anything else?`
               )}
             </div>
 
+            {/* Continue Conversation Button */}
+            {!isProcessing && !isListening && (response || error) && (
+              <div className="flex justify-center">
+                <Button
+                  onClick={() => {
+                    // Immediately stop any ongoing speech when user wants to ask more
+                    if (!isListening) {
+                      console.log('🔇 Stopping AI voice before starting new recording')
+                      speechSynthesis.cancel()
+                      emergencyVoiceManager.stop()
+                    }
+                    
+                    // Then start or stop voice recording
+                    if (isListening) {
+                      stopVoiceRecording()
+                    } else {
+                      startActualVoiceRecording()
+                    }
+                  }}
+                  disabled={isProcessing}
+                  className={`${
+                    isListening 
+                      ? 'bg-red-100 border-red-300 text-red-600 animate-pulse hover:bg-red-200' 
+                      : 'bg-primary text-white hover:bg-primary/90'
+                  }`}
+                  size="sm"
+                >
+                  {isListening ? (
+                    <>
+                      <MicOff size={16} className="mr-2" />
+                      {language === 'hi' ? 'सुनाई रोकें' : 'Stop Listening'}
+                    </>
+                  ) : (
+                    <>
+                      <Mic size={16} className="mr-2" />
+                      {language === 'hi' ? 'और पूछें' : 'Ask More'}
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {/* Show listening indicator */}
+            {isListening && (
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 text-red-600 animate-pulse">
+                  <Radio size={16} className="animate-bounce" />
+                  <span className="text-sm font-medium">
+                    {language === 'hi' ? 'सुन रहे हैं...' : 'Listening...'}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {language === 'hi' 
+                    ? 'स्पष्ट रूप से बोलें'
+                    : 'Speak clearly'
+                  }
+                </p>
+              </div>
+            )}
+
             {/* Instructions */}
             <div className="text-center">
               <p className="text-xs text-muted-foreground">
-                {language === 'hi' 
-                  ? 'फिर से पूछने के लिए वॉइस बटन दबाएं'
-                  : 'Press the voice button again to ask another question'
-                }
+                {isListening ? (
+                  language === 'hi' 
+                    ? 'बोलना समाप्त करने के बाद कुछ सेकंड प्रतीक्षा करें'
+                    : 'Wait a few seconds after finishing speaking'
+                ) : (
+                  language === 'hi' 
+                    ? 'ऊपर के बटन से और सवाल पूछ सकते हैं'
+                    : 'Use the button above to ask more questions'
+                )}
               </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Instructions Dialog for Loan Detail Page */}
+      <Dialog open={showInstructions} onOpenChange={(open) => !open && setShowInstructions(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mic size={24} className="text-primary" />
+              {language === 'hi' ? 'वॉइस सहायता गाइड' : 'Voice Assistant Guide'}
+            </DialogTitle>
+            <DialogDescription>
+              {language === 'hi' 
+                ? 'इस लोन की जानकारी पाने के लिए निम्न तरीके से बोलें:'
+                : 'To get information about this loan, please speak like this:'
+              }
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Hindi Examples */}
+            <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <h4 className="font-medium text-sm mb-2 text-orange-800">
+                🇮🇳 हिंदी में कहें:
+              </h4>
+              <div className="space-y-2 text-sm text-orange-700">
+                <div className="bg-white/60 p-2 rounded border">
+                  "मुझे इस लोन की पूरी जानकारी दो"
+                </div>
+                <div className="bg-white/60 p-2 rounded border">
+                  "कितने पैसे बाकी हैं?"
+                </div>
+                <div className="bg-white/60 p-2 rounded border">
+                  "ब्याज कितना है?"
+                </div>
+              </div>
+            </div>
+
+            {/* English Examples */}
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-medium text-sm mb-2 text-blue-800">
+                🇺🇸 Say in English:
+              </h4>
+              <div className="space-y-2 text-sm text-blue-700">
+                <div className="bg-white/60 p-2 rounded border">
+                  "Give me all details of this loan"
+                </div>
+                <div className="bg-white/60 p-2 rounded border">
+                  "How much money is outstanding?"
+                </div>
+                <div className="bg-white/60 p-2 rounded border">
+                  "What's the interest rate?"
+                </div>
+              </div>
+            </div>
+
+            {/* Tips */}
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <h4 className="font-medium text-sm mb-1">
+                💡 {language === 'hi' ? 'सुझाव:' : 'Tips:'}
+              </h4>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li>• {language === 'hi' ? 'साफ और धीमी आवाज़ में बोलें' : 'Speak clearly and slowly'}</li>
+                <li>• {language === 'hi' ? 'पूरे वाक्य बोलें' : 'Speak complete sentences'}</li>
+                <li>• {language === 'hi' ? 'माइक्रोफोन का अनुमति दें' : 'Allow microphone permission'}</li>
+              </ul>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowInstructions(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                {language === 'hi' ? 'बाद में' : 'Maybe Later'}
+              </Button>
+              <Button
+                onClick={startActualVoiceRecording}
+                className="flex-1 bg-primary hover:bg-primary/90"
+              >
+                <Mic size={16} className="mr-2" />
+                {language === 'hi' ? 'अब बोलें' : 'Start Speaking'}
+              </Button>
             </div>
           </div>
         </DialogContent>
