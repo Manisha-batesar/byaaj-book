@@ -21,6 +21,39 @@ export default function WelcomePage() {
       <div className="mt-6 w-full">
         <p className="text-base font-medium">Welcome to {t('appName')}</p>
         <p className="text-sm text-muted-foreground mt-2">ब्याजबुक में आपका स्वागत है</p>
+        
+        {/* AI Features Highlight */}
+        <div className="mt-4 bg-card p-4 rounded-lg border border-primary/20">
+          <div className="flex items-center space-x-2 mb-3">
+            <span className="text-xl">🤖</span>
+            <h3 className="font-semibold text-primary">AI-Powered Features</h3>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center space-x-2">
+              <span>🎤</span>
+              <span>Voice Commands in Hindi & English</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span>💬</span>
+              <span>Smart AI Assistant for Loan Management</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span>🔍</span>
+              <span>Voice-Enabled Search & Navigation</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span>📊</span>
+              <span>Automated Portfolio Analysis</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span>🏠</span>
+              <span>Works Completely Offline</span>
+            </div>
+          </div>
+          <div className="mt-3 p-2 bg-primary/10 rounded text-xs text-muted-foreground">
+            <strong>Try saying:</strong> "Add new loan", "Show my portfolio", "नया लोन जोड़ें"
+          </div>
+        </div>
       </div>
 
       <button

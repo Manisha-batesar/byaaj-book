@@ -18,31 +18,37 @@ export default function AboutPage() {
 
       <div className="mt-4 bg-card p-4 rounded-lg">
         <div className="flex items-start space-x-3">
-          <div className="text-2xl">�</div>
+          <div className="text-2xl">💡</div>
           <div>
             <div className="font-semibold">Why Byaj Manager?</div>
             <ul className="mt-2 list-disc pl-5 space-y-2 text-sm">
               <li>Manage given & taken money with interest</li>
+              <li><strong>AI-Powered:</strong> Voice commands in Hindi & English</li>
+              <li><strong>Smart Assistant:</strong> AI helps with loan management</li>
+              <li><strong>Voice Search:</strong> Find loans by speaking</li>
               <li>Works completely offline – no internet needed</li>
               <li>Secure with your personal PIN</li>
               <li>Your data stays only on your phone – no one else can see it</li>
               <li>Track your client details with smart reminders</li>
-              <li>Simple and easy to use</li>
+              <li>Simple and easy to use with AI assistance</li>
             </ul>
           </div>
         </div>
 
         <div className="mt-4 flex items-start space-x-3">
-          <div className="text-2xl">💡</div>
+          <div className="text-2xl">🤖</div>
           <div>
             <div className="font-semibold">ब्याज मैनेजर क्यों?</div>
             <ul className="mt-2 list-disc pl-5 space-y-2 text-sm text-muted-foreground">
               <li>दिए और लिए गए पैसों का ब्याज आसानी से संभालें</li>
+              <li><strong>AI सुविधा:</strong> हिंदी और अंग्रेजी में आवाज़ कमांड</li>
+              <li><strong>स्मार्ट सहायक:</strong> AI लोन मैनेजमेंट में मदद करता है</li>
+              <li><strong>आवाज़ से खोजें:</strong> बोलकर लोन खोजें</li>
               <li>बिना इंटरनेट के भी पूरी तरह काम करता है</li>
               <li>आपके निजी PIN से सुरक्षित</li>
               <li>आपका डेटा सिर्फ आपके फोन में रहेगा – कोई और नहीं देख पाएगा</li>
               <li>अपने क्लाइंट की डिटेल्स रिमाइंडर से भी ट्रैक कर सकते हैं</li>
-              <li>सरल और आसान उपयोग</li>
+              <li>AI सहायता के साथ सरल और आसान उपयोग</li>
             </ul>
           </div>
         </div>
