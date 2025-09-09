@@ -365,8 +365,83 @@ export function AIAssistant({ currentLoanId, className }: AIAssistantProps) {
     localStorage.removeItem('ai_assistant_messages')
   }
 
+  // Helper function to detect thank you messages (without bye)
+  const detectThankYouIntent = (message: string): boolean => {
+    const lowerMessage = message.toLowerCase().trim()
+    
+    // Thank you patterns that don't include bye
+    const thankYouPatterns = [
+      /^(thank you|thanks|thanku|dhanyawad|shukriya)$/i,
+      /^(thank you so much|thanks a lot|bahut dhanyawad)$/i,
+      /^(great|awesome|perfect|wonderful|badhiya|mast|zabardast)$/i
+    ]
+    
+    return thankYouPatterns.some(pattern => pattern.test(lowerMessage)) &&
+           !detectGoodbyeIntent(message) // Make sure it's not a goodbye
+  }
+
+  // Helper function to detect goodbye/exit commands
+  const detectGoodbyeIntent = (message: string): boolean => {
+    const lowerMessage = message.toLowerCase().trim()
+    
+    // Comprehensive goodbye patterns
+    const goodbyePatterns = [
+      // Basic goodbyes
+      /^(bye|goodbye|alvida)$/i,
+      // Thank you + bye combinations
+      /^(thank you|thanks|thanku|dhanyawad|shukriya)\s+(bye|goodbye)$/i,
+      /^(bye|goodbye)\s+(thanks|thank you|thanku|dhanyawad)$/i,
+      // OK + bye combinations
+      /^(ok|okay|oky|okhy|thik|theek)\s+(bye|goodbye)$/i,
+      /^(bye|goodbye)\s+(ok|okay|oky|thik|theek)$/i,
+      // Common variations
+      /^(ok bye|okay bye|oky bye|okhy bye)$/i,
+      /^(thank you bye|thanks bye|thanku bye)$/i,
+      /^(bye thank you|bye thanks|bye thanku)$/i,
+      // Hindi variations
+      /^(dhanyawad bye|shukriya bye|theek bye|thik bye)$/i,
+      /^(bye dhanyawad|bye shukriya|bye theek)$/i,
+      // Single word variations that sound like bye
+      /^(byr|bai|bhy|byee|byeee)$/i,
+      // Exit commands
+      /^(exit|close|quit|band|khatam|gaya|done|finish|over)$/i,
+      // Polite closures
+      /^(that'?s all|bas|enough|khatam|ho gaya|done hai)$/i
+    ]
+    
+    return goodbyePatterns.some(pattern => pattern.test(lowerMessage))
+  }
+
   const handleSendMessage = async (message: string, isVoice = false) => {
     if (!message.trim() || isLoading) return
+
+    // Check for goodbye intent first
+    if (detectGoodbyeIntent(message)) {
+      const goodbyeResponse = language === 'hi'
+        ? '👋 Bye bye! Dobara help chahiye to yaad karna. Have a great day! 😊'
+        : '👋 Goodbye! Feel free to come back anytime you need help. Have a great day! 😊'
+      
+      addMessage(message, 'user', isVoice)
+      addMessage(goodbyeResponse, 'assistant')
+      
+      // Close the dialog after a short delay
+      setTimeout(() => {
+        setIsOpen(false)
+      }, 2000)
+      
+      return
+    }
+
+    // Check for thank you messages (without goodbye)
+    if (detectThankYouIntent(message)) {
+      const thankYouResponse = language === 'hi'
+        ? '😊 Welcome hai! Khushi mili help karne mein. Aur kuch chahiye? 🤗'
+        : '😊 You\'re welcome! Happy to help. Anything else you need? 🤗'
+      
+      addMessage(message, 'user', isVoice)
+      addMessage(thankYouResponse, 'assistant')
+      return
+    }
 
     // Add user message
     addMessage(message, 'user', isVoice)

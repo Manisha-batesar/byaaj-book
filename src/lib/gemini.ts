@@ -59,6 +59,30 @@ const getOfflineResponse = (prompt: string, language: Language, context?: any): 
   console.log('🤖 Processing offline prompt:', lowerPrompt)
   console.log('🤖 Context received:', context)
   
+  // Handle goodbye patterns
+  if (lowerPrompt.match(/(bye|goodbye|exit|close|quit|band|khatam|alvida|done|finish)/i) ||
+      lowerPrompt.match(/(ok\s+bye|okay\s+bye|oky\s+bye|okhy\s+bye)/i) ||
+      lowerPrompt.match(/(thank\s*you\s+bye|thanks\s+bye|thanku\s+bye)/i) ||
+      lowerPrompt.match(/(dhanyawad\s+bye|shukriya\s+bye|theek\s+bye)/i)) {
+    return {
+      text: language === 'hi'
+        ? '👋 Bye bye! Dobara help chahiye to yaad karna. Have a great day! 😊'
+        : '👋 Goodbye! Feel free to come back anytime you need help. Have a great day! 😊',
+      success: true
+    }
+  }
+  
+  // Handle thank you messages (without goodbye)
+  if (lowerPrompt.match(/^(thank you|thanks|thanku|dhanyawad|shukriya|great|awesome|perfect)$/i) &&
+      !lowerPrompt.includes('bye')) {
+    return {
+      text: language === 'hi'
+        ? '😊 Welcome hai! Khushi mili help karne mein. Aur kuch chahiye? 🤗'
+        : '😊 You\'re welcome! Happy to help. Anything else you need? 🤗',
+      success: true
+    }
+  }
+  
   // Current loan specific questions
   if (context?.currentLoan) {
     const loan = context.currentLoan
