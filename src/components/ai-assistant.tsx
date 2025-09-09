@@ -277,11 +277,13 @@ interface ChatMessage {
 interface AIAssistantProps {
   currentLoanId?: string
   className?: string
+  isOpen?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function AIAssistant({ currentLoanId, className }: AIAssistantProps) {
+export function AIAssistant({ currentLoanId, className, isOpen: externalIsOpen, onOpenChange }: AIAssistantProps) {
   const { language, t } = useLanguage()
-  const [isOpen, setIsOpen] = useState(false)
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -289,6 +291,10 @@ export function AIAssistant({ currentLoanId, className }: AIAssistantProps) {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [voiceSupport, setVoiceSupport] = useState({ recognition: false, synthesis: false })
   const [isGeminiAvailable, setIsGeminiAvailable] = useState(false)
+
+  // Use external state if provided, otherwise use internal state
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen
+  const setIsOpen = onOpenChange || setInternalIsOpen
   
   const voiceManagerRef = useRef<VoiceManager | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -575,49 +581,53 @@ export function AIAssistant({ currentLoanId, className }: AIAssistantProps) {
   // Always show the button, but with different states
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className={`${className} border-primary/20 bg-primary/10 text-primary hover:bg-primary/20`}
-              >
-                <Bot size={20} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>
-                {GeminiAI.isOnlineMode() 
-                  ? t("aiAssistant") + " (Online)" 
-                  : t("aiAssistant") + " (Offline Mode)"
-                }
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </DialogTrigger>
+      {externalIsOpen === undefined && (
+        <DialogTrigger asChild>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className={`${className} border-primary/20 bg-primary/10 text-primary hover:bg-primary/20`}
+                >
+                  <Bot size={20} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  {GeminiAI.isOnlineMode() 
+                    ? t("aiAssistant") + " (Online)" 
+                    : t("aiAssistant") + " (Offline Mode)"
+                  }
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </DialogTrigger>
+      )}
       
-      <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col p-0">
+      <DialogContent className="w-[95vw] max-w-4xl h-[90vh] max-h-[90vh] sm:h-[85vh] sm:max-h-[85vh] flex flex-col p-0 m-2 ai-assistant-mobile data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] data-[state=open]:duration-200">
         {/* Always show normal AI Assistant interface */}
         <>
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle className="flex items-center space-x-2">
-              <Bot size={24} className="text-primary" />
-              <span>{t("aiAssistant")}</span>
-              {voiceSupport.recognition && (
-                <Badge variant="secondary" className="text-xs">
-                  {t("voiceEnabled")}
-                </Badge>
-              )}
-              {!GeminiAI.isOnlineMode() && (
-                <Badge variant="outline" className="text-xs">
-                  Offline Mode
-                </Badge>
-              )}
+          <DialogHeader className="p-4 sm:p-6 pb-0 flex-shrink-0 border-b border-border/40">
+            <DialogTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+              <Bot size={20} className="text-primary flex-shrink-0 sm:w-6 sm:h-6" />
+              <span className="truncate">{t("aiAssistant")}</span>
+              <div className="flex flex-wrap gap-1 ml-auto">
+                {voiceSupport.recognition && (
+                  <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
+                    {t("voiceEnabled")}
+                  </Badge>
+                )}
+                {!GeminiAI.isOnlineMode() && (
+                  <Badge variant="outline" className="text-xs">
+                    {window.innerWidth < 640 ? 'Offline' : 'Offline Mode'}
+                  </Badge>
+                )}
+              </div>
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm text-left">
               {GeminiAI.isOnlineMode() 
                 ? t("aiInstructions")
                 : (language === 'hi' 
@@ -628,24 +638,24 @@ export function AIAssistant({ currentLoanId, className }: AIAssistantProps) {
             </DialogDescription>
           </DialogHeader>
 
-        <div className="flex-1 flex flex-col min-h-0 p-6 pt-0">
+        <div className="flex-1 flex flex-col min-h-0 p-4 sm:p-6 pt-0 pb-0">
           {/* Chat Messages */}
-          <Card className="flex-1 flex flex-col min-h-0 mb-4">
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <MessageSquare size={18} />
-                  <span>{t("chat")}</span>
+          <Card className="flex-1 flex flex-col min-h-0 mb-3 sm:mb-4">
+            <CardHeader className="pb-2 px-3 pt-3 sm:px-4 sm:pt-4">
+              <div className="flex justify-between items-center gap-2">
+                <CardTitle className="text-base sm:text-lg flex items-center space-x-2 min-w-0">
+                  <MessageSquare size={16} className="flex-shrink-0" />
+                  <span className="truncate">{t("chat")}</span>
                 </CardTitle>
-                <div className="flex space-x-2">
+                <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
                   {isSpeaking && voiceSupport.synthesis && (
                     <Button 
                       variant="ghost" 
                       size="sm"
                       onClick={toggleSpeaking}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-red-600 hover:text-red-700 h-8 w-8 p-0 sm:h-9 sm:w-9"
                     >
-                      <VolumeX size={16} />
+                      <VolumeX size={14} className="sm:w-4 sm:h-4" />
                     </Button>
                   )}
                   <Button 
@@ -653,29 +663,30 @@ export function AIAssistant({ currentLoanId, className }: AIAssistantProps) {
                     size="sm"
                     onClick={clearMessages}
                     disabled={messages.length === 0}
+                    className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} className="sm:w-4 sm:h-4" />
                   </Button>
                 </div>
               </div>
             </CardHeader>
             
-            <CardContent className="flex-1 min-h-0 p-4">
-              <ScrollArea className="h-full pr-4">
+            <CardContent className="flex-1 min-h-0 p-3 sm:p-4">
+              <ScrollArea className="h-full pr-2 sm:pr-4">
                 {messages.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-8">
-                    <Bot size={48} className="mx-auto mb-4 opacity-50" />
-                    <p>{t("aiWelcomeMessage")}</p>
+                  <div className="text-center text-muted-foreground py-6 sm:py-8">
+                    <Bot size={36} className="mx-auto mb-3 opacity-50 sm:w-12 sm:h-12 sm:mb-4" />
+                    <p className="text-sm sm:text-base px-2">{t("aiWelcomeMessage")}</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {messages.map((message) => (
                       <div
                         key={message.id}
                         className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[80%] rounded-lg p-3 ${
+                          className={`max-w-[85%] sm:max-w-[80%] rounded-lg p-2.5 sm:p-3 ${
                             message.type === 'user'
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
@@ -683,16 +694,16 @@ export function AIAssistant({ currentLoanId, className }: AIAssistantProps) {
                         >
                           <div className="flex items-start space-x-2">
                             {message.type === 'assistant' && (
-                              <Bot size={16} className="mt-0.5 flex-shrink-0" />
+                              <Bot size={14} className="mt-0.5 flex-shrink-0 sm:w-4 sm:h-4" />
                             )}
-                            <div className="flex-1">
-                              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                              <div className="flex items-center justify-between mt-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                              <div className="flex items-center justify-between mt-1.5 sm:mt-2">
                                 <span className="text-xs opacity-70">
                                   {formatTimestamp(message.timestamp)}
                                 </span>
                                 {message.isVoice && (
-                                  <Mic size={12} className="opacity-70" />
+                                  <Mic size={10} className="opacity-70 sm:w-3 sm:h-3" />
                                 )}
                               </div>
                             </div>
@@ -702,10 +713,10 @@ export function AIAssistant({ currentLoanId, className }: AIAssistantProps) {
                     ))}
                     {isLoading && (
                       <div className="flex justify-start">
-                        <div className="bg-muted rounded-lg p-3 max-w-[80%]">
+                        <div className="bg-muted rounded-lg p-2.5 sm:p-3 max-w-[85%] sm:max-w-[80%]">
                           <div className="flex items-center space-x-2">
-                            <Bot size={16} />
-                            <Loader2 size={16} className="animate-spin" />
+                            <Bot size={14} className="sm:w-4 sm:h-4" />
+                            <Loader2 size={14} className="animate-spin sm:w-4 sm:h-4" />
                             <span className="text-sm">
                               {t("thinking")}
                             </span>
@@ -722,25 +733,25 @@ export function AIAssistant({ currentLoanId, className }: AIAssistantProps) {
 
           {/* Suggested Prompts */}
           {messages.length === 0 && (
-            <Card className="mb-4">
-              <CardHeader className="pb-2">
+            <Card className="mb-3 sm:mb-4 flex-shrink-0">
+              <CardHeader className="pb-2 px-3 pt-3 sm:px-4 sm:pt-4">
                 <CardTitle className="text-sm flex items-center space-x-2">
-                  <Lightbulb size={16} />
+                  <Lightbulb size={14} className="sm:w-4 sm:h-4" />
                   <span>{t("suggestedQuestions")}</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <CardContent className="p-3 sm:p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {getSuggestedPrompts().slice(0, 4).map((prompt, index) => (
                     <Button
                       key={index}
                       variant="outline"
                       size="sm"
-                      className="text-left h-auto p-2 justify-start text-wrap"
+                      className="text-left h-auto p-2 sm:p-3 justify-start text-wrap text-xs sm:text-sm leading-relaxed"
                       onClick={() => handleSendMessage(prompt)}
                       disabled={isLoading}
                     >
-                      {prompt}
+                      <span className="break-words">{prompt}</span>
                     </Button>
                   ))}
                 </div>
@@ -749,60 +760,63 @@ export function AIAssistant({ currentLoanId, className }: AIAssistantProps) {
           )}
 
           {/* Input Area */}
-          <div className="flex space-x-2">
-            <div className="flex-1 relative">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder={
-                  isListening 
-                    ? t("listening")
-                    : t("typeQuestion")
-                }
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSendMessage(inputValue)
+          <div className="flex-shrink-0 border-t border-border/40 p-4 sm:p-6 pt-3 sm:pt-4 space-y-2">
+            <div className="flex space-x-2">
+              <div className="flex-1 relative min-w-0">
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder={
+                    isListening 
+                      ? t("listening")
+                      : t("typeQuestion")
                   }
-                }}
-                disabled={isLoading || isListening}
-                className={isListening ? 'bg-red-50 border-red-200' : ''}
-              />
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSendMessage(inputValue)
+                    }
+                  }}
+                  disabled={isLoading || isListening}
+                  className={`${isListening ? 'bg-red-50 border-red-200' : ''} text-sm sm:text-base h-10 sm:h-11`}
+                />
+              </div>
+              
+              {/* Voice Input Button */}
+              {voiceSupport.recognition && (
+                <Button
+                  variant={isListening ? "destructive" : "outline"}
+                  size="icon"
+                  onClick={isListening ? stopVoiceRecording : startVoiceRecording}
+                  disabled={isLoading}
+                  className="flex-shrink-0 h-10 w-10 sm:h-11 sm:w-11"
+                >
+                  {isListening ? <MicOff size={16} className="sm:w-[18px] sm:h-[18px]" /> : <Mic size={16} className="sm:w-[18px] sm:h-[18px]" />}
+                </Button>
+              )}
+
+              {/* Send Button */}
+              <Button
+                onClick={() => handleSendMessage(inputValue)}
+                disabled={!inputValue.trim() || isLoading || isListening}
+                className="flex-shrink-0 h-10 w-10 sm:h-11 sm:w-11"
+                size="icon"
+              >
+                {isLoading ? (
+                  <Loader2 size={16} className="animate-spin sm:w-[18px] sm:h-[18px]" />
+                ) : (
+                  <Send size={16} className="sm:w-[18px] sm:h-[18px]" />
+                )}
+              </Button>
             </div>
             
-            {/* Voice Input Button */}
+            {/* Voice Instructions */}
             {voiceSupport.recognition && (
-              <Button
-                variant={isListening ? "destructive" : "outline"}
-                size="icon"
-                onClick={isListening ? stopVoiceRecording : startVoiceRecording}
-                disabled={isLoading}
-                className="flex-shrink-0"
-              >
-                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-              </Button>
+              <p className="text-xs text-muted-foreground text-center px-2">
+                {voicePrompts.startListening}
+              </p>
             )}
-
-            {/* Send Button */}
-            <Button
-              onClick={() => handleSendMessage(inputValue)}
-              disabled={!inputValue.trim() || isLoading || isListening}
-              className="flex-shrink-0"
-            >
-              {isLoading ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <Send size={18} />
-              )}
-            </Button>
           </div>
-          
-          {/* Voice Instructions */}
-          {voiceSupport.recognition && (
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              {voicePrompts.startListening}
-            </p>
-          )}
             </div>
           </>
       </DialogContent>

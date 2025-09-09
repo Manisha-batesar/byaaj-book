@@ -214,9 +214,11 @@ export function AIUnifiedButton({ className, currentLoanId }: AIUnifiedButtonPro
 
       {/* AI Assistant Dialog */}
       {showAIAssistant && (
-        <div className="fixed inset-0 z-50">
-          <AIAssistant currentLoanId={currentLoanId} />
-        </div>
+        <AIAssistant 
+          currentLoanId={currentLoanId} 
+          isOpen={showAIAssistant} 
+          onOpenChange={setShowAIAssistant} 
+        />
       )}
 
       {/* Voice Input Dialog */}

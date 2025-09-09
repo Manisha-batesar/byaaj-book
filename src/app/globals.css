@@ -200,6 +200,35 @@
     .mobile-hide-scrollbar::-webkit-scrollbar {
       display: none;
     }
+    
+    /* AI Assistant mobile optimizations */
+    [data-radix-dialog-content] {
+      /* Ensure dialog doesn't exceed viewport bounds */
+      max-width: calc(100vw - 16px) !important;
+      max-height: calc(100vh - 16px) !important;
+      margin: 8px !important;
+    }
+    
+    /* Touch-friendly button sizes for mobile */
+    .ai-assistant-mobile button[size="icon"] {
+      min-height: 44px !important;
+      min-width: 44px !important;
+    }
+    
+    /* Better touch scrolling for chat messages */
+    [data-radix-scroll-area-viewport] {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+  }
+  
+  /* Very small mobile devices */
+  @media (max-width: 480px) {
+    [data-radix-dialog-content] {
+      max-width: calc(100vw - 8px) !important;
+      max-height: calc(100vh - 8px) !important;
+      margin: 4px !important;
+    }
   }
 }
 
