@@ -22,7 +22,7 @@ import { DueReminders } from "@/components/due-reminders"
 import SuperSmartAIExperience from "@/components/super-smart-ai"
 import { useLanguage } from "@/components/language-provider"
 import { storage } from "@/lib/storage"
-import { Plus, Calculator, TrendingUp, FileText, IndianRupee, Edit3, Trash2, ChevronRight, Bug } from "lucide-react"
+import { Plus, Calculator, TrendingUp, FileText, IndianRupee, Edit3, Trash2, ChevronRight } from "lucide-react"
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -150,13 +150,6 @@ export default function DashboardPage() {
       icon: FileText,
       href: "/reports",
       color: "bg-muted text-muted-foreground",
-    },
-    {
-      title: "Voice Debug",
-      description: "Test and debug voice features",
-      icon: Bug,
-      href: "/voice-debug",
-      color: "bg-orange-600 text-white",
     },
   ]
 

@@ -94,6 +94,9 @@ export function VoiceInputButton({ className, currentLoanId }: VoiceInputButtonP
       return
     }
 
+    // Initialize voices for mobile/cross-browser compatibility
+    await emergencyVoiceManager.initializeVoices()
+
     console.log('🎤 Starting simple voice recording...')
     setIsListening(true)
     setError('')
@@ -256,7 +259,7 @@ Would you like to see payment history?`
           
           // Full loan details with proper Hindi
           response = detectedLanguage === 'hi' 
-            ? `जी हाँ, मैं आपको पूरी जानकारी देता हूँ।
+            ? `जी हाँ, मैं आपको पूरी जानकारी देती हूँ।
 
 यह लोन ${currentLoan.borrowerName} के नाम पर है। इसे ${loanDate} को दिया गया था।
 
